@@ -1,0 +1,92 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using PetAdoption.Application.DTOs
+@using PetAdoption.Domain.Enums
+@model PetAdoption.Web.Models.Pets.PetFormVm
+
+@{
+    ViewData["Title"] = "Edit Pet";
+    var shelters = ViewBag.Shelters as IReadOnlyList<ShelterDto> ?? Array.Empty<ShelterDto>();
+}
+
+<h3 class="mb-4">Edit @Model.Name</h3>
+
+<form asp-action="Edit" method="post" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Species" class="form-label"></label>
+            <select asp-for="Species" class="form-select"
+                    asp-items="Html.GetEnumSelectList<Species>()">
+            </select>
+            <span asp-validation-for="Species" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Breed" class="form-label"></label>
+            <input asp-for="Breed" class="form-control" />
+            <span asp-validation-for="Breed" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="AgeYears" class="form-label"></label>
+            <input asp-for="AgeYears" type="number" class="form-control" min="0" />
+            <span asp-validation-for="AgeYears" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-8">
+            <label asp-for="ImageUrl" class="form-label"></label>
+            <input asp-for="ImageUrl" class="form-control" />
+            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+            <div class="form-text">Paste a public image URL.</div>
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+            @if (!string.IsNullOrWhiteSpace(Model?.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="Pet image" class="img-thumbnail ms-md-3" style="max-height:100px;" />
+            }
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="ShelterId" class="form-label">Shelter</label>
+            <select asp-for="ShelterId"
+                    class="form-select"
+                    asp-items="@(new SelectList(shelters, nameof(ShelterDto.Id), nameof(ShelterDto.Name), Model?.ShelterId))">
+            </select>
+            <span asp-validation-for="ShelterId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Status" class="form-label"></label>
+            <select asp-for="Status" class="form-select"
+                    asp-items="Html.GetEnumSelectList<PetStatus>()">
+            </select>
+            <span asp-validation-for="Status" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save changes</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

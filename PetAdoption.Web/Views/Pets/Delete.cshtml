@@ -1,0 +1,51 @@
+﻿@model PetAdoption.Application.DTOs.PetDto
+
+@{
+    ViewData["Title"] = "Delete Pet";
+}
+
+<h3 class="text-danger mb-3">Delete Pet</h3>
+
+<div class="alert alert-warning">
+    <strong>Warning:</strong> This action cannot be undone.
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="row g-0">
+        <div class="col-md-5">
+            <img class="img-fluid rounded-start w-100 h-100 object-fit-cover"
+                 src="@(Model.ImageUrl ?? "https://placehold.co/800x600?text=" + Uri.EscapeDataString(Model.Name))"
+                 alt="@Model.Name" />
+        </div>
+        <div class="col-md-7">
+            <div class="card-body">
+                <h4 class="card-title">@Model.Name <small class="text-muted">(@Model.Species)</small></h4>
+                <dl class="row">
+                    <dt class="col-sm-4">Breed</dt>
+                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Breed) ? Model.Breed : "-")</dd>
+
+                    <dt class="col-sm-4">Age (years)</dt>
+                    <dd class="col-sm-8">@Model.AgeYears</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">@Model.Status</dd>
+
+                    <dt class="col-sm-4">Shelter</dt>
+                    <dd class="col-sm-8">@Model.ShelterName</dd>
+
+                    <dt class="col-sm-4">Description</dt>
+                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "-")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post" class="d-flex gap-2">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.Id" />
+    <button type="submit" class="btn btn-danger">
+        <span class="me-1">🗑️</span> Delete
+    </button>
+    <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Pets")">Cancel</a>
+</form>

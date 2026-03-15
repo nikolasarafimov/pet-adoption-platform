@@ -1,0 +1,91 @@
+﻿@model PetAdoption.Web.Models.Account.RegisterVm
+@{
+    ViewData["Title"] = "Register";
+}
+<h2 class="mb-3">Create your account</h2>
+
+<form asp-action="Register" method="post" class="card shadow-sm p-3" novalidate>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ReturnUrl" />
+
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" class="form-control" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <hr />
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" asp-for="IsShelter" id="isShelter" />
+        <label class="form-check-label" asp-for="IsShelter"></label>
+    </div>
+
+    <div id="shelterFields" class="border rounded p-3 mb-3" style="display:none;">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="ShelterName" class="form-label"></label>
+                <input asp-for="ShelterName" class="form-control" />
+                <span asp-validation-for="ShelterName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ShelterCity" class="form-label"></label>
+                <input asp-for="ShelterCity" class="form-control" />
+                <span asp-validation-for="ShelterCity" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="ShelterAddress" class="form-label"></label>
+                <input asp-for="ShelterAddress" class="form-control" />
+                <span asp-validation-for="ShelterAddress" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ShelterPhone" class="form-label"></label>
+                <input asp-for="ShelterPhone" class="form-control" />
+                <span asp-validation-for="ShelterPhone" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ShelterEmail" class="form-label"></label>
+                <input asp-for="ShelterEmail" class="form-control" />
+                <span asp-validation-for="ShelterEmail" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-text mt-2">
+            These fields are required only if you register as a Shelter.
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Create account</button>
+    <a class="btn btn-link" href="/Account/Login?returnUrl=@Uri.EscapeDataString(Model.ReturnUrl ?? "/")">Have an account? Login</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const isShelter = document.getElementById('isShelter');
+        const panel = document.getElementById('shelterFields');
+
+        function toggleShelter() {
+            panel.style.display = isShelter.checked ? 'block' : 'none';
+        }
+        isShelter.addEventListener('change', toggleShelter);
+        toggleShelter();
+    </script>
+}

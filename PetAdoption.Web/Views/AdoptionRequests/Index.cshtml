@@ -1,0 +1,47 @@
+﻿@model IReadOnlyList<PetAdoption.Application.DTOs.AdoptionRequestDto>
+
+<h3>My Adoption Requests</h3>
+
+@if (TempData["ok"] != null)
+{
+    <div class="alert alert-success">@TempData["ok"]</div>
+}
+@if (TempData["err"] != null)
+{
+    <div class="alert alert-danger">@TempData["err"]</div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Pet</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Decision</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.PetName</td>
+                <td>@r.Status</td>
+                <td>@r.CreatedAt.ToLocalTime()</td>
+                <td>@(r.DecisionAt?.ToLocalTime().ToString() ?? "-")</td>
+                <td class="text-end">
+                    @if (r.Status == PetAdoption.Domain.Enums.AdoptionRequestStatus.Pending)
+                    {
+                        <form method="post" asp-action="Cancel" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@r.Id" />
+                            <button class="btn btn-sm btn-outline-danger" type="submit">
+                                Cancel
+                            </button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

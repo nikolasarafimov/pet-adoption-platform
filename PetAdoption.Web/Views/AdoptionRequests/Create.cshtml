@@ -1,0 +1,16 @@
+﻿@model int
+<h3>Adopt Pet</h3>
+@if (TempData["err"] != null)
+{
+    <div class="alert alert-danger">@TempData["err"]</div>
+}
+<form method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="petId" value="@Model" />
+    <div class="mb-3">
+        <label class="form-label">Message (optional)</label>
+        <textarea name="message" class="form-control" rows="4" placeholder="Tell the shelter about your home, experience, etc."></textarea>
+    </div>
+    <button class="btn btn-success">Submit Request</button>
+    <a class="btn btn-outline-secondary" href="/Pets/Details/@Model">Back</a>
+</form>

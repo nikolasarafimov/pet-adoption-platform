@@ -1,0 +1,68 @@
+﻿@model IReadOnlyList<PetAdoption.Application.DTOs.BreedDto>
+@{
+    ViewData["Title"] = "Dog Breeds";
+    int page = ViewBag.Page ?? 1;
+    int pageSize = ViewBag.PageSize ?? 12;
+    int total = ViewBag.Total ?? 0;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    string q = ViewBag.Query as string ?? "";
+    string BaseUrl(string p, int ps) => Url.Action("Breeds", "Home", new { q, page = p, pageSize = ps })!;
+}
+
+<h2 class="mb-3">Dog Breeds</h2>
+
+<form method="get" class="mb-3 d-flex gap-2">
+    <input type="text" name="q" value="@q" class="form-control" placeholder="Search breeds..." />
+    <select name="pageSize" class="form-select" onchange="this.form.submit()">
+        @foreach (var size in new[] { 6, 12, 18, 24, 36 })
+        {
+            <option value="@size" selected="@(pageSize == size)">@size / page</option>
+        }
+    </select>
+    <button class="btn btn-primary">Search</button>
+</form>
+
+@if (total == 0)
+{
+    <div class="alert alert-info">No breeds found.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var b in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img class="card-img-top" src="@(b.ImageUrl ?? "https://placehold.co/600x400?text=" + Uri.EscapeDataString(b.Name))" alt="@b.Name" />
+                    <div class="card-body">
+                        <h5 class="card-title mb-1">@b.Name</h5>
+                        <p class="card-text small mb-1"><strong>Temperaments:</strong> @string.Join(", ", b.Temperaments ?? Array.Empty<string>())</p>
+                        <p class="card-text small mb-1"><strong>Lifespan:</strong> @((b.LifeSpanMinYears is null && b.LifeSpanMaxYears is null) ? "-" : $"{b.LifeSpanMinYears}-{b.LifeSpanMaxYears} yrs")</p>
+                        <p class="card-text small"><strong>Avg weight:</strong> @(b.WeightKgAverage?.ToString("0.0") ?? "-") kg</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(page <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@BaseUrl((page - 1).ToString(), pageSize)">Previous</a>
+            </li>
+
+            @for (int i = Math.Max(1, page - 2); i <= Math.Min(totalPages, page + 2); i++)
+            {
+                <li class="page-item @(i == page ? "active" : "")">
+                    <a class="page-link" href="@BaseUrl(i.ToString(), pageSize)">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                <a class="page-link" href="@BaseUrl((page + 1).ToString(), pageSize)">Next</a>
+            </li>
+        </ul>
+        <div class="text-center text-muted small">Showing page @(page) of @totalPages — @total total breeds.</div>
+    </nav>
+}

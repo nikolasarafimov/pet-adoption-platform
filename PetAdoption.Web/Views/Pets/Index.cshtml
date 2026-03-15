@@ -1,0 +1,99 @@
+﻿@using PetAdoption.Domain.Enums
+@model PetAdoption.Web.Models.Pets.PetListVm
+@{
+    ViewData["Title"] = "Pets";
+}
+
+<h2 class="mb-3">Pets</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form method="get" class="row g-2 flex-grow-1 me-3">
+        <div class="col-md-4">
+            <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by name or breed" />
+        </div>
+        <div class="col-md-3">
+            <select name="species" class="form-select">
+                <option value="">All species</option>
+                @foreach (var s in Enum.GetValues(typeof(Species)).Cast<Species>())
+                {
+                    <option value="@s" selected="@(Model.Species == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                @foreach (var s in Enum.GetValues(typeof(PetStatus)).Cast<PetStatus>())
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn btn-outline-primary">Filter</button>
+        </div>
+    </form>
+
+    @if (Model.IsAdmin || Model.IsShelter)
+    {
+        <a class="btn btn-primary" asp-action="Create">Add Pet</a>
+    }
+</div>
+
+@if (!Model.Pets.Any())
+{
+    <div class="alert alert-info">No pets found.</div>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Species</th>
+                <th>Breed</th>
+                <th>Age</th>
+                <th>Status</th>
+                <th>Shelter</th>
+                <th style="width:260px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Pets)
+            {
+                <tr>
+                    <td>@p.Name</td>
+                    <td>@p.Species</td>
+                    <td>@p.Breed</td>
+                    <td>@p.AgeYears</td>
+                    <td>
+                        <span class="badge bg-@(
+                              p.Status == PetStatus.Available ? "success" :
+                              p.Status == PetStatus.Reserved ? "warning" :
+                              p.Status == PetStatus.Adopted ? "secondary" : "dark")">
+                    @p.Status
+                </span>
+            </td>
+            <td>@p.ShelterName</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@p.Id">View</a>
+
+                @if (Model.IsAdopter && p.Status == PetStatus.Available)
+                        {
+                            <a class="btn btn-sm btn-success"
+                               asp-controller="AdoptionRequests"
+                               asp-action="Create"
+                               asp-route-petId="@p.Id">Request</a>
+                        }
+
+                        @if (Model.IsAdmin || (Model.IsShelter && Model.MyShelterId == p.ShelterId))
+                        {
+                            <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@p.Id">Edit</a>
+                            <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@p.Id">Delete</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

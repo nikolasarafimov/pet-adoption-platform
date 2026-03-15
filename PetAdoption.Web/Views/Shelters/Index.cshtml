@@ -1,0 +1,49 @@
+﻿@model IReadOnlyList<PetAdoption.Application.DTOs.ShelterDto>
+@{
+    ViewData["Title"] = "Shelters";
+}
+
+<h3 class="mb-3">Shelters</h3>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        @if (TempData["Ok"] is string ok)
+        {
+            <div class="alert alert-success py-2 mb-0">@ok</div>
+        }
+        @if (TempData["Err"] is string err)
+        {
+            <div class="alert alert-danger py-2 mb-0">@err</div>
+        }
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Add Shelter</a>
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th style="width:160px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.Name</td>
+                <td>@s.Address</td>
+                <td>@s.City</td>
+                <td>@s.Phone</td>
+                <td>@s.Email</td>
+                <td class="text-end">
+                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@s.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,21 @@
+﻿@model PetAdoption.Application.DTOs.PetDto
+<div class="row">
+    <div class="col-md-6">
+        <img class="img-fluid rounded" src="@(Model.ImageUrl ?? "https://placehold.co/800x600")" />
+    </div>
+    <div class="col-md-6">
+        <h3>@Model.Name <small class="text-muted">(@Model.Species)</small></h3>
+        <p>@Model.Description</p>
+        <p><strong>Breed:</strong> @(Model.Breed ?? "-")</p>
+        <p><strong>Age:</strong> @Model.AgeYears</p>
+        <p><strong>Status:</strong> @Model.Status</p>
+        <p><strong>Shelter:</strong> @Model.ShelterName</p>
+        <div class="d-flex gap-2">
+            @if (Model.Status == PetAdoption.Domain.Enums.PetStatus.Available && User.IsInRole("Adopter"))
+            {
+                <a class="btn btn-success" href="/AdoptionRequests/Create?petId=@Model.Id">Adopt</a>
+            }
+            <a class="btn btn-outline-secondary" href="/Pets">Back</a>
+        </div>
+    </div>
+</div>

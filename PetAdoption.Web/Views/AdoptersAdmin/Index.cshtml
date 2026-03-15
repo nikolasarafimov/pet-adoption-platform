@@ -1,0 +1,43 @@
+﻿@model IReadOnlyList<PetAdoption.Application.DTOs.AdopterDto>
+@{
+    ViewData["Title"] = "Adopters";
+}
+<h3 class="mb-3">Adopters</h3>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        @if (TempData["Ok"] is string ok)
+        {
+            <div class="alert alert-success py-2 mb-0">@ok</div>
+        }
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Add Adopter</a>
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th style="width:220px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var a in Model)
+        {
+            <tr>
+                <td>@a.FullName</td>
+                <td>@a.Email</td>
+                <td>@a.Phone</td>
+                <td>@a.Address</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+                    <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@a.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

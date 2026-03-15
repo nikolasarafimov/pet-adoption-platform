@@ -1,0 +1,109 @@
+﻿@using PetAdoption.Domain.Enums
+@model IReadOnlyList<PetAdoption.Application.DTOs.PetDto>
+
+@{
+    ViewData["Title"] = "Browse Pets";
+
+    int page      = ViewBag.Page      ?? 1;
+    int pageSize  = ViewBag.PageSize  ?? 9;
+    int total     = ViewBag.Total     ?? 0;
+    int totalPages= ViewBag.TotalPages?? 1;
+
+    string BuildUrl(int p) => Url.Action(
+        "Index", "Home",
+        new {
+            search = (string?)ViewBag.Search,
+            species = (Species?)ViewBag.Species,
+            page = p,
+            pageSize
+        })!;
+}
+
+<div class="d-flex align-items-center mb-3">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <input type="text"
+               name="search"
+               value="@ViewBag.Search"
+               class="form-control"
+               placeholder="Search pets by name or breed" />
+
+        <select name="species" class="form-select">
+            <option value="">All species</option>
+            @foreach (var s in Enum.GetValues(typeof(Species)).Cast<Species>())
+            {
+                <option value="@s" selected="@(ViewBag.Species!=null && ((Species)ViewBag.Species)==s)">
+                    @s
+                </option>
+            }
+        </select>
+
+        <select name="pageSize" class="form-select">
+            @foreach (var size in new[]{6,9,12,15,18})
+            {
+                <option value="@size" selected="@( (int)(ViewBag.PageSize ?? 9) == size)">
+                    @size / page
+                </option>
+            }
+        </select>
+
+        <button class="btn btn-primary">Filter</button>
+    </form>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No pets found. Try a different search or species.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var p in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img class="card-img-top"
+                         src="@(p.ImageUrl ?? "https://placehold.co/600x400?text=" + Uri.EscapeDataString(p.Name))"
+                         alt="@p.Name" />
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            @p.Name <small class="text-muted">(@p.Species)</small>
+                        </h5>
+                        <p class="card-text small text-truncate" style="-webkit-line-clamp:3; display:-webkit-box; -webkit-box-orient:vertical;">
+                            @p.Description
+                        </p>
+                        <span class="badge bg-@(p.Status == PetAdoption.Domain.Enums.PetStatus.Available ? "success" : (p.Status == PetAdoption.Domain.Enums.PetStatus.Reserved ? "warning" : "secondary"))">
+                            @p.Status
+                        </span>
+                    </div>
+                    <div class="card-footer d-flex gap-2">
+                        <a class="btn btn-sm btn-outline-primary" href="/Pets/Details/@p.Id">Details</a>
+                        @if (p.Status == PetStatus.Available && User.IsInRole("Adopter"))
+                        {
+                            <a class="btn btn-sm btn-success" href="/AdoptionRequests/Create?petId=@p.Id">Adopt</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(page<=1?"disabled":"")">
+                <a class="page-link" href="@BuildUrl(page-1)">Previous</a>
+            </li>
+
+            @for (int i = Math.Max(1, page-2); i <= Math.Min(totalPages, page+2); i++)
+            {
+                <li class="page-item @(i==page?"active":"")">
+                    <a class="page-link" href="@BuildUrl(i)">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(page>=totalPages?"disabled":"")">
+                <a class="page-link" href="@BuildUrl(page+1)">Next</a>
+            </li>
+        </ul>
+        <div class="text-center text-muted small">Showing page @(page) of @totalPages — @total pets.</div>
+    </nav>
+}

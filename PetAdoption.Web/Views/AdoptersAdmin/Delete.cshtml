@@ -1,0 +1,23 @@
+﻿@model PetAdoption.Application.DTOs.AdopterDto
+@{
+    ViewData["Title"] = "Delete Adopter";
+}
+<h3 class="mb-3 text-danger">Delete Adopter</h3>
+
+<div class="alert alert-warning">
+    <strong>Are you sure?</strong> This will permanently remove <em>@Model.FullName</em>.
+</div>
+
+<dl class="row">
+    <dt class="col-sm-2">Email</dt>
+    <dd class="col-sm-10">@Model.Email</dd>
+    <dt class="col-sm-2">Phone</dt>
+    <dd class="col-sm-10">@Model.Phone</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.Id" />
+    <button class="btn btn-danger" type="submit">Delete</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</form>

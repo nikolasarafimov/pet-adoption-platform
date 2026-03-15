@@ -1,0 +1,127 @@
+﻿@model IReadOnlyList<PetAdoption.Application.DTOs.PetDto>
+@using Microsoft.AspNetCore.Identity
+@using PetAdoption.Domain.Enums
+@inject SignInManager<PetAdoption.Infrastructure.Data.ApplicationUser> SignInManager
+
+@{
+    ViewData["Title"] = "Welcome";
+    var isAuthed = SignInManager.IsSignedIn(User);
+    bool isShelter = User.IsInRole("Shelter");
+    bool isAdopter = User.IsInRole("Adopter");
+}
+
+<section class="py-5 bg-gradient rounded-4 shadow-sm px-4 px-md-5">
+    <div class="container-fluid p-0">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <h1 class="display-5 fw-bold mb-3">Find a loving home for every pet</h1>
+                <p class="lead text-muted">
+                    Pet Adoption Platform helps shelters publish adoptable pets and allows citizens to submit and track adoption requests through a clean, role-based web application.
+                </p>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <a class="btn btn-primary btn-lg" href="/Home/Index">Browse Pets</a>
+                    <a class="btn btn-outline-secondary btn-lg" href="/Breeds">Explore Dog Breeds</a>
+
+                    @if (!isAuthed)
+                    {
+                        <a class="btn btn-success btn-lg" href="/Account/Register">Create Account</a>
+                        <a class="btn btn-outline-dark btn-lg" href="/Account/Login">Login</a>
+                    }
+                    else if (isAdopter)
+                    {
+                        <a class="btn btn-success btn-lg" href="/AdoptionRequests">My Requests</a>
+                    }
+                    else if (isShelter)
+                    {
+                        <a class="btn btn-success btn-lg" href="/Pets">Manage Pets</a>
+                        <a class="btn btn-outline-dark btn-lg" href="/AdoptionRequests/Manage">Review Requests</a>
+                    }
+                </div>
+
+                <div class="row mt-4 small text-muted">
+                    <div class="col-md-4"><strong>Step 1:</strong> Browse available pets</div>
+                    <div class="col-md-4"><strong>Step 2:</strong> Submit adoption request</div>
+                    <div class="col-md-4"><strong>Step 3:</strong> Shelter reviews the request</div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1200&auto=format&fit=crop"
+                         class="card-img-top" alt="Adopted dog" />
+                    <div class="card-body">
+                        <h5 class="card-title mb-1">Clean workflow for shelters and adopters</h5>
+                        <p class="card-text text-muted mb-0">
+                            Built with authentication, role-based authorization, adoption state management, and external breed data integration.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-5" />
+
+        <div class="d-flex align-items-center mb-3">
+            <h3 class="me-auto mb-0">Featured Pets</h3>
+            <a class="btn btn-sm btn-outline-primary" href="/Home/Index">View all</a>
+        </div>
+
+        @if (!(Model?.Any() ?? false))
+        {
+            <div class="alert alert-info">No pets to show yet.</div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                @foreach (var p in Model)
+                {
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <img class="card-img-top"
+                                 src="@(p.ImageUrl ?? ("https://placehold.co/600x400?text=" + Uri.EscapeDataString(p.Name)))"
+                                 alt="@p.Name" />
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    @p.Name <small class="text-muted">(@p.Species)</small>
+                                </h5>
+                                <p class="card-text small text-truncate" style="-webkit-line-clamp:3; display:-webkit-box; -webkit-box-orient:vertical;">
+                                    @(!string.IsNullOrWhiteSpace(p.Description) ? p.Description : "No description provided.")
+                                </p>
+                                <span class="badge bg-@(
+                                      p.Status == PetStatus.Available ? "success" :
+                                      p.Status == PetStatus.Reserved ? "warning" :
+                                      p.Status == PetStatus.Adopted ? "secondary" : "dark")">
+                            @p.Status
+                        </span>
+                    </div>
+                    <div class="card-footer d-flex gap-2">
+                        <a class="btn btn-sm btn-outline-primary" href="/Pets/Details/@p.Id">Details</a>
+                        @if (p.Status == PetStatus.Available && isAdopter)
+                                {
+                                    <a class="btn btn-sm btn-success" href="/AdoptionRequests/Create?petId=@p.Id">Adopt</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="text-center mt-5">
+            <a class="btn btn-outline-secondary" href="/Home/Breeds">Browse Dog Breeds</a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+    </script>
+}
+
+<style>
+    .bg-gradient {
+        background: linear-gradient(135deg, #eefcf4 0%, #e9f3ff 100%);
+        border-radius: 1rem;
+    }
+</style>

@@ -1,0 +1,17 @@
+﻿@model PetAdoption.Web.Models.Adopters.AdopterFormVm
+@{
+    ViewData["Title"] = "Edit Adopter";
+}
+<h3 class="mb-3">Edit Adopter</h3>
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <partial name="_AdopterForm" for="@Model" />
+    <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

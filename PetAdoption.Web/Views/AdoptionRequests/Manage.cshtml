@@ -1,0 +1,38 @@
+﻿@model IReadOnlyList<PetAdoption.Application.DTOs.AdoptionRequestDto>
+<h3>Requests for My Shelter</h3>
+@if (TempData["ok"] != null)
+{
+    <div class="alert alert-success">@TempData["ok"]</div>
+}
+<table class="table">
+    <thead><tr><th>Pet</th><th>Adopter</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.PetName</td>
+                <td>@r.AdopterName</td>
+                <td>@r.Status</td>
+                <td>@r.CreatedAt.ToLocalTime()</td>
+                <td class="d-flex gap-2">
+                    @if (r.Status == PetAdoption.Domain.Enums.AdoptionRequestStatus.Pending)
+                    {
+                        <form method="post" action="/AdoptionRequests/Decide">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@r.Id" />
+                            <input type="hidden" name="status" value="Approved" />
+                            <button class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                        <form method="post" action="/AdoptionRequests/Decide">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@r.Id" />
+                            <input type="hidden" name="status" value="Rejected" />
+                            <button class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
