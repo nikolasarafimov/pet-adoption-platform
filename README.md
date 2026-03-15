@@ -77,19 +77,14 @@ Contains:
 
 ## Demo Accounts
 
-The application includes seeded demo users for testing.
+The application supports seeded demo roles for local development:
 
-### Admin
-- **Email:** `admin@pets.com`
-- **Password:** `Admin#12345`
+- Admin
+- Shelter
+- Adopter
 
-### Shelter
-- **Email:** `shelter@pets.com`
-- **Password:** `Shelter#123`
-
-### Adopter
-- **Email:** `adopter@pets.com`
-- **Password:** `Adopter#123`
+For security reasons, demo passwords are not published in the repository.
+Configure local credentials before running the project.
 
 ---
 
