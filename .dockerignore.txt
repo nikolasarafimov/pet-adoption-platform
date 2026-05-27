@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+.vs/
+.git/
+.gitignore
+
+*.user
+*.suo
+*.db
+*.sqlite
+*.sqlite3
+
+Dockerfile
+.dockerignore
