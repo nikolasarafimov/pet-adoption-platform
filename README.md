@@ -1,6 +1,7 @@
 # Pet Adoption Platform
 
 [![CI](https://github.com/nikolasarafimov/pet-adoption-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasarafimov/pet-adoption-platform/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7)](https://pet-adoption-platform-nuvx.onrender.com/)
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-MVC-512BD4)
 ![Entity Framework Core](https://img.shields.io/badge/Entity%20Framework%20Core-8.0-512BD4)
@@ -8,7 +9,15 @@
 
 A modern **ASP.NET Core MVC pet adoption platform** for connecting adopters with animal shelters and managing the complete adoption workflow.
 
-Built with **C#**, **.NET 8**, **ASP.NET Core MVC**, **Entity Framework Core**, **ASP.NET Core Identity**, **SQLite**, and **Docker**, the application follows a layered **Onion Architecture** and includes role-based authorization, automated business workflows, external API integration, responsive UI, automated tests, and continuous integration.
+Built with **C#**, **.NET 8**, **ASP.NET Core MVC**, **Entity Framework Core**, **ASP.NET Core Identity**, **SQLite**, and **Docker**, the application follows a layered **Onion Architecture** and includes role-based authorization, automated adoption workflows, external API integration, responsive UI, automated tests, continuous integration, and a public cloud deployment.
+
+## Live Demo
+
+The application is publicly deployed on Render:
+
+**[Open Pet Adoption Platform](https://pet-adoption-platform-nuvx.onrender.com/)**
+
+> The hosted application may require a short startup period if the Render service has been idle.
 
 ---
 
@@ -18,7 +27,7 @@ Pet Adoption Platform provides dedicated workflows for three types of users:
 
 - **Adopters** can browse pets, submit adoption requests, and track their status.
 - **Shelters** can manage their own pets and review adoption requests.
-- **Administrators** can manage platform-wide shelters, adopters, pets, and adoption data.
+- **Administrators** can manage shelters, adopters, pets, and adoption data across the platform.
 
 The system also integrates with **The Dog API** to provide a searchable dog breed explorer with breed images and characteristics.
 
@@ -50,7 +59,7 @@ Security and authorization features include:
 - Protected adopter-specific request management
 - Production-safe exception handling
 
-Shelter users cannot modify pets or adoption requests belonging to another shelter, while adopters cannot cancel requests belonging to another adopter.
+Shelter users cannot manage pets or adoption requests belonging to another shelter, while adopters cannot cancel requests belonging to another adopter.
 
 ---
 
@@ -69,15 +78,13 @@ Shelters and administrators can manage pet profiles containing:
 
 New pets are created with the `Available` status.
 
-Shelter accounts are restricted to managing pets assigned to their own shelter.
-
-Administrators can manage pets across the platform.
+Shelter accounts are restricted to managing pets assigned to their own shelter, while administrators can manage pets across the platform.
 
 ---
 
 ### Adoption Workflow
 
-The adoption workflow is handled through application services and automatic pet-status transitions.
+The adoption workflow is implemented in the application service layer and automatically manages request and pet state transitions.
 
 ```text
 Available
@@ -129,7 +136,7 @@ Shelter profiles include:
 
 ### Adopter Administration
 
-Administrators can manage adopter profiles including:
+Administrators can manage adopter profiles containing:
 
 - Full name
 - Email
@@ -141,41 +148,39 @@ Administrators can manage adopter profiles including:
 
 ### Dog Breed Explorer
 
-The application integrates with **The Dog API**.
+The application integrates with **The Dog API** through a typed `HttpClient`.
 
 Users can browse and search dog breeds and view:
 
 - Breed name
-- Image
+- Breed image
 - Temperament
 - Expected lifespan
 - Average weight
-
-The integration is implemented through a typed `HttpClient`.
 
 ---
 
 ### Responsive User Interface
 
-The application includes a custom responsive UI built with:
+The application includes a custom responsive interface built with:
 
 - Razor Views
 - Bootstrap 5
 - Custom CSS
-- Responsive grids
+- Responsive card grids
 - Animated page transitions
 - Hover effects
-- Premium card layouts
+- Modern landing page
 - Responsive navigation
 - Mobile-friendly forms
 - Responsive administrative tables
 - Authentication layouts
-- Role-specific dashboards
+- Role-specific actions
 - Status badges
 - Empty states
 - Pet image previews
 
-The interface is designed to work across desktop, tablet, and mobile screen sizes.
+The interface is designed for desktop, tablet, and mobile screen sizes.
 
 ---
 
@@ -184,30 +189,36 @@ The interface is designed to work across desktop, tablet, and mobile screen size
 The solution follows a layered **Onion Architecture**.
 
 ```text
-                    ┌──────────────────────┐
-                    │   PetAdoption.Web    │
-                    │ Controllers / Views  │
-                    │ ViewModels / Startup │
-                    └──────────┬───────────┘
-                               │
-                    ┌──────────▼───────────┐
-                    │PetAdoption.Application│
-                    │ Services / DTOs      │
-                    │ Service Interfaces   │
-                    └──────────┬───────────┘
-                               │
-                    ┌──────────▼───────────┐
-                    │ PetAdoption.Domain   │
-                    │ Entities / Enums     │
-                    │ Abstractions         │
-                    └──────────────────────┘
+                   ┌─────────────────────────┐
+                   │    PetAdoption.Web      │
+                   │                         │
+                   │ Controllers / Views     │
+                   │ ViewModels / Startup    │
+                   └────────────┬────────────┘
+                                │
+                                ▼
+                   ┌─────────────────────────┐
+                   │ PetAdoption.Application │
+                   │                         │
+                   │ Services / DTOs         │
+                   │ Service Interfaces      │
+                   └────────────┬────────────┘
+                                │
+                                ▼
+                   ┌─────────────────────────┐
+                   │   PetAdoption.Domain    │
+                   │                         │
+                   │ Entities / Enums        │
+                   │ Abstractions            │
+                   └─────────────────────────┘
 
-                    ┌──────────────────────┐
-                    │PetAdoption.Infrastructure│
-                    │ EF Core / Identity   │
-                    │ Repositories / APIs  │
-                    │ Migrations / Seeding │
-                    └──────────────────────┘
+                   ┌─────────────────────────┐
+                   │PetAdoption.Infrastructure│
+                   │                         │
+                   │ EF Core / Identity      │
+                   │ Repositories / APIs     │
+                   │ Migrations / Seeding    │
+                   └─────────────────────────┘
 ```
 
 ### `PetAdoption.Domain`
@@ -218,7 +229,7 @@ Contains the core domain model:
 - Enums
 - Repository abstraction
 
-The domain layer contains the central business entities without presentation concerns.
+The domain layer contains the central business entities without presentation or infrastructure concerns.
 
 ### `PetAdoption.Application`
 
@@ -238,7 +249,7 @@ Contains infrastructure implementations:
 - SQLite persistence
 - ASP.NET Core Identity persistence
 - `AppDbContext`
-- Generic repository
+- Generic repository implementation
 - Database migrations
 - Database initialization
 - Demo-data seeding
@@ -261,7 +272,7 @@ Contains the presentation layer:
 
 Contains automated unit tests for application business logic.
 
-The tests cover important scenarios such as:
+The tests cover scenarios including:
 
 - Valid adoption submission
 - Invalid adoption submission
@@ -293,7 +304,8 @@ The tests cover important scenarios such as:
 | External API | The Dog API |
 | Unit Testing | xUnit, Moq |
 | Containerization | Docker |
-| CI | GitHub Actions |
+| Continuous Integration | GitHub Actions |
+| Deployment | Render |
 | Architecture | Onion Architecture |
 | Source Control | Git / GitHub |
 
@@ -371,7 +383,7 @@ cd pet-adoption-platform
 
 ### 2. Restore Local .NET Tools
 
-The repository includes a local tool manifest with the required Entity Framework CLI version.
+The repository includes a local .NET tool manifest with the required Entity Framework CLI version.
 
 ```bash
 dotnet tool restore
@@ -383,7 +395,7 @@ The project uses:
 dotnet-ef 8.0.19
 ```
 
-This keeps the EF CLI version aligned with the Entity Framework packages used by the application.
+This keeps the EF CLI version aligned with the Entity Framework Core packages used by the application.
 
 ### 3. Restore Dependencies
 
@@ -399,9 +411,9 @@ dotnet build PetAdoptionPlatform.sln -c Release
 
 ### 5. Configure The Dog API
 
-The API key should not be committed to source control.
+The Dog API key should not be committed to source control.
 
-The project is configured to support .NET User Secrets.
+The project supports .NET User Secrets for local development.
 
 ```bash
 dotnet user-secrets set \
@@ -410,7 +422,7 @@ dotnet user-secrets set \
   "YOUR_DOG_API_KEY"
 ```
 
-The application can run without an API key, although API rate limits may differ.
+The application can start without an API key, although API rate limits may differ.
 
 ### 6. Run the Application
 
@@ -421,7 +433,7 @@ dotnet run --project PetAdoption.Web
 At startup, the application:
 
 1. Connects to SQLite
-2. Checks for pending Entity Framework migrations
+2. Checks for pending Entity Framework Core migrations
 3. Applies pending migrations automatically
 4. Seeds development demo data when running in Development
 
@@ -509,7 +521,7 @@ dotnet tool run dotnet-ef migrations list \
   --startup-project PetAdoption.Web
 ```
 
-Check whether the model has unapplied migration changes:
+Check whether the model contains changes that require a new migration:
 
 ```bash
 dotnet tool run dotnet-ef migrations has-pending-model-changes \
@@ -517,7 +529,7 @@ dotnet tool run dotnet-ef migrations has-pending-model-changes \
   --startup-project PetAdoption.Web
 ```
 
-The application automatically applies pending migrations when it starts.
+The application automatically applies pending migrations during startup.
 
 ---
 
@@ -602,12 +614,14 @@ Workflow configuration:
 .github/workflows/ci.yml
 ```
 
-This ensures that changes cannot silently break:
+The pipeline verifies that changes do not break:
 
 - Dependency restoration
 - Compilation
 - Application tests
-- Docker image creation
+- Production Docker image creation
+
+Current workflow status is displayed by the CI badge at the top of this README.
 
 ---
 
@@ -671,33 +685,31 @@ docker run --rm \
 
 ## Production Deployment
 
-The Docker image is designed for deployment to a container hosting platform such as **Render**.
+The application is deployed publicly on **Render** using its production Docker image.
 
-Inside the production container, the SQLite database is stored at:
+### Live Application
+
+**[https://pet-adoption-platform-nuvx.onrender.com/](https://pet-adoption-platform-nuvx.onrender.com/)**
+
+The container stores its SQLite database at:
 
 ```text
 /app/data/petadoption.db
 ```
 
-Production hosting must preserve `/app/data` if SQLite data should survive restarts and redeployments.
-
-### Render
-
-For a Render Docker Web Service, configure a persistent disk mounted at:
+For production environments where SQLite data must survive container recreation or redeployment, persistent storage should be mounted at:
 
 ```text
 /app/data
 ```
 
-Without persistent storage, a container's local SQLite database may be lost when the service is recreated or redeployed.
+The application automatically binds to the hosting platform's `PORT` environment variable when one is supplied.
 
 Recommended production environment variable:
 
 ```text
 DogApi__ApiKey=<secret>
 ```
-
-The container automatically binds to the hosting platform's `PORT` value when available.
 
 ---
 
@@ -724,7 +736,7 @@ Outside Development, all required seed credentials must be explicitly configured
 
 After the required initial accounts have been created, production demo seeding can be disabled again.
 
-Never use the local development passwords in production.
+Never reuse the local development passwords in production.
 
 ---
 
@@ -737,7 +749,7 @@ SQLite is well suited to:
 - Portfolio deployments
 - Small single-instance applications
 
-Because SQLite stores data in a local file, the production filesystem must preserve that file.
+Because SQLite stores its database in a local file, production hosting must preserve that file if persistent application data is required.
 
 A persistent SQLite deployment is intended for a **single application instance**.
 
@@ -750,13 +762,13 @@ For a future system requiring:
 
 the persistence layer should be migrated to a server-based database such as **PostgreSQL**.
 
-The application's layered architecture keeps that future migration reasonably isolated from the core domain and application logic.
+The layered architecture keeps that future database migration largely isolated from the domain and application layers.
 
 ---
 
 ## Security
 
-The project implements multiple security measures:
+The project implements multiple application-security measures:
 
 - ASP.NET Core Identity authentication
 - Role-based authorization
@@ -779,7 +791,7 @@ Authentication and authorization decisions are enforced server-side and are not 
 
 ## Development Validation
 
-Before committing changes, restore tools and dependencies:
+Restore tools and dependencies:
 
 ```bash
 dotnet tool restore
@@ -794,7 +806,7 @@ dotnet build PetAdoptionPlatform.sln \
   --no-restore
 ```
 
-Run automated tests:
+Run the automated test suite:
 
 ```bash
 dotnet test PetAdoptionPlatform.sln \
@@ -814,7 +826,7 @@ Check Git changes for whitespace errors:
 git diff --check
 ```
 
-A clean final validation should therefore pass:
+A clean validation should pass:
 
 ```text
 Restore       ✓
@@ -826,6 +838,27 @@ Diff Check    ✓
 
 ---
 
+## Release
+
+The first stable portfolio release is:
+
+**[Pet Adoption Platform v1.0.0](https://github.com/nikolasarafimov/pet-adoption-platform/releases/tag/v1.0.0)**
+
+The release includes:
+
+- Layered Onion Architecture
+- Role-based authentication and authorization
+- Complete adoption workflow
+- Responsive UI
+- External Dog API integration
+- Application service unit tests
+- Docker support
+- GitHub Actions CI
+- Render deployment
+- Reproducible Entity Framework Core tooling
+
+---
+
 ## Future Improvements
 
 Possible future extensions include:
@@ -834,13 +867,13 @@ Possible future extensions include:
 - Email verification
 - Password reset workflow
 - Shelter approval workflow
-- Image upload and cloud storage
+- Image uploads with cloud storage
 - Adoption request notifications
 - Pagination for administrative listings
 - Richer adopter profiles
 - Advanced pet filtering
-- Integration tests for MVC endpoints
-- Deployment automation
+- MVC integration tests
+- Automated deployment pipeline
 
 ---
 
@@ -849,3 +882,12 @@ Possible future extensions include:
 **Nikola Sarafimov**
 
 GitHub: [@nikolasarafimov](https://github.com/nikolasarafimov)
+
+---
+
+## Links
+
+- **Live Application:** [pet-adoption-platform-nuvx.onrender.com](https://pet-adoption-platform-nuvx.onrender.com/)
+- **Source Code:** [github.com/nikolasarafimov/pet-adoption-platform](https://github.com/nikolasarafimov/pet-adoption-platform)
+- **v1.0.0 Release:** [Pet Adoption Platform v1.0.0](https://github.com/nikolasarafimov/pet-adoption-platform/releases/tag/v1.0.0)
+- **CI Workflow:** [GitHub Actions](https://github.com/nikolasarafimov/pet-adoption-platform/actions)
