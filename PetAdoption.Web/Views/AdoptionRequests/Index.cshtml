@@ -1,47 +1,187 @@
-﻿@model IReadOnlyList<PetAdoption.Application.DTOs.AdoptionRequestDto>
+﻿@using PetAdoption.Domain.Enums
+@model IReadOnlyList<PetAdoption.Application.DTOs.AdoptionRequestDto>
 
-<h3>My Adoption Requests</h3>
+@{
+    ViewData["Title"] = "My Adoption Requests";
+
+    var pendingCount =
+        Model.Count(r =>
+            r.Status == AdoptionRequestStatus.Pending
+        );
+
+    var approvedCount =
+        Model.Count(r =>
+            r.Status == AdoptionRequestStatus.Approved
+        );
+}
+
+<section class="mb-4">
+    <div class="text-primary fw-semibold text-uppercase small mb-2">
+        Adoption Dashboard
+    </div>
+
+    <h1 class="section-title mb-2">
+        My Adoption Requests
+    </h1>
+
+    <p class="section-subtitle mb-0">
+        Follow the progress of every adoption request you have submitted.
+    </p>
+</section>
 
 @if (TempData["ok"] != null)
 {
-    <div class="alert alert-success">@TempData["ok"]</div>
-}
-@if (TempData["err"] != null)
-{
-    <div class="alert alert-danger">@TempData["err"]</div>
+    <div class="alert alert-success">
+        @TempData["ok"]
+    </div>
 }
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Pet</th>
-            <th>Status</th>
-            <th>Submitted</th>
-            <th>Decision</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var r in Model)
+@if (TempData["err"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["err"]
+    </div>
+}
+
+<div class="row g-3 mb-5">
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <div class="small text-muted mb-2">
+                Total Requests
+            </div>
+
+            <div class="display-6 fw-bold">
+                @Model.Count
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <div class="small text-muted mb-2">
+                Pending
+            </div>
+
+            <div class="display-6 fw-bold text-warning">
+                @pendingCount
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <div class="small text-muted mb-2">
+                Approved
+            </div>
+
+            <div class="display-6 fw-bold text-success">
+                @approvedCount
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <div class="display-5 mb-3">
+            📭
+        </div>
+
+        <h4>No adoption requests yet</h4>
+
+        <p class="mb-4">
+            Browse available pets and submit your first adoption request.
+        </p>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-primary">
+            Browse Pets
+        </a>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var request in Model)
         {
-            <tr>
-                <td>@r.PetName</td>
-                <td>@r.Status</td>
-                <td>@r.CreatedAt.ToLocalTime()</td>
-                <td>@(r.DecisionAt?.ToLocalTime().ToString() ?? "-")</td>
-                <td class="text-end">
-                    @if (r.Status == PetAdoption.Domain.Enums.AdoptionRequestStatus.Pending)
-                    {
-                        <form method="post" asp-action="Cancel" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@r.Id" />
-                            <button class="btn btn-sm btn-outline-danger" type="submit">
-                                Cancel
-                            </button>
-                        </form>
-                    }
-                </td>
-            </tr>
+            var badgeClass =
+            request.Status switch
+            {
+                AdoptionRequestStatus.Pending => "warning text-dark",
+                AdoptionRequestStatus.Approved => "success",
+                AdoptionRequestStatus.Rejected => "danger",
+                AdoptionRequestStatus.Cancelled => "secondary",
+                _ => "dark"
+            };
+
+            <div class="col-12">
+                <div class="card p-4">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                                <h4 class="mb-0">
+                                    @request.PetName
+                                </h4>
+
+                                <span class="badge bg-@badgeClass">
+                                    @request.Status
+                                </span>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(request.Message))
+                            {
+                                <div class="bg-light rounded-4 p-3 mb-3">
+                                    <div class="small text-muted mb-1">
+                                        Your message
+                                    </div>
+
+                                    <div>
+                                        @request.Message
+                                    </div>
+                                </div>
+                            }
+
+                        <div class="d-flex flex-wrap gap-4 small text-muted">
+                            <div>
+                                <strong>Submitted:</strong>
+                                @request.CreatedAt.ToLocalTime().ToString("g")
+                            </div>
+
+                            <div>
+                                <strong>Decision:</strong>
+
+                                @(request.DecisionAt.HasValue
+                                                            ? request.DecisionAt.Value
+                                                            .ToLocalTime()
+                                                            .ToString("g")
+                                                            : "Pending")
+                        </div>
+                    </div>
+                </div>
+
+                @if (request.Status == AdoptionRequestStatus.Pending)
+                        {
+                            <div class="d-flex align-items-center">
+                                <form asp-controller="AdoptionRequests"
+                                      asp-action="Cancel"
+                                      method="post">
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@request.Id" />
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger">
+                                        Cancel Request
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+}

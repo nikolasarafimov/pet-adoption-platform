@@ -1,68 +1,298 @@
 ﻿@model IReadOnlyList<PetAdoption.Application.DTOs.BreedDto>
+
 @{
     ViewData["Title"] = "Dog Breeds";
+
     int page = ViewBag.Page ?? 1;
     int pageSize = ViewBag.PageSize ?? 12;
     int total = ViewBag.Total ?? 0;
     int totalPages = ViewBag.TotalPages ?? 1;
-    string q = ViewBag.Query as string ?? "";
-    string BaseUrl(string p, int ps) => Url.Action("Breeds", "Home", new { q, page = p, pageSize = ps })!;
+
+    string query =
+        ViewBag.Query as string
+        ?? string.Empty;
+
+    string BuildUrl(int targetPage)
+    {
+        return Url.Action(
+            "Index",
+            "Breeds",
+            new
+            {
+                q = query,
+                page = targetPage,
+                pageSize
+            }
+        )!;
+    }
 }
 
-<h2 class="mb-3">Dog Breeds</h2>
+<section class="hero-panel p-4 p-md-5 mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <div class="text-primary fw-semibold text-uppercase small mb-2">
+                Breed Explorer
+            </div>
 
-<form method="get" class="mb-3 d-flex gap-2">
-    <input type="text" name="q" value="@q" class="form-control" placeholder="Search breeds..." />
-    <select name="pageSize" class="form-select" onchange="this.form.submit()">
-        @foreach (var size in new[] { 6, 12, 18, 24, 36 })
+            <h1 class="section-title mb-3">
+                Discover Dog Breeds
+            </h1>
+
+            <p class="section-subtitle mb-0">
+                Explore breed characteristics, temperament,
+                lifespan and average weight through live data
+                provided by The Dog API.
+            </p>
+        </div>
+
+        <div class="col-lg-5 text-lg-end">
+            <div class="d-inline-flex align-items-center gap-3 bg-white rounded-4 shadow-sm px-4 py-3">
+                <div class="display-6">🐶</div>
+
+                <div class="text-start">
+                    <div class="fw-bold fs-5">
+                        @total
+                    </div>
+
+                    <div class="small text-muted">
+                        breeds found
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card p-3 p-md-4 mb-5">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-7">
+            <label for="q" class="form-label">
+                Search breeds
+            </label>
+
+            <input id="q"
+                   type="text"
+                   name="q"
+                   value="@query"
+                   class="form-control"
+                   placeholder="Try Labrador, Husky, Poodle..." />
+        </div>
+
+        <div class="col-md-3">
+            <label for="pageSize" class="form-label">
+                Results per page
+            </label>
+
+            <select id="pageSize"
+                    name="pageSize"
+                    class="form-select"
+                    onchange="this.form.submit()">
+
+                @foreach (var size in new[] { 6, 12, 18, 24, 36 })
+                {
+                    if (pageSize == size)
+                    {
+                        <option value="@size" selected>
+                            @size
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@size">
+                            @size
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2 d-grid">
+            <button type="submit"
+                    class="btn btn-primary">
+                Search
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(query))
         {
-            <option value="@size" selected="@(pageSize == size)">@size / page</option>
+            <div class="col-12">
+                <a asp-controller="Breeds"
+                   asp-action="Index"
+                   class="btn btn-sm btn-outline-secondary">
+                    Clear Search
+                </a>
+            </div>
         }
-    </select>
-    <button class="btn btn-primary">Search</button>
-</form>
+    </form>
+</section>
 
 @if (total == 0)
 {
-    <div class="alert alert-info">No breeds found.</div>
+    <div class="empty-state">
+        <div class="display-5 mb-3">🐕</div>
+
+        <h4>No breeds found</h4>
+
+        <p class="mb-3">
+            Try another breed name or clear the current search.
+        </p>
+
+        <a asp-controller="Breeds"
+           asp-action="Index"
+           class="btn btn-primary">
+            Show All Breeds
+        </a>
+    </div>
 }
 else
 {
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        @foreach (var b in Model)
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        @foreach (var breed in Model)
         {
+            var imageUrl =
+            string.IsNullOrWhiteSpace(breed.ImageUrl)
+            ? "https://placehold.co/800x600?text="
+            + Uri.EscapeDataString(breed.Name)
+            : breed.ImageUrl;
+
+            var lifeSpan =
+            breed.LifeSpanMinYears is null
+            && breed.LifeSpanMaxYears is null
+            ? "Unknown"
+            : $"{breed.LifeSpanMinYears}-{breed.LifeSpanMaxYears} years";
+
+            var weight =
+            breed.WeightKgAverage.HasValue
+            ? $"{breed.WeightKgAverage.Value:0.0} kg"
+            : "Unknown";
+
             <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <img class="card-img-top" src="@(b.ImageUrl ?? "https://placehold.co/600x400?text=" + Uri.EscapeDataString(b.Name))" alt="@b.Name" />
-                    <div class="card-body">
-                        <h5 class="card-title mb-1">@b.Name</h5>
-                        <p class="card-text small mb-1"><strong>Temperaments:</strong> @string.Join(", ", b.Temperaments ?? Array.Empty<string>())</p>
-                        <p class="card-text small mb-1"><strong>Lifespan:</strong> @((b.LifeSpanMinYears is null && b.LifeSpanMaxYears is null) ? "-" : $"{b.LifeSpanMinYears}-{b.LifeSpanMaxYears} yrs")</p>
-                        <p class="card-text small"><strong>Avg weight:</strong> @(b.WeightKgAverage?.ToString("0.0") ?? "-") kg</p>
+                <article class="card h-100">
+                    <div class="position-relative">
+                        <img src="@imageUrl"
+                             alt="@breed.Name"
+                             class="card-img-top"
+                             loading="lazy" />
+
+                        <div class="position-absolute top-0 start-0 m-3">
+                            <span class="badge bg-dark bg-opacity-75">
+                                Dog Breed
+                            </span>
+                        </div>
                     </div>
-                </div>
+
+                    <div class="card-body p-4">
+                        <h4 class="card-title mb-3">
+                            @breed.Name
+                        </h4>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <div class="bg-light rounded-4 p-3 h-100">
+                                    <div class="small text-muted mb-1">
+                                        Lifespan
+                                    </div>
+
+                                    <div class="fw-semibold">
+                                        @lifeSpan
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="bg-light rounded-4 p-3 h-100">
+                                    <div class="small text-muted mb-1">
+                                        Avg. weight
+                                    </div>
+
+                                    <div class="fw-semibold">
+                                        @weight
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="small text-muted mb-2">
+                                Temperament
+                            </div>
+
+                            @if (breed.Temperaments.Length == 0)
+                            {
+                                <span class="text-muted">
+                                    No temperament information available.
+                                </span>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var temperament in breed.Temperaments.Take(6))
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            @temperament
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </article>
             </div>
         }
     </div>
 
-    <!-- Pagination -->
-    <nav class="mt-4">
+    <nav class="mt-5"
+         aria-label="Breed pagination">
         <ul class="pagination justify-content-center">
             <li class="page-item @(page <= 1 ? "disabled" : "")">
-                <a class="page-link" href="@BaseUrl((page - 1).ToString(), pageSize)">Previous</a>
+                @if (page <= 1)
+                {
+                    <span class="page-link">
+                        ‹
+                    </span>
+                }
+                else
+                {
+                    <a class="page-link"
+                       href="@BuildUrl(page - 1)">
+                        ‹
+                    </a>
+                }
             </li>
 
-            @for (int i = Math.Max(1, page - 2); i <= Math.Min(totalPages, page + 2); i++)
+            @for (
+                    int i = Math.Max(1, page - 2);
+                    i <= Math.Min(totalPages, page + 2);
+                    i++
+                    )
             {
                 <li class="page-item @(i == page ? "active" : "")">
-                    <a class="page-link" href="@BaseUrl(i.ToString(), pageSize)">@i</a>
+                    <a class="page-link"
+                       href="@BuildUrl(i)">
+                        @i
+                    </a>
                 </li>
             }
 
             <li class="page-item @(page >= totalPages ? "disabled" : "")">
-                <a class="page-link" href="@BaseUrl((page + 1).ToString(), pageSize)">Next</a>
+                @if (page >= totalPages)
+                {
+                    <span class="page-link">
+                        ›
+                    </span>
+                }
+                else
+                {
+                    <a class="page-link"
+                       href="@BuildUrl(page + 1)">
+                        ›
+                    </a>
+                }
             </li>
         </ul>
-        <div class="text-center text-muted small">Showing page @(page) of @totalPages — @total total breeds.</div>
+
+        <div class="text-center text-muted small">
+            Page @(page) of @totalPages
+        </div>
     </nav>
 }

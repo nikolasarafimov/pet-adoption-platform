@@ -5,87 +5,324 @@
 
 @{
     ViewData["Title"] = "Add Pet";
-    var shelters = ViewBag.Shelters as IReadOnlyList<ShelterDto> ?? Array.Empty<ShelterDto>();
+
+    var shelters =
+        ViewBag.Shelters as IReadOnlyList<ShelterDto>
+        ?? Array.Empty<ShelterDto>();
+
+    var selectedShelter =
+        shelters.FirstOrDefault(s =>
+            s.Id == Model.ShelterId
+        );
 }
 
-<h3 class="mb-4">Add Pet</h3>
+<section class="mb-4">
+    <a asp-action="Index"
+       class="btn btn-sm btn-outline-secondary mb-4">
+        ← Back to Pets
+    </a>
 
-<form asp-action="Create" method="post" class="needs-validation" novalidate>
-    @Html.AntiForgeryToken()
+    <div class="text-primary fw-semibold text-uppercase small mb-2">
+        Pet Management
+    </div>
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <h1 class="section-title mb-2">
+        Add a New Pet
+    </h1>
 
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control" />
-            <span asp-validation-for="Name" class="text-danger"></span>
-        </div>
+    <p class="section-subtitle mb-0">
+        Create a new adoption profile with accurate details and a clear photo.
+    </p>
+</section>
 
-        <div class="col-md-6">
-            <label asp-for="Species" class="form-label"></label>
-            <select asp-for="Species" class="form-select"
-                    asp-items="Html.GetEnumSelectList<Species>()">
-            </select>
-            <span asp-validation-for="Species" class="text-danger"></span>
-        </div>
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card p-4 p-md-5">
+            <form asp-action="Create"
+                  method="post"
+                  novalidate>
 
-        <div class="col-md-6">
-            <label asp-for="Breed" class="form-label"></label>
-            <input asp-for="Breed" class="form-control" />
-            <span asp-validation-for="Breed" class="text-danger"></span>
-        </div>
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger mb-4">
+                </div>
 
-        <div class="col-md-6">
-            <label asp-for="AgeYears" class="form-label"></label>
-            <input asp-for="AgeYears" type="number" class="form-control" min="0" />
-            <span asp-validation-for="AgeYears" class="text-danger"></span>
-        </div>
+                <div class="mb-4">
+                    <h5 class="mb-1">
+                        Basic Information
+                    </h5>
 
-        <div class="col-12">
-            <label asp-for="Description" class="form-label"></label>
-            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
+                    <p class="small text-muted mb-0">
+                        Add the core details that adopters will see first.
+                    </p>
+                </div>
 
-        <div class="col-md-8">
-            <label asp-for="ImageUrl" class="form-label"></label>
-            <input asp-for="ImageUrl" class="form-control" />
-            <span asp-validation-for="ImageUrl" class="text-danger"></span>
-            <div class="form-text">Paste a public image URL.</div>
-        </div>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label asp-for="Name"
+                               class="form-label">
+                        </label>
 
-        <div class="col-md-4 d-flex align-items-end">
-            @if (!string.IsNullOrWhiteSpace(Model?.ImageUrl))
-            {
-                <img src="@Model.ImageUrl" alt="Preview" class="img-thumbnail ms-md-3" style="max-height:100px;" />
-            }
-        </div>
+                        <input asp-for="Name"
+                               class="form-control"
+                               placeholder="e.g. Buddy" />
 
-        <div class="col-md-6">
-            <label asp-for="ShelterId" class="form-label">Shelter</label>
-            <select asp-for="ShelterId"
-                    class="form-select"
-                    asp-items="@(new SelectList(shelters, nameof(ShelterDto.Id), nameof(ShelterDto.Name), Model?.ShelterId))">
-            </select>
-            <span asp-validation-for="ShelterId" class="text-danger"></span>
-        </div>
+                        <span asp-validation-for="Name"
+                              class="text-danger">
+                        </span>
+                    </div>
 
-        <div class="col-md-6">
-            <label asp-for="Status" class="form-label"></label>
-            <select asp-for="Status" class="form-select"
-                    asp-items="Html.GetEnumSelectList<PetStatus>()">
-            </select>
-            <span asp-validation-for="Status" class="text-danger"></span>
+                    <div class="col-md-6">
+                        <label asp-for="Species"
+                               class="form-label">
+                        </label>
+
+                        <select asp-for="Species"
+                                class="form-select"
+                                asp-items="Html.GetEnumSelectList<Species>()">
+                        </select>
+
+                        <span asp-validation-for="Species"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Breed"
+                               class="form-label">
+                        </label>
+
+                        <input asp-for="Breed"
+                               class="form-control"
+                               placeholder="e.g. Labrador Retriever" />
+
+                        <span asp-validation-for="Breed"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="AgeYears"
+                               class="form-label">
+                        </label>
+
+                        <div class="input-group">
+                            <input asp-for="AgeYears"
+                                   type="number"
+                                   class="form-control"
+                                   min="0"
+                                   max="200" />
+
+                            <span class="input-group-text">
+                                years
+                            </span>
+                        </div>
+
+                        <span asp-validation-for="AgeYears"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Description"
+                               class="form-label">
+                        </label>
+
+                        <textarea asp-for="Description"
+                                  class="form-control"
+                                  rows="5"
+                                  placeholder="Describe personality, behavior, training and anything adopters should know.">
+                        </textarea>
+
+                        <span asp-validation-for="Description"
+                              class="text-danger">
+                        </span>
+                    </div>
+                </div>
+
+                <hr class="my-5" />
+
+                <div class="mb-4">
+                    <h5 class="mb-1">
+                        Photo & Shelter
+                    </h5>
+
+                    <p class="small text-muted mb-0">
+                        Add a public image and confirm where the pet is located.
+                    </p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label asp-for="ImageUrl"
+                               class="form-label">
+                        </label>
+
+                        <input asp-for="ImageUrl"
+                               id="imageUrl"
+                               type="url"
+                               class="form-control"
+                               placeholder="https://example.com/pet.jpg" />
+
+                        <span asp-validation-for="ImageUrl"
+                              class="text-danger">
+                        </span>
+
+                        <div class="form-text">
+                            Use a publicly accessible image URL.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ShelterId"
+                               class="form-label">
+                            Shelter
+                        </label>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <select asp-for="ShelterId"
+                                    class="form-select"
+                                    asp-items="@(new SelectList(
+                                                                            shelters,
+                                                                            nameof(ShelterDto.Id),
+                                                                            nameof(ShelterDto.Name),
+                                                                            Model.ShelterId
+                                                                        ))">
+                            <option value="">
+                                Select a shelter
+                            </option>
+                        </select>
+                                                }
+                        else
+                        {
+                            <input type="hidden"
+                                   asp-for="ShelterId" />
+
+                            <input type="text"
+                                   class="form-control"
+                                   value="@(selectedShelter?.Name ?? "Current shelter")"
+                                   readonly />
+                        }
+
+                        <span asp-validation-for="ShelterId"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Initial Status
+                        </label>
+
+                        <div class="form-control d-flex align-items-center gap-2 bg-light">
+                            <span class="badge bg-success">
+                                Available
+                            </span>
+
+                            <span class="small text-muted">
+                                New pets start as available.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row gap-2 mt-5">
+                    <button type="submit"
+                            class="btn btn-success px-4">
+                        Create Pet
+                    </button>
+
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary px-4">
+                        Cancel
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="mt-4 d-flex gap-2">
-        <button type="submit" class="btn btn-success">Create</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    <div class="col-xl-4">
+        <div class="card p-4 sticky-xl-top"
+             style="top: 110px;">
+            <div class="text-primary fw-semibold text-uppercase small mb-2">
+                Preview
+            </div>
+
+            <h5 class="mb-3">
+                Pet Card Preview
+            </h5>
+
+            <div class="rounded-4 overflow-hidden bg-light mb-3">
+                <img id="imagePreview"
+                     src="https://placehold.co/800x600?text=Pet+Preview"
+                     alt="Pet preview"
+                     class="w-100 object-fit-cover"
+                     style="height: 230px;" />
+            </div>
+
+            <div class="small text-muted">
+                A clear, well-lit photo makes an adoption profile much more engaging.
+            </div>
+        </div>
+
+        <div class="card p-4 mt-4">
+            <div class="fs-3 mb-3">
+                💡
+            </div>
+
+            <h5>
+                Profile Tips
+            </h5>
+
+            <ul class="small text-muted mb-0 ps-3">
+                <li class="mb-2">
+                    Use the pet's real name.
+                </li>
+                <li class="mb-2">
+                    Describe temperament honestly.
+                </li>
+                <li class="mb-2">
+                    Mention training or special needs.
+                </li>
+                <li>
+                    Choose a clear and recent photo.
+                </li>
+            </ul>
+        </div>
     </div>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const imageUrl =
+            document.getElementById('imageUrl');
+
+        const imagePreview =
+            document.getElementById('imagePreview');
+
+        function updatePreview() {
+            const url = imageUrl.value.trim();
+
+            imagePreview.src =
+                url ||
+                'https://placehold.co/800x600?text=Pet+Preview';
+        }
+
+        imageUrl.addEventListener(
+            'input',
+            updatePreview
+        );
+
+        imagePreview.addEventListener(
+            'error',
+            function () {
+                imagePreview.src =
+                    'https://placehold.co/800x600?text=Invalid+Image';
+            }
+        );
+
+        updatePreview();
+    </script>
 }

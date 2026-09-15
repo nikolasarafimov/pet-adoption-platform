@@ -1,16 +1,53 @@
 ﻿@model PetAdoption.Web.Models.Adopters.AdopterFormVm
+
 @{
     ViewData["Title"] = "Add Adopter";
 }
-<h3 class="mb-3">Add Adopter</h3>
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
-    <partial name="_AdopterForm" for="@Model" />
-    <div class="mt-3 d-flex gap-2">
-        <button class="btn btn-success" type="submit">Create</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <section class="mb-4">
+            <a asp-action="Index"
+               class="btn btn-sm btn-outline-secondary mb-4">
+                ← Back to Adopters
+            </a>
+
+            <div class="text-primary fw-semibold text-uppercase small mb-2">
+                Administration
+            </div>
+
+            <h1 class="section-title mb-2">
+                Add Adopter
+            </h1>
+
+            <p class="section-subtitle mb-0">
+                Create an adopter profile manually.
+            </p>
+        </section>
+
+        <div class="card p-4 p-md-5">
+            <form asp-action="Create"
+                  method="post">
+
+                <partial name="_AdopterForm"
+                         for="@Model" />
+
+                <div class="d-flex flex-column flex-sm-row gap-2 mt-5">
+                    <button type="submit"
+                            class="btn btn-success px-4">
+                        Create Adopter
+                    </button>
+
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary px-4">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</form>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

@@ -2,12 +2,46 @@
     ViewData["Title"] = "Access Denied";
 }
 
-<div class="container mt-5 text-center">
-    <h1 class="text-danger">Access Denied</h1>
-    <p class="lead">You do not have permission to view this page.</p>
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card p-4 p-md-5 text-center">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mx-auto mb-4"
+                 style="width: 90px; height: 90px;">
+                <span class="display-6">
+                    🔒
+                </span>
+            </div>
 
-    <div class="mt-4">
-        <a asp-controller="Home" asp-action="Welcome" class="btn btn-primary">Return to Home</a>
-        <a asp-controller="Account" asp-action="Login" class="btn btn-secondary">Login with another account</a>
+            <div class="text-danger fw-semibold text-uppercase small mb-2">
+                Access Restricted
+            </div>
+
+            <h1 class="section-title mb-3">
+                You don't have permission to access this page
+            </h1>
+
+            <p class="section-subtitle mx-auto mb-4"
+               style="max-width: 560px;">
+                Your account does not have the required role or permissions
+                for this resource.
+            </p>
+
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                <a asp-controller="Home"
+                   asp-action="Welcome"
+                   class="btn btn-primary px-4">
+                    Return Home
+                </a>
+
+                @if (!(User.Identity?.IsAuthenticated ?? false))
+                {
+                    <a asp-controller="Account"
+                       asp-action="Login"
+                       class="btn btn-outline-secondary px-4">
+                        Login
+                    </a>
+                }
+            </div>
+        </div>
     </div>
 </div>

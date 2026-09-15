@@ -1,99 +1,215 @@
 ﻿@using PetAdoption.Domain.Enums
 @model PetAdoption.Web.Models.Pets.PetListVm
+
 @{
     ViewData["Title"] = "Pets";
 }
 
-<h2 class="mb-3">Pets</h2>
+<section class="mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+        <div>
+            <div class="text-primary fw-semibold text-uppercase small mb-2">
+                Pet Directory
+            </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <form method="get" class="row g-2 flex-grow-1 me-3">
-        <div class="col-md-4">
-            <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by name or breed" />
+            <h1 class="section-title mb-2">
+                Pets
+            </h1>
+
+            <p class="section-subtitle mb-0">
+                Browse available pets and manage shelter listings.
+            </p>
         </div>
-        <div class="col-md-3">
-            <select name="species" class="form-select">
+
+        @if (Model.IsAdmin || Model.IsShelter)
+        {
+            <a asp-action="Create"
+               class="btn btn-primary px-4">
+                <span class="me-1">＋</span>
+                Add Pet
+            </a>
+        }
+    </div>
+</section>
+
+<section class="card p-3 p-md-4 mb-5">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4">
+            <label asp-for="Search" class="form-label">
+                Search
+            </label>
+
+            <input asp-for="Search"
+                   class="form-control"
+                   placeholder="Search by name or breed..." />
+        </div>
+
+        <div class="col-md-4 col-lg-3">
+            <label asp-for="Species" class="form-label">
+                Species
+            </label>
+
+            <select asp-for="Species"
+                    class="form-select"
+                    asp-items="Html.GetEnumSelectList<Species>()">
                 <option value="">All species</option>
-                @foreach (var s in Enum.GetValues(typeof(Species)).Cast<Species>())
-                {
-                    <option value="@s" selected="@(Model.Species == s)">@s</option>
-                }
             </select>
         </div>
-        <div class="col-md-3">
-            <select name="status" class="form-select">
-                <option value="">All statuses</option>
-                @foreach (var s in Enum.GetValues(typeof(PetStatus)).Cast<PetStatus>())
-                {
-                    <option value="@s" selected="@(Model.Status == s)">@s</option>
-                }
-            </select>
-        </div>
-        <div class="col-md-2 d-grid">
-            <button class="btn btn-outline-primary">Filter</button>
-        </div>
-    </form>
 
-    @if (Model.IsAdmin || Model.IsShelter)
-    {
-        <a class="btn btn-primary" asp-action="Create">Add Pet</a>
-    }
-</div>
+        <div class="col-md-4 col-lg-3">
+            <label asp-for="Status" class="form-label">
+                Status
+            </label>
+
+            <select asp-for="Status"
+                    class="form-select"
+                    asp-items="Html.GetEnumSelectList<PetStatus>()">
+                <option value="">All statuses</option>
+            </select>
+        </div>
+
+        <div class="col-md-4 col-lg-2 d-grid">
+            <button type="submit"
+                    class="btn btn-primary">
+                Filter
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Search)
+                || Model.Species.HasValue
+                || Model.Status.HasValue)
+        {
+            <div class="col-12">
+                <a asp-action="Index"
+                   class="btn btn-sm btn-outline-secondary">
+                    Clear Filters
+                </a>
+            </div>
+        }
+    </form>
+</section>
 
 @if (!Model.Pets.Any())
 {
-    <div class="alert alert-info">No pets found.</div>
+    <div class="empty-state">
+        <div class="display-5 mb-3">🐾</div>
+
+        <h4>No pets found</h4>
+
+        <p class="mb-3">
+            Try changing your filters or search query.
+        </p>
+
+        <a asp-action="Index"
+           class="btn btn-primary">
+            Show All Pets
+        </a>
+    </div>
 }
 else
 {
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Species</th>
-                <th>Breed</th>
-                <th>Age</th>
-                <th>Status</th>
-                <th>Shelter</th>
-                <th style="width:260px;"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in Model.Pets)
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        @foreach (var pet in Model.Pets)
+        {
+            var imageUrl =
+            string.IsNullOrWhiteSpace(pet.ImageUrl)
+            ? "https://placehold.co/800x600?text="
+            + Uri.EscapeDataString(pet.Name)
+            : pet.ImageUrl;
+
+            var badgeClass =
+            pet.Status switch
             {
-                <tr>
-                    <td>@p.Name</td>
-                    <td>@p.Species</td>
-                    <td>@p.Breed</td>
-                    <td>@p.AgeYears</td>
-                    <td>
-                        <span class="badge bg-@(
-                              p.Status == PetStatus.Available ? "success" :
-                              p.Status == PetStatus.Reserved ? "warning" :
-                              p.Status == PetStatus.Adopted ? "secondary" : "dark")">
-                    @p.Status
-                </span>
-            </td>
-            <td>@p.ShelterName</td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@p.Id">View</a>
+                PetStatus.Available => "success",
+                PetStatus.Reserved => "warning text-dark",
+                PetStatus.Adopted => "secondary",
+                _ => "dark"
+            };
 
-                @if (Model.IsAdopter && p.Status == PetStatus.Available)
-                        {
-                            <a class="btn btn-sm btn-success"
-                               asp-controller="AdoptionRequests"
-                               asp-action="Create"
-                               asp-route-petId="@p.Id">Request</a>
-                        }
+            <div class="col">
+                <article class="card h-100">
+                    <div class="position-relative">
+                        <img src="@imageUrl"
+                             alt="@pet.Name"
+                             class="card-img-top"
+                             loading="lazy" />
 
-                        @if (Model.IsAdmin || (Model.IsShelter && Model.MyShelterId == p.ShelterId))
-                        {
-                            <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@p.Id">Edit</a>
-                            <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@p.Id">Delete</a>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        <span class="badge bg-@badgeClass position-absolute top-0 end-0 m-3 shadow-sm">
+                            @pet.Status
+                        </span>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <h4 class="mb-1">
+                                    @pet.Name
+                                </h4>
+
+                                <div class="small text-muted">
+                                    @pet.Species
+
+                                    @if (!string.IsNullOrWhiteSpace(pet.Breed))
+                                    {
+                                        <span>• @pet.Breed</span>
+                                    }
+                            </div>
+                        </div>
+
+                        <span class="badge bg-light text-dark">
+                            @pet.AgeYears yrs
+                        </span>
+                    </div>
+
+                    <p class="text-truncate-3 mb-3">
+                        @(string.IsNullOrWhiteSpace(pet.Description)
+                                            ? "No description provided."
+                                            : pet.Description)
+                </p>
+
+                        <div class="d-flex align-items-center gap-2 small text-muted mb-4">
+                            <span>🏠</span>
+                            <span>@pet.ShelterName</span>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <a asp-action="Details"
+                               asp-route-id="@pet.Id"
+                               class="btn btn-outline-secondary flex-grow-1">
+                                View
+                            </a>
+
+                    @if (Model.IsAdopter
+                                        && pet.Status == PetStatus.Available)
+                            {
+                                <a asp-controller="AdoptionRequests"
+                                   asp-action="Create"
+                                   asp-route-petId="@pet.Id"
+                                   class="btn btn-success">
+                                    Adopt
+                                </a>
+                            }
+
+                            @if (Model.IsAdmin
+                                                || (Model.IsShelter
+                                                && Model.MyShelterId == pet.ShelterId))
+                            {
+                                <a asp-action="Edit"
+                                   asp-route-id="@pet.Id"
+                                   class="btn btn-primary">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete"
+                                   asp-route-id="@pet.Id"
+                                   class="btn btn-outline-danger">
+                                    Delete
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
 }

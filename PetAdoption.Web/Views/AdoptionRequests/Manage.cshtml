@@ -1,38 +1,196 @@
-﻿@model IReadOnlyList<PetAdoption.Application.DTOs.AdoptionRequestDto>
-<h3>Requests for My Shelter</h3>
+﻿@using PetAdoption.Domain.Enums
+@model IReadOnlyList<PetAdoption.Application.DTOs.AdoptionRequestDto>
+
+@{
+    ViewData["Title"] = "Review Adoption Requests";
+
+    var pendingCount =
+        Model.Count(r =>
+            r.Status == AdoptionRequestStatus.Pending
+        );
+}
+
+<section class="mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+        <div>
+            <div class="text-primary fw-semibold text-uppercase small mb-2">
+                Shelter Workspace
+            </div>
+
+            <h1 class="section-title mb-2">
+                @(User.IsInRole("Admin")
+                                ? "Review Adoption Requests"
+                                : "Requests for My Shelter")
+            </h1>
+
+            <p class="section-subtitle mb-0">
+                Review adopter information and manage pending requests.
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                @pendingCount pending
+            </span>
+
+            <span class="badge bg-light text-dark fs-6 px-3 py-2 shadow-sm">
+                @Model.Count total
+            </span>
+        </div>
+    </div>
+</section>
+
 @if (TempData["ok"] != null)
 {
-    <div class="alert alert-success">@TempData["ok"]</div>
+    <div class="alert alert-success">
+        @TempData["ok"]
+    </div>
 }
-<table class="table">
-    <thead><tr><th>Pet</th><th>Adopter</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
-    <tbody>
-        @foreach (var r in Model)
-        {
-            <tr>
-                <td>@r.PetName</td>
-                <td>@r.AdopterName</td>
-                <td>@r.Status</td>
-                <td>@r.CreatedAt.ToLocalTime()</td>
-                <td class="d-flex gap-2">
-                    @if (r.Status == PetAdoption.Domain.Enums.AdoptionRequestStatus.Pending)
-                    {
-                        <form method="post" action="/AdoptionRequests/Decide">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@r.Id" />
-                            <input type="hidden" name="status" value="Approved" />
-                            <button class="btn btn-sm btn-success">Approve</button>
-                        </form>
-                        <form method="post" action="/AdoptionRequests/Decide">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@r.Id" />
-                            <input type="hidden" name="status" value="Rejected" />
-                            <button class="btn btn-sm btn-danger">Reject</button>
-                        </form>
 
-                    }
-                </td>
-            </tr>
+@if (TempData["err"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["err"]
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <div class="display-5 mb-3">
+            📋
+        </div>
+
+        <h4>No adoption requests</h4>
+
+        <p class="mb-0">
+            New requests will appear here when adopters submit them.
+        </p>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var request in Model)
+        {
+            var badgeClass =
+            request.Status switch
+            {
+                AdoptionRequestStatus.Pending => "warning text-dark",
+                AdoptionRequestStatus.Approved => "success",
+                AdoptionRequestStatus.Rejected => "danger",
+                AdoptionRequestStatus.Cancelled => "secondary",
+                _ => "dark"
+            };
+
+            <div class="col-12">
+                <div class="card p-4">
+                    <div class="row g-4 align-items-center">
+                        <div class="col-lg-3">
+                            <div class="small text-muted mb-1">
+                                Pet
+                            </div>
+
+                            <h4 class="mb-2">
+                                @request.PetName
+                            </h4>
+
+                            <span class="badge bg-@badgeClass">
+                                @request.Status
+                            </span>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="small text-muted mb-1">
+                                Adopter
+                            </div>
+
+                            <div class="fw-semibold">
+                                @request.AdopterName
+                            </div>
+
+                            <div class="small text-muted mt-2">
+                                Submitted
+                                @request.CreatedAt
+                                .ToLocalTime()
+                                .ToString("g")
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="small text-muted mb-1">
+                                Message
+                            </div>
+
+                            <div>
+                                @(string.IsNullOrWhiteSpace(request.Message)
+                                                        ? "No message was provided."
+                                                        : request.Message)
+                    </div>
+                </div>
+
+                        <div class="col-lg-2">
+                    @if (request.Status == AdoptionRequestStatus.Pending)
+                            {
+                                <div class="d-grid gap-2">
+                                    <form asp-controller="AdoptionRequests"
+                                          asp-action="Decide"
+                                          method="post">
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@request.Id" />
+
+                                        <input type="hidden"
+                                               name="status"
+                                               value="@AdoptionRequestStatus.Approved" />
+
+                                        <button type="submit"
+                                                class="btn btn-success w-100">
+                                            ✓ Approve
+                                        </button>
+                                    </form>
+
+                                    <form asp-controller="AdoptionRequests"
+                                          asp-action="Decide"
+                                          method="post">
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@request.Id" />
+
+                                        <input type="hidden"
+                                               name="status"
+                                               value="@AdoptionRequestStatus.Rejected" />
+
+                                        <button type="submit"
+                                                class="btn btn-outline-danger w-100">
+                                            Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="small text-muted text-lg-end">
+                                    @if (request.DecisionAt.HasValue)
+                                    {
+                                        <div>
+                                            Decision
+                                        </div>
+
+                                        <div class="fw-semibold">
+                                            @request.DecisionAt.Value
+                                            .ToLocalTime()
+                                            .ToString("g")
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+}

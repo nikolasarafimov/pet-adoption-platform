@@ -1,49 +1,129 @@
 ﻿@model IReadOnlyList<PetAdoption.Application.DTOs.ShelterDto>
+
 @{
     ViewData["Title"] = "Shelters";
 }
 
-<h3 class="mb-3">Shelters</h3>
+<section class="mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+        <div>
+            <div class="text-primary fw-semibold text-uppercase small mb-2">
+                Administration
+            </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        @if (TempData["Ok"] is string ok)
-        {
-            <div class="alert alert-success py-2 mb-0">@ok</div>
-        }
-        @if (TempData["Err"] is string err)
-        {
-            <div class="alert alert-danger py-2 mb-0">@err</div>
-        }
+            <h1 class="section-title mb-2">
+                Shelters
+            </h1>
+
+            <p class="section-subtitle mb-0">
+                Manage organizations participating in the adoption platform.
+            </p>
+        </div>
+
+        <a asp-action="Create"
+           class="btn btn-primary px-4">
+            ＋ Add Shelter
+        </a>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Add Shelter</a>
-</div>
+</section>
 
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Address</th>
-            <th>City</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th style="width:160px;"></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var s in Model)
-        {
-            <tr>
-                <td>@s.Name</td>
-                <td>@s.Address</td>
-                <td>@s.City</td>
-                <td>@s.Phone</td>
-                <td>@s.Email</td>
-                <td class="text-end">
-                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@s.Id" class="btn btn-sm btn-outline-danger">Delete</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <div class="display-5 mb-3">🏠</div>
+
+        <h4>No shelters yet</h4>
+
+        <p class="mb-4">
+            Add the first shelter to start managing pets.
+        </p>
+
+        <a asp-action="Create"
+           class="btn btn-primary">
+            Add Shelter
+        </a>
+    </div>
+}
+else
+{
+    <div class="card p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Shelter</th>
+                        <th>Location</th>
+                        <th>Contact</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var shelter in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 fs-5"
+                                         style="width: 46px; height: 46px;">
+                                        🏠
+                                    </div>
+
+                                    <div>
+                                        <div class="fw-bold">
+                                            @shelter.Name
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            Shelter #@shelter.Id
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="fw-semibold">
+                                    @shelter.City
+                                </div>
+
+                                <div class="small text-muted">
+                                    @shelter.Address
+                                </div>
+                            </td>
+
+                            <td>
+                                <div>
+                                    @(string.IsNullOrWhiteSpace(shelter.Email)
+                                                                ? "No email"
+                                                                : shelter.Email)
+                                                                            </div>
+
+                                <div class="small text-muted">
+                                    @(string.IsNullOrWhiteSpace(shelter.Phone)
+                                                                ? "No phone"
+                                                                : shelter.Phone)
+                        </div>
+                    </td>
+
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end flex-wrap gap-2">
+                                    <a asp-action="Edit"
+                                       asp-route-id="@shelter.Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="Delete"
+                                       asp-route-id="@shelter.Id"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

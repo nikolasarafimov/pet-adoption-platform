@@ -4,106 +4,306 @@
 @{
     ViewData["Title"] = "Browse Pets";
 
-    int page      = ViewBag.Page      ?? 1;
-    int pageSize  = ViewBag.PageSize  ?? 9;
-    int total     = ViewBag.Total     ?? 0;
-    int totalPages= ViewBag.TotalPages?? 1;
+    int page = ViewBag.Page ?? 1;
+    int pageSize = ViewBag.PageSize ?? 9;
+    int total = ViewBag.Total ?? 0;
+    int totalPages = ViewBag.TotalPages ?? 1;
 
-    string BuildUrl(int p) => Url.Action(
-        "Index", "Home",
-        new {
-            search = (string?)ViewBag.Search,
-            species = (Species?)ViewBag.Species,
-            page = p,
-            pageSize
-        })!;
+    string? search = ViewBag.Search as string;
+    Species? selectedSpecies = ViewBag.Species as Species?;
+
+    string BuildUrl(int targetPage)
+    {
+        return Url.Action(
+            "Index",
+            "Home",
+            new
+            {
+                search,
+                species = selectedSpecies,
+                page = targetPage,
+                pageSize
+            }
+        )!;
+    }
 }
 
-<div class="d-flex align-items-center mb-3">
-    <form method="get" class="d-flex gap-2 flex-wrap">
-        <input type="text"
-               name="search"
-               value="@ViewBag.Search"
-               class="form-control"
-               placeholder="Search pets by name or breed" />
+<section class="mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+        <div>
+            <div class="text-primary text-uppercase small fw-semibold mb-2">
+                Discover your companion
+            </div>
 
-        <select name="species" class="form-select">
-            <option value="">All species</option>
-            @foreach (var s in Enum.GetValues(typeof(Species)).Cast<Species>())
-            {
-                <option value="@s" selected="@(ViewBag.Species!=null && ((Species)ViewBag.Species)==s)">
-                    @s
-                </option>
-            }
-        </select>
+            <h1 class="section-title mb-2">
+                Browse Pets
+            </h1>
 
-        <select name="pageSize" class="form-select">
-            @foreach (var size in new[]{6,9,12,15,18})
-            {
-                <option value="@size" selected="@( (int)(ViewBag.PageSize ?? 9) == size)">
-                    @size / page
-                </option>
-            }
-        </select>
+            <p class="section-subtitle mb-0">
+                Search through pets currently registered on the platform.
+            </p>
+        </div>
 
-        <button class="btn btn-primary">Filter</button>
+        <div class="d-flex align-items-center gap-2 text-muted">
+            <span class="badge bg-white text-dark shadow-sm fs-6">
+                @total pets found
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="card p-3 p-md-4 mb-5">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-5">
+            <label for="search" class="form-label">
+                Search
+            </label>
+
+            <input id="search"
+                   type="text"
+                   name="search"
+                   value="@search"
+                   class="form-control"
+                   placeholder="Search by name or breed..." />
+        </div>
+
+        <div class="col-md-5 col-lg-3">
+            <label for="species" class="form-label">
+                Species
+            </label>
+
+            <select id="species"
+                    name="species"
+                    class="form-select">
+                <option value="">All species</option>
+
+                @foreach (var species in Enum.GetValues<Species>())
+                {
+                    if (selectedSpecies == species)
+                    {
+                        <option value="@species" selected>
+                            @species
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@species">
+                            @species
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4 col-lg-2">
+            <label for="pageSize" class="form-label">
+                Per page
+            </label>
+
+            <select id="pageSize"
+                    name="pageSize"
+                    class="form-select">
+                @foreach (var size in new[] { 6, 9, 12, 15, 18 })
+                {
+                    if (pageSize == size)
+                    {
+                        <option value="@size" selected>
+                            @size
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@size">
+                            @size
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3 col-lg-2 d-grid">
+            <button type="submit"
+                    class="btn btn-primary">
+                Search
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(search)
+                || selectedSpecies.HasValue)
+        {
+            <div class="col-12">
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-sm btn-outline-secondary">
+                    Clear Filters
+                </a>
+            </div>
+        }
     </form>
-</div>
+</section>
 
 @if (!Model.Any())
 {
-    <div class="alert alert-info">No pets found. Try a different search or species.</div>
+    <div class="empty-state">
+        <div class="display-5 mb-3">🔍</div>
+
+        <h4>No pets found</h4>
+
+        <p class="mb-3">
+            Try changing the search term or selecting another species.
+        </p>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-primary">
+            Clear Search
+        </a>
+    </div>
 }
 else
 {
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        @foreach (var p in Model)
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        @foreach (var pet in Model)
         {
+            var imageUrl =
+            string.IsNullOrWhiteSpace(pet.ImageUrl)
+            ? "https://placehold.co/800x600?text="
+            + Uri.EscapeDataString(pet.Name)
+            : pet.ImageUrl;
+
+            var badgeClass =
+            pet.Status switch
+            {
+                PetStatus.Available => "success",
+                PetStatus.Reserved => "warning text-dark",
+                PetStatus.Adopted => "secondary",
+                _ => "dark"
+            };
+
             <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <img class="card-img-top"
-                         src="@(p.ImageUrl ?? "https://placehold.co/600x400?text=" + Uri.EscapeDataString(p.Name))"
-                         alt="@p.Name" />
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            @p.Name <small class="text-muted">(@p.Species)</small>
-                        </h5>
-                        <p class="card-text small text-truncate" style="-webkit-line-clamp:3; display:-webkit-box; -webkit-box-orient:vertical;">
-                            @p.Description
-                        </p>
-                        <span class="badge bg-@(p.Status == PetAdoption.Domain.Enums.PetStatus.Available ? "success" : (p.Status == PetAdoption.Domain.Enums.PetStatus.Reserved ? "warning" : "secondary"))">
-                            @p.Status
+                <article class="card h-100">
+                    <div class="position-relative">
+                        <img class="card-img-top"
+                             src="@imageUrl"
+                             alt="@pet.Name"
+                             loading="lazy" />
+
+                        <span class="badge bg-@badgeClass position-absolute top-0 end-0 m-3 shadow-sm">
+                            @pet.Status
                         </span>
                     </div>
-                    <div class="card-footer d-flex gap-2">
-                        <a class="btn btn-sm btn-outline-primary" href="/Pets/Details/@p.Id">Details</a>
-                        @if (p.Status == PetStatus.Available && User.IsInRole("Adopter"))
-                        {
-                            <a class="btn btn-sm btn-success" href="/AdoptionRequests/Create?petId=@p.Id">Adopt</a>
-                        }
+
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between gap-3 mb-3">
+                            <div>
+                                <h4 class="mb-1">
+                                    @pet.Name
+                                </h4>
+
+                                <div class="small text-muted">
+                                    @pet.Species
+                                    @if (!string.IsNullOrWhiteSpace(pet.Breed))
+                                    {
+                                        <span>• @pet.Breed</span>
+                                    }
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="badge bg-light text-dark">
+                                @pet.AgeYears yrs
+                            </span>
+                        </div>
                     </div>
-                </div>
+
+                    <p class="text-truncate-3 mb-4">
+                        @(string.IsNullOrWhiteSpace(pet.Description)
+                                            ? "No description is available for this pet."
+                                            : pet.Description)
+                </p>
+
+                        <div class="small text-muted mb-4">
+                            <span class="me-1">🏠</span>
+                            @pet.ShelterName
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Pets"
+                               asp-action="Details"
+                               asp-route-id="@pet.Id"
+                               class="btn btn-outline-primary flex-grow-1">
+                                View Details
+                            </a>
+
+                    @if (pet.Status == PetStatus.Available
+                                        && User.IsInRole("Adopter"))
+                            {
+                                <a asp-controller="AdoptionRequests"
+                                   asp-action="Create"
+                                   asp-route-petId="@pet.Id"
+                                   class="btn btn-success">
+                                    Adopt
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </article>
             </div>
         }
     </div>
 
-    <nav class="mt-4">
+    <nav class="mt-5"
+         aria-label="Pet pagination">
         <ul class="pagination justify-content-center">
-            <li class="page-item @(page<=1?"disabled":"")">
-                <a class="page-link" href="@BuildUrl(page-1)">Previous</a>
+            <li class="page-item @(page <= 1 ? "disabled" : "")">
+                @if (page <= 1)
+                {
+                    <span class="page-link">
+                        ‹
+                    </span>
+                }
+                else
+                {
+                    <a class="page-link"
+                       href="@BuildUrl(page - 1)">
+                        ‹
+                    </a>
+                }
             </li>
 
-            @for (int i = Math.Max(1, page-2); i <= Math.Min(totalPages, page+2); i++)
+            @for (
+                    int i = Math.Max(1, page - 2);
+                    i <= Math.Min(totalPages, page + 2);
+                    i++
+                    )
             {
-                <li class="page-item @(i==page?"active":"")">
-                    <a class="page-link" href="@BuildUrl(i)">@i</a>
+                <li class="page-item @(i == page ? "active" : "")">
+                    <a class="page-link"
+                       href="@BuildUrl(i)">
+                        @i
+                    </a>
                 </li>
             }
 
-            <li class="page-item @(page>=totalPages?"disabled":"")">
-                <a class="page-link" href="@BuildUrl(page+1)">Next</a>
+            <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                @if (page >= totalPages)
+                {
+                    <span class="page-link">
+                        ›
+                    </span>
+                }
+                else
+                {
+                    <a class="page-link"
+                       href="@BuildUrl(page + 1)">
+                        ›
+                    </a>
+                }
             </li>
         </ul>
-        <div class="text-center text-muted small">Showing page @(page) of @totalPages — @total pets.</div>
+
+        <div class="text-center text-muted small mt-2">
+            Page @(page) of @totalPages
+        </div>
     </nav>
 }

@@ -1,16 +1,130 @@
 ﻿@model int
-<h3>Adopt Pet</h3>
-@if (TempData["err"] != null)
-{
-    <div class="alert alert-danger">@TempData["err"]</div>
+
+@{
+    ViewData["Title"] = "Adoption Request";
 }
-<form method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="petId" value="@Model" />
-    <div class="mb-3">
-        <label class="form-label">Message (optional)</label>
-        <textarea name="message" class="form-control" rows="4" placeholder="Tell the shelter about your home, experience, etc."></textarea>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <section class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 mb-3"
+                 style="width: 72px; height: 72px;">
+                <span class="fs-2">
+                    ❤️
+                </span>
+            </div>
+
+            <div class="text-success fw-semibold text-uppercase small mb-2">
+                Adoption
+            </div>
+
+            <h1 class="section-title mb-2">
+                Submit an Adoption Request
+            </h1>
+
+            <p class="section-subtitle">
+                Introduce yourself to the shelter and explain why
+                this pet would be a good fit for your home.
+            </p>
+        </section>
+
+        @if (TempData["err"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["err"]
+            </div>
+        }
+
+        <div class="card p-4 p-md-5">
+            <form asp-controller="AdoptionRequests"
+                  asp-action="Create"
+                  method="post">
+
+                <input type="hidden"
+                       name="petId"
+                       value="@Model" />
+
+                <div class="mb-4">
+                    <label for="message"
+                           class="form-label">
+                        Message to the shelter
+                    </label>
+
+                    <textarea id="message"
+                              name="message"
+                              class="form-control"
+                              rows="7"
+                              maxlength="512"
+                              placeholder="Tell the shelter about your home, lifestyle, previous experience with pets, and why you would like to adopt.">
+                    </textarea>
+
+                    <div class="d-flex justify-content-between mt-2">
+                        <div class="form-text">
+                            Optional, but a thoughtful message can help the shelter.
+                        </div>
+
+                        <div id="messageCounter"
+                             class="small text-muted">
+                            0 / 512
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-light rounded-4 p-4 mb-4">
+                    <div class="d-flex gap-3">
+                        <div class="fs-4">
+                            🔒
+                        </div>
+
+                        <div>
+                            <div class="fw-semibold mb-1">
+                                What happens next?
+                            </div>
+
+                            <div class="small text-muted">
+                                Your request will be sent to the shelter for review.
+                                You can track its status from My Requests.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit"
+                            class="btn btn-success flex-grow-1">
+                        Submit Request
+                    </button>
+
+                    <a asp-controller="Pets"
+                       asp-action="Details"
+                       asp-route-id="@Model"
+                       class="btn btn-outline-secondary">
+                        Back to Pet
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-    <button class="btn btn-success">Submit Request</button>
-    <a class="btn btn-outline-secondary" href="/Pets/Details/@Model">Back</a>
-</form>
+</div>
+
+@section Scripts {
+    <script>
+        const message =
+            document.getElementById('message');
+
+        const messageCounter =
+            document.getElementById('messageCounter');
+
+        function updateCounter() {
+            messageCounter.textContent =
+                `${message.value.length} / 512`;
+        }
+
+        message.addEventListener(
+            'input',
+            updateCounter
+        );
+
+        updateCounter();
+    </script>
+}

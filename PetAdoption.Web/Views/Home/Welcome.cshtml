@@ -1,127 +1,420 @@
-﻿@model IReadOnlyList<PetAdoption.Application.DTOs.PetDto>
-@using Microsoft.AspNetCore.Identity
-@using PetAdoption.Domain.Enums
-@inject SignInManager<PetAdoption.Infrastructure.Data.ApplicationUser> SignInManager
+﻿@using PetAdoption.Domain.Enums
+@model IReadOnlyList<PetAdoption.Application.DTOs.PetDto>
 
 @{
     ViewData["Title"] = "Welcome";
-    var isAuthed = SignInManager.IsSignedIn(User);
-    bool isShelter = User.IsInRole("Shelter");
-    bool isAdopter = User.IsInRole("Adopter");
+
+    bool isAuthenticated =
+        User.Identity?.IsAuthenticated == true;
+
+    bool isAdmin =
+        User.IsInRole("Admin");
+
+    bool isShelter =
+        User.IsInRole("Shelter");
+
+    bool isAdopter =
+        User.IsInRole("Adopter");
 }
 
-<section class="py-5 bg-gradient rounded-4 shadow-sm px-4 px-md-5">
-    <div class="container-fluid p-0">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-7">
-                <h1 class="display-5 fw-bold mb-3">Find a loving home for every pet</h1>
-                <p class="lead text-muted">
-                    Pet Adoption Platform helps shelters publish adoptable pets and allows citizens to submit and track adoption requests through a clean, role-based web application.
+<section class="hero-panel overflow-hidden mb-5">
+    <div class="row align-items-center g-0">
+        <div class="col-lg-7">
+            <div class="p-4 p-md-5 p-xl-6">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill bg-white shadow-sm mb-4">
+                    <span>🐾</span>
+                    <span class="small fw-semibold text-primary">
+                        Connecting pets with loving homes
+                    </span>
+                </div>
+
+                <h1 class="display-4 fw-bold mb-4">
+                    Every pet deserves
+                    <span class="text-primary">a second chance.</span>
+                </h1>
+
+                <p class="lead section-subtitle mb-4">
+                    Discover adoptable pets, connect with trusted shelters,
+                    and manage the complete adoption process through one
+                    simple and secure platform.
                 </p>
 
-                <div class="d-flex flex-wrap gap-2 mt-4">
-                    <a class="btn btn-primary btn-lg" href="/Home/Index">Browse Pets</a>
-                    <a class="btn btn-outline-secondary btn-lg" href="/Breeds">Explore Dog Breeds</a>
+                <div class="d-flex flex-wrap gap-3 mb-5">
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-primary btn-lg px-4">
+                        Browse Pets
+                    </a>
 
-                    @if (!isAuthed)
+                    <a asp-controller="Breeds"
+                       asp-action="Index"
+                       class="btn btn-outline-primary btn-lg px-4">
+                        Explore Breeds
+                    </a>
+
+                    @if (!isAuthenticated)
                     {
-                        <a class="btn btn-success btn-lg" href="/Account/Register">Create Account</a>
-                        <a class="btn btn-outline-dark btn-lg" href="/Account/Login">Login</a>
-                    }
-                    else if (isAdopter)
-                    {
-                        <a class="btn btn-success btn-lg" href="/AdoptionRequests">My Requests</a>
-                    }
-                    else if (isShelter)
-                    {
-                        <a class="btn btn-success btn-lg" href="/Pets">Manage Pets</a>
-                        <a class="btn btn-outline-dark btn-lg" href="/AdoptionRequests/Manage">Review Requests</a>
+                        <a asp-controller="Account"
+                           asp-action="Register"
+                           class="btn btn-success btn-lg px-4">
+                            Get Started
+                        </a>
                     }
                 </div>
 
-                <div class="row mt-4 small text-muted">
-                    <div class="col-md-4"><strong>Step 1:</strong> Browse available pets</div>
-                    <div class="col-md-4"><strong>Step 2:</strong> Submit adoption request</div>
-                    <div class="col-md-4"><strong>Step 3:</strong> Shelter reviews the request</div>
-                </div>
-            </div>
-
-            <div class="col-lg-5">
-                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1200&auto=format&fit=crop"
-                         class="card-img-top" alt="Adopted dog" />
-                    <div class="card-body">
-                        <h5 class="card-title mb-1">Clean workflow for shelters and adopters</h5>
-                        <p class="card-text text-muted mb-0">
-                            Built with authentication, role-based authorization, adoption state management, and external breed data integration.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <hr class="my-5" />
-
-        <div class="d-flex align-items-center mb-3">
-            <h3 class="me-auto mb-0">Featured Pets</h3>
-            <a class="btn btn-sm btn-outline-primary" href="/Home/Index">View all</a>
-        </div>
-
-        @if (!(Model?.Any() ?? false))
-        {
-            <div class="alert alert-info">No pets to show yet.</div>
-        }
-        else
-        {
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                @foreach (var p in Model)
-                {
-                    <div class="col">
-                        <div class="card h-100 shadow-sm">
-                            <img class="card-img-top"
-                                 src="@(p.ImageUrl ?? ("https://placehold.co/600x400?text=" + Uri.EscapeDataString(p.Name)))"
-                                 alt="@p.Name" />
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    @p.Name <small class="text-muted">(@p.Species)</small>
-                                </h5>
-                                <p class="card-text small text-truncate" style="-webkit-line-clamp:3; display:-webkit-box; -webkit-box-orient:vertical;">
-                                    @(!string.IsNullOrWhiteSpace(p.Description) ? p.Description : "No description provided.")
-                                </p>
-                                <span class="badge bg-@(
-                                      p.Status == PetStatus.Available ? "success" :
-                                      p.Status == PetStatus.Reserved ? "warning" :
-                                      p.Status == PetStatus.Adopted ? "secondary" : "dark")">
-                            @p.Status
-                        </span>
-                    </div>
-                    <div class="card-footer d-flex gap-2">
-                        <a class="btn btn-sm btn-outline-primary" href="/Pets/Details/@p.Id">Details</a>
-                        @if (p.Status == PetStatus.Available && isAdopter)
-                                {
-                                    <a class="btn btn-sm btn-success" href="/AdoptionRequests/Create?petId=@p.Id">Adopt</a>
-                                }
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <div class="bg-white rounded-4 p-3 shadow-sm h-100">
+                            <div class="fs-4 mb-2">🔎</div>
+                            <div class="fw-bold">Discover</div>
+                            <div class="small text-muted">
+                                Find pets that match your lifestyle.
                             </div>
                         </div>
                     </div>
-                }
-            </div>
-        }
 
-        <div class="text-center mt-5">
-            <a class="btn btn-outline-secondary" href="/Home/Breeds">Browse Dog Breeds</a>
+                    <div class="col-sm-4">
+                        <div class="bg-white rounded-4 p-3 shadow-sm h-100">
+                            <div class="fs-4 mb-2">💌</div>
+                            <div class="fw-bold">Request</div>
+                            <div class="small text-muted">
+                                Submit an adoption request securely.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="bg-white rounded-4 p-3 shadow-sm h-100">
+                            <div class="fs-4 mb-2">🏡</div>
+                            <div class="fw-bold">Adopt</div>
+                            <div class="small text-muted">
+                                Give a pet the home it deserves.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="position-relative h-100">
+                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=85&w=1400&auto=format&fit=crop"
+                     alt="Dog waiting for adoption"
+                     class="w-100 h-100 object-fit-cover"
+                     style="min-height: 560px;" />
+
+                <div class="position-absolute bottom-0 start-0 end-0 p-4">
+                    <div class="bg-dark bg-opacity-75 text-white rounded-4 p-3 shadow-lg">
+                        <div class="small text-white-50 mb-1">
+                            Simple. Secure. Compassionate.
+                        </div>
+                        <div class="fw-semibold">
+                            Helping shelters and adopters connect faster.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-@section Scripts {
-    <script>
-    </script>
+@if (isAuthenticated)
+{
+    <section class="mb-5">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <div class="text-primary fw-semibold small text-uppercase">
+                    Your workspace
+                </div>
+
+                <h2 class="section-title mb-1">
+                    Quick Actions
+                </h2>
+
+                <p class="section-subtitle mb-0">
+                    Continue where you left off.
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @if (isAdopter)
+            {
+                <div class="col-md-6">
+                    <a asp-controller="AdoptionRequests"
+                       asp-action="Index"
+                       class="text-decoration-none">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="fs-2">📋</div>
+
+                                <div>
+                                    <h5 class="mb-1">
+                                        My Adoption Requests
+                                    </h5>
+
+                                    <p class="mb-0">
+                                        Track pending, approved and completed requests.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6">
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="text-decoration-none">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="fs-2">🐶</div>
+
+                                <div>
+                                    <h5 class="mb-1">
+                                        Find Another Pet
+                                    </h5>
+
+                                    <p class="mb-0">
+                                        Explore pets currently available for adoption.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+            else if (isShelter)
+            {
+                <div class="col-md-6">
+                    <a asp-controller="Pets"
+                       asp-action="Index"
+                       class="text-decoration-none">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="fs-2">🐕</div>
+
+                                <div>
+                                    <h5 class="mb-1">
+                                        Manage Pets
+                                    </h5>
+
+                                    <p class="mb-0">
+                                        Add, edit and manage pets from your shelter.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6">
+                    <a asp-controller="AdoptionRequests"
+                       asp-action="Manage"
+                       class="text-decoration-none">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="fs-2">✅</div>
+
+                                <div>
+                                    <h5 class="mb-1">
+                                        Review Requests
+                                    </h5>
+
+                                    <p class="mb-0">
+                                        Review adoption requests for your pets.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+            else if (isAdmin)
+            {
+                <div class="col-md-4">
+                    <a asp-controller="Pets"
+                       asp-action="Index"
+                       class="text-decoration-none">
+                        <div class="card h-100 p-4">
+                            <div class="fs-2 mb-3">🐕</div>
+                            <h5>Manage Pets</h5>
+                            <p class="mb-0">
+                                Oversee all registered pets.
+                            </p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4">
+                    <a asp-controller="Shelters"
+                       asp-action="Index"
+                       class="text-decoration-none">
+                        <div class="card h-100 p-4">
+                            <div class="fs-2 mb-3">🏠</div>
+                            <h5>Manage Shelters</h5>
+                            <p class="mb-0">
+                                Review and maintain shelter data.
+                            </p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4">
+                    <a asp-controller="AdoptersAdmin"
+                       asp-action="Index"
+                       class="text-decoration-none">
+                        <div class="card h-100 p-4">
+                            <div class="fs-2 mb-3">👥</div>
+                            <h5>Manage Adopters</h5>
+                            <p class="mb-0">
+                                View and manage adopter profiles.
+                            </p>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </section>
 }
 
-<style>
-    .bg-gradient {
-        background: linear-gradient(135deg, #eefcf4 0%, #e9f3ff 100%);
-        border-radius: 1rem;
+<section class="mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+        <div>
+            <div class="text-primary fw-semibold small text-uppercase">
+                Meet your new companion
+            </div>
+
+            <h2 class="section-title mb-2">
+                Featured Pets
+            </h2>
+
+            <p class="section-subtitle mb-0">
+                A few wonderful pets currently looking for a family.
+            </p>
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-outline-primary">
+            View All Pets
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="fs-1 mb-3">🐾</div>
+            <h5>No pets available yet</h5>
+            <p class="mb-0">
+                Check back soon for new adoption opportunities.
+            </p>
+        </div>
     }
-</style>
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            @foreach (var pet in Model)
+            {
+                var imageUrl =
+                string.IsNullOrWhiteSpace(pet.ImageUrl)
+                ? "https://placehold.co/800x600?text="
+                + Uri.EscapeDataString(pet.Name)
+                : pet.ImageUrl;
+
+                var badgeClass =
+                pet.Status switch
+                {
+                    PetStatus.Available => "success",
+                    PetStatus.Reserved => "warning text-dark",
+                    PetStatus.Adopted => "secondary",
+                    _ => "dark"
+                };
+
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="position-relative">
+                            <img src="@imageUrl"
+                                 alt="@pet.Name"
+                                 class="card-img-top"
+                                 loading="lazy" />
+
+                            <span class="badge bg-@badgeClass position-absolute top-0 end-0 m-3">
+                                @pet.Status
+                            </span>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <h4 class="card-title mb-1">
+                                        @pet.Name
+                                    </h4>
+
+                                    <div class="text-muted small">
+                                        @pet.Species
+                                        @if (!string.IsNullOrWhiteSpace(pet.Breed))
+                                        {
+                                            <span>• @pet.Breed</span>
+                                        }
+                                </div>
+                            </div>
+
+                            <span class="badge bg-light text-dark">
+                                @pet.AgeYears yrs
+                            </span>
+                        </div>
+
+                        <p class="card-text text-truncate-3 mb-4">
+                            @(string.IsNullOrWhiteSpace(pet.Description)
+                                                    ? "No description provided."
+                                                    : pet.Description)
+                    </p>
+
+                            <div class="d-flex gap-2">
+                                <a asp-controller="Pets"
+                                   asp-action="Details"
+                                   asp-route-id="@pet.Id"
+                                   class="btn btn-outline-primary flex-grow-1">
+                                    View Details
+                                </a>
+
+                        @if (pet.Status == PetStatus.Available
+                                                && isAdopter)
+                                {
+                                    <a asp-controller="AdoptionRequests"
+                                       asp-action="Create"
+                                       asp-route-petId="@pet.Id"
+                                       class="btn btn-success">
+                                        Adopt
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<section class="hero-panel p-4 p-md-5 text-center">
+    <div class="mx-auto" style="max-width: 720px;">
+        <div class="fs-1 mb-3">🐕‍🦺</div>
+
+        <h2 class="section-title mb-3">
+            Curious about dog breeds?
+        </h2>
+
+        <p class="section-subtitle mb-4">
+            Explore breed characteristics, temperament, lifespan and average
+            weight using live data from The Dog API.
+        </p>
+
+        <a asp-controller="Breeds"
+           asp-action="Index"
+           class="btn btn-primary btn-lg px-4">
+            Explore Dog Breeds
+        </a>
+    </div>
+</section>

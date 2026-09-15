@@ -1,35 +1,93 @@
 ﻿@model PetAdoption.Web.Models.Adopters.AdopterFormVm
 
-<div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+<div asp-validation-summary="ModelOnly"
+     class="alert alert-danger mb-4">
+</div>
 
-<div class="row g-3">
+<div class="mb-4">
+    <h5 class="mb-1">
+        Personal Information
+    </h5>
+
+    <p class="small text-muted mb-0">
+        Enter the adopter's contact and profile details.
+    </p>
+</div>
+
+<div class="row g-4">
     <div class="col-md-6">
-        <label asp-for="FullName" class="form-label"></label>
-        <input asp-for="FullName" class="form-control" />
-        <span asp-validation-for="FullName" class="text-danger"></span>
+        <label asp-for="FullName"
+               class="form-label">
+        </label>
+
+        <input asp-for="FullName"
+               class="form-control"
+               autocomplete="name"
+               placeholder="Full name" />
+
+        <span asp-validation-for="FullName"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
+        <label asp-for="Email"
+               class="form-label">
+        </label>
+
+        <input asp-for="Email"
+               type="email"
+               class="form-control"
+               autocomplete="email"
+               placeholder="name@example.com" />
+
+        <span asp-validation-for="Email"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Phone" class="form-label"></label>
-        <input asp-for="Phone" class="form-control" />
-        <span asp-validation-for="Phone" class="text-danger"></span>
+        <label asp-for="Phone"
+               class="form-label">
+        </label>
+
+        <input asp-for="Phone"
+               type="tel"
+               class="form-control"
+               autocomplete="tel" />
+
+        <span asp-validation-for="Phone"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Address" class="form-label"></label>
-        <input asp-for="Address" class="form-control" />
-        <span asp-validation-for="Address" class="text-danger"></span>
+        <label asp-for="Address"
+               class="form-label">
+        </label>
+
+        <input asp-for="Address"
+               class="form-control"
+               autocomplete="street-address" />
+
+        <span asp-validation-for="Address"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-12">
-        <label asp-for="Notes" class="form-label"></label>
-        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="Notes" class="text-danger"></span>
+        <label asp-for="Notes"
+               class="form-label">
+        </label>
+
+        <textarea asp-for="Notes"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Optional administrative notes...">
+        </textarea>
+
+        <span asp-validation-for="Notes"
+              class="text-danger">
+        </span>
     </div>
 </div>

@@ -2,50 +2,116 @@
 
 @{
     ViewData["Title"] = "Delete Pet";
+
+    var imageUrl =
+        string.IsNullOrWhiteSpace(Model.ImageUrl)
+            ? "https://placehold.co/800x600?text="
+              + Uri.EscapeDataString(Model.Name)
+            : Model.ImageUrl;
 }
 
-<h3 class="text-danger mb-3">Delete Pet</h3>
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="card overflow-hidden">
+            <div class="row g-0">
+                <div class="col-lg-5">
+                    <img src="@imageUrl"
+                         alt="@Model.Name"
+                         class="w-100 h-100 object-fit-cover"
+                         style="min-height: 460px;" />
+                </div>
 
-<div class="alert alert-warning">
-    <strong>Warning:</strong> This action cannot be undone.
-</div>
+                <div class="col-lg-7">
+                    <div class="p-4 p-md-5">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mb-4"
+                             style="width: 68px; height: 68px;">
+                            <span class="fs-3">
+                                🗑️
+                            </span>
+                        </div>
 
-<div class="card shadow-sm mb-3">
-    <div class="row g-0">
-        <div class="col-md-5">
-            <img class="img-fluid rounded-start w-100 h-100 object-fit-cover"
-                 src="@(Model.ImageUrl ?? "https://placehold.co/800x600?text=" + Uri.EscapeDataString(Model.Name))"
-                 alt="@Model.Name" />
-        </div>
-        <div class="col-md-7">
-            <div class="card-body">
-                <h4 class="card-title">@Model.Name <small class="text-muted">(@Model.Species)</small></h4>
-                <dl class="row">
-                    <dt class="col-sm-4">Breed</dt>
-                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Breed) ? Model.Breed : "-")</dd>
+                        <div class="text-danger fw-semibold text-uppercase small mb-2">
+                            Permanent Action
+                        </div>
 
-                    <dt class="col-sm-4">Age (years)</dt>
-                    <dd class="col-sm-8">@Model.AgeYears</dd>
+                        <h1 class="section-title mb-3">
+                            Delete @Model.Name?
+                        </h1>
 
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">@Model.Status</dd>
+                        <p class="section-subtitle mb-4">
+                            This pet will be permanently removed from the platform.
+                        </p>
 
-                    <dt class="col-sm-4">Shelter</dt>
-                    <dd class="col-sm-8">@Model.ShelterName</dd>
+                        <div class="bg-light rounded-4 p-4 mb-4">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="small text-muted">
+                                        Species
+                                    </div>
 
-                    <dt class="col-sm-4">Description</dt>
-                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "-")</dd>
-                </dl>
+                                    <div class="fw-semibold">
+                                        @Model.Species
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <div class="small text-muted">
+                                        Breed
+                                    </div>
+
+                                    <div class="fw-semibold">
+                                        @(Model.Breed ?? "-")
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <div class="small text-muted">
+                                        Status
+                                    </div>
+
+                                    <div class="fw-semibold">
+                                        @Model.Status
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <div class="small text-muted">
+                                        Shelter
+                                    </div>
+
+                                    <div class="fw-semibold">
+                                        @Model.ShelterName
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            This action cannot be undone.
+                        </div>
+
+                        <form asp-action="Delete"
+                              method="post">
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.Id" />
+
+                            <div class="d-flex flex-column flex-sm-row gap-2">
+                                <button type="submit"
+                                        class="btn btn-danger flex-grow-1">
+                                    Delete Pet
+                                </button>
+
+                                <a asp-action="Index"
+                                   class="btn btn-outline-secondary">
+                                    Keep Pet
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<form asp-action="Delete" method="post" class="d-flex gap-2">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="id" value="@Model.Id" />
-    <button type="submit" class="btn btn-danger">
-        <span class="me-1">🗑️</span> Delete
-    </button>
-    <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Pets")">Cancel</a>
-</form>

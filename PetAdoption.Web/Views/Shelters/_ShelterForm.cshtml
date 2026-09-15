@@ -1,35 +1,89 @@
 ﻿@model PetAdoption.Web.Models.Shelters.ShelterFormVm
 
-<div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+<div asp-validation-summary="ModelOnly"
+     class="alert alert-danger mb-4">
+</div>
 
-<div class="row g-3">
+<div class="mb-4">
+    <h5 class="mb-1">
+        Shelter Information
+    </h5>
+
+    <p class="small text-muted mb-0">
+        Enter the organization's public contact and location details.
+    </p>
+</div>
+
+<div class="row g-4">
     <div class="col-md-6">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+        <label asp-for="Name"
+               class="form-label">
+        </label>
+
+        <input asp-for="Name"
+               class="form-control"
+               placeholder="Shelter name" />
+
+        <span asp-validation-for="Name"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="City" class="form-label"></label>
-        <input asp-for="City" class="form-control" />
-        <span asp-validation-for="City" class="text-danger"></span>
+        <label asp-for="City"
+               class="form-label">
+        </label>
+
+        <input asp-for="City"
+               class="form-control"
+               placeholder="City" />
+
+        <span asp-validation-for="City"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-12">
-        <label asp-for="Address" class="form-label"></label>
-        <input asp-for="Address" class="form-control" />
-        <span asp-validation-for="Address" class="text-danger"></span>
+        <label asp-for="Address"
+               class="form-label">
+        </label>
+
+        <input asp-for="Address"
+               class="form-control"
+               placeholder="Street and number" />
+
+        <span asp-validation-for="Address"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Phone" class="form-label"></label>
-        <input asp-for="Phone" class="form-control" />
-        <span asp-validation-for="Phone" class="text-danger"></span>
+        <label asp-for="Phone"
+               class="form-label">
+        </label>
+
+        <input asp-for="Phone"
+               class="form-control"
+               type="tel"
+               placeholder="+389..." />
+
+        <span asp-validation-for="Phone"
+              class="text-danger">
+        </span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
+        <label asp-for="Email"
+               class="form-label">
+        </label>
+
+        <input asp-for="Email"
+               class="form-control"
+               type="email"
+               placeholder="contact@shelter.com" />
+
+        <span asp-validation-for="Email"
+              class="text-danger">
+        </span>
     </div>
 </div>

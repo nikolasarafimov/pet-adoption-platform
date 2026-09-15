@@ -1,43 +1,128 @@
 ﻿@model IReadOnlyList<PetAdoption.Application.DTOs.AdopterDto>
+
 @{
     ViewData["Title"] = "Adopters";
 }
-<h3 class="mb-3">Adopters</h3>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        @if (TempData["Ok"] is string ok)
-        {
-            <div class="alert alert-success py-2 mb-0">@ok</div>
-        }
+<section class="mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+        <div>
+            <div class="text-primary fw-semibold text-uppercase small mb-2">
+                Administration
+            </div>
+
+            <h1 class="section-title mb-2">
+                Adopters
+            </h1>
+
+            <p class="section-subtitle mb-0">
+                Review and maintain adopter profiles registered on the platform.
+            </p>
+        </div>
+
+        <a asp-action="Create"
+           class="btn btn-primary px-4">
+            ＋ Add Adopter
+        </a>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Add Adopter</a>
-</div>
+</section>
 
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th style="width:220px;"></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var a in Model)
-        {
-            <tr>
-                <td>@a.FullName</td>
-                <td>@a.Email</td>
-                <td>@a.Phone</td>
-                <td>@a.Address</td>
-                <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">Details</a>
-                    <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@a.Id" class="btn btn-sm btn-outline-danger">Delete</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <div class="display-5 mb-3">
+            👥
+        </div>
+
+        <h4>No adopters</h4>
+
+        <p class="mb-0">
+            Registered adopters will appear here.
+        </p>
+    </div>
+}
+else
+{
+    <div class="card p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Adopter</th>
+                        <th>Contact</th>
+                        <th>Address</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var adopter in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10"
+                                         style="width: 46px; height: 46px;">
+                                        👤
+                                    </div>
+
+                                    <div>
+                                        <div class="fw-bold">
+                                            @adopter.FullName
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            Adopter #@adopter.Id
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div>
+                                    @(string.IsNullOrWhiteSpace(adopter.Email)
+                                                                ? "No email"
+                                                                : adopter.Email)
+                                                                            </div>
+
+                                <div class="small text-muted">
+                                    @(string.IsNullOrWhiteSpace(adopter.Phone)
+                                                                ? "No phone"
+                                                                : adopter.Phone)
+                                                                            </div>
+                                                                        </td>
+
+                            <td>
+                                @(string.IsNullOrWhiteSpace(adopter.Address)
+                                                        ? "-"
+                                                        : adopter.Address)
+                    </td>
+
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end flex-wrap gap-2">
+                                    <a asp-action="Details"
+                                       asp-route-id="@adopter.Id"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Details
+                                    </a>
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@adopter.Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="Delete"
+                                       asp-route-id="@adopter.Id"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

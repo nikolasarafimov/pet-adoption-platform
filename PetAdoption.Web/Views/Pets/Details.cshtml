@@ -1,21 +1,177 @@
-﻿@model PetAdoption.Application.DTOs.PetDto
-<div class="row">
-    <div class="col-md-6">
-        <img class="img-fluid rounded" src="@(Model.ImageUrl ?? "https://placehold.co/800x600")" />
-    </div>
-    <div class="col-md-6">
-        <h3>@Model.Name <small class="text-muted">(@Model.Species)</small></h3>
-        <p>@Model.Description</p>
-        <p><strong>Breed:</strong> @(Model.Breed ?? "-")</p>
-        <p><strong>Age:</strong> @Model.AgeYears</p>
-        <p><strong>Status:</strong> @Model.Status</p>
-        <p><strong>Shelter:</strong> @Model.ShelterName</p>
-        <div class="d-flex gap-2">
-            @if (Model.Status == PetAdoption.Domain.Enums.PetStatus.Available && User.IsInRole("Adopter"))
-            {
-                <a class="btn btn-success" href="/AdoptionRequests/Create?petId=@Model.Id">Adopt</a>
-            }
-            <a class="btn btn-outline-secondary" href="/Pets">Back</a>
+﻿@using PetAdoption.Domain.Enums
+@model PetAdoption.Application.DTOs.PetDto
+
+@{
+    ViewData["Title"] = Model.Name;
+
+    var imageUrl =
+        string.IsNullOrWhiteSpace(Model.ImageUrl)
+            ? "https://placehold.co/1000x800?text="
+              + Uri.EscapeDataString(Model.Name)
+            : Model.ImageUrl;
+
+    var badgeClass =
+        Model.Status switch
+        {
+            PetStatus.Available => "success",
+            PetStatus.Reserved => "warning text-dark",
+            PetStatus.Adopted => "secondary",
+            _ => "dark"
+        };
+}
+
+<div class="mb-4">
+    <a asp-controller="Pets"
+       asp-action="Index"
+       class="btn btn-sm btn-outline-secondary">
+        ← Back to Pets
+    </a>
+</div>
+
+<section class="card overflow-hidden mb-5">
+    <div class="row g-0">
+        <div class="col-lg-6">
+            <div class="position-relative h-100">
+                <img src="@imageUrl"
+                     alt="@Model.Name"
+                     class="w-100 h-100 object-fit-cover"
+                     style="min-height: 520px;"
+                     loading="lazy" />
+
+                <span class="badge bg-@badgeClass position-absolute top-0 start-0 m-4 fs-6 shadow">
+                    @Model.Status
+                </span>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="p-4 p-md-5 h-100 d-flex flex-column">
+                <div class="mb-4">
+                    <div class="text-primary fw-semibold small text-uppercase mb-2">
+                        Meet @Model.Name
+                    </div>
+
+                    <h1 class="display-5 fw-bold mb-2">
+                        @Model.Name
+                    </h1>
+
+                    <div class="fs-5 text-muted">
+                        @Model.Species
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Breed))
+                        {
+                            <span>• @Model.Breed</span>
+                        }
+                    </div>
+                </div>
+
+                <p class="lead mb-4">
+                    @(string.IsNullOrWhiteSpace(Model.Description)
+                                        ? "No description has been provided for this pet yet."
+                                        : Model.Description)
+                </p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <div class="bg-light rounded-4 p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Age
+                            </div>
+
+                            <div class="fw-bold fs-5">
+                                @Model.AgeYears
+                                @(Model.AgeYears == 1 ? "year" : "years")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <div class="bg-light rounded-4 p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Status
+                            </div>
+
+                            <div class="fw-bold fs-5">
+                                @Model.Status
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="bg-light rounded-4 p-3">
+                            <div class="small text-muted mb-1">
+                                Shelter
+                            </div>
+
+                            <div class="fw-bold">
+                                🏠 @Model.ShelterName
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto">
+                    @if (Model.Status == PetStatus.Available
+                                        && User.IsInRole("Adopter"))
+                    {
+                        <div class="p-4 rounded-4 bg-success bg-opacity-10 mb-3">
+                            <h5 class="mb-2">
+                                Interested in @Model.Name?
+                            </h5>
+
+                            <p class="mb-3">
+                                Submit an adoption request and the shelter
+                                will review your application.
+                            </p>
+
+                            <a asp-controller="AdoptionRequests"
+                               asp-action="Create"
+                               asp-route-petId="@Model.Id"
+                               class="btn btn-success px-4">
+                                Request Adoption
+                            </a>
+                        </div>
+                    }
+                    else if (Model.Status != PetStatus.Available)
+                    {
+                        <div class="alert alert-light border mb-3">
+                            This pet is currently marked as
+                            <strong>@Model.Status</strong>.
+                        </div>
+                    }
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Pets"
+                           asp-action="Edit"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-outline-primary">
+                            Edit Pet
+                        </a>
+                    }
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</section>
+
+<section class="hero-panel p-4 p-md-5 text-center">
+    <div class="mx-auto" style="max-width: 680px;">
+        <div class="fs-1 mb-3">❤️</div>
+
+        <h2 class="section-title mb-3">
+            Adoption changes two lives
+        </h2>
+
+        <p class="section-subtitle mb-4">
+            Every successful adoption gives an animal a loving home
+            and creates space for another pet in need.
+        </p>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-primary">
+            Discover More Pets
+        </a>
+    </div>
+</section>
