@@ -1,102 +1,293 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PetAdoption.Application.Interfaces;
 using PetAdoption.Domain.Enums;
+using PetAdoption.Infrastructure.Data;
 
 namespace PetAdoption.Web.Controllers
 {
     [Authorize]
     public class AdoptionRequestsController : Controller
     {
-        private readonly IAdoptionService _adoptions;
-        private readonly IAdopterService _adopters;
-        private readonly IShelterService _shelters;
+        private readonly IAdoptionService _adoptionService;
+        private readonly IShelterService _shelterService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AdoptionRequestsController(IAdoptionService adoptions, IAdopterService adopters, IShelterService shelters)
+        public AdoptionRequestsController(
+            IAdoptionService adoptionService,
+            IShelterService shelterService,
+            UserManager<ApplicationUser> userManager
+        )
         {
-            _adoptions = adoptions;
-            _adopters = adopters;
-            _shelters = shelters;
+            _adoptionService = adoptionService;
+            _shelterService = shelterService;
+            _userManager = userManager;
         }
 
         [Authorize(Roles = "Adopter")]
         public async Task<IActionResult> Index()
         {
-            var adopterId = await _adopters.GetMyAdopterIdAsync(User);
-            var list = await _adoptions.GetForAdopterAsync(adopterId);
-            return View(list);
+            var adopterId =
+                await GetCurrentAdopterIdAsync();
+
+            if (!adopterId.HasValue)
+            {
+                return Forbid();
+            }
+
+            var requests =
+                await _adoptionService.GetForAdopterAsync(
+                    adopterId.Value
+                );
+
+            return View(requests);
         }
 
         [Authorize(Roles = "Shelter,Admin")]
-        public async Task<IActionResult> Manage(int? shelterId)
+        public async Task<IActionResult> Manage(
+            int? shelterId
+        )
         {
-            int sid;
+            int effectiveShelterId;
 
             if (User.IsInRole("Admin"))
             {
-                sid = shelterId ?? await _shelters.GetMyShelterIdAsync(User);
+                if (shelterId.HasValue)
+                {
+                    var shelter =
+                        await _shelterService.GetAsync(
+                            shelterId.Value
+                        );
+
+                    if (shelter == null)
+                    {
+                        return NotFound();
+                    }
+
+                    effectiveShelterId =
+                        shelter.Id;
+                }
+                else
+                {
+                    var shelters =
+                        await _shelterService.GetAllAsync();
+
+                    var firstShelter =
+                        shelters.FirstOrDefault();
+
+                    if (firstShelter == null)
+                    {
+                        return NotFound();
+                    }
+
+                    effectiveShelterId =
+                        firstShelter.Id;
+                }
             }
             else
             {
-                sid = await _shelters.GetMyShelterIdAsync(User);
+                var currentShelterId =
+                    await GetCurrentShelterIdAsync();
+
+                if (!currentShelterId.HasValue)
+                {
+                    return Forbid();
+                }
+
+                effectiveShelterId =
+                    currentShelterId.Value;
             }
 
-            var list = await _adoptions.GetForShelterAsync(sid);
-            ViewBag.ShelterId = sid;
-            return View(list);
+            var requests =
+                await _adoptionService.GetForShelterAsync(
+                    effectiveShelterId
+                );
+
+            ViewBag.ShelterId =
+                effectiveShelterId;
+
+            return View(requests);
         }
 
         [Authorize(Roles = "Adopter")]
-        public IActionResult Create(int petId) => View(model: petId);
-
-        [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Adopter")]
-        public async Task<IActionResult> Create(int petId, string? message)
+        [HttpGet]
+        public IActionResult Create(int petId)
         {
-            var adopterId = await _adopters.GetMyAdopterIdAsync(User);
+            return View(model: petId);
+        }
+
+        [Authorize(Roles = "Adopter")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            int petId,
+            string? message
+        )
+        {
+            var adopterId =
+                await GetCurrentAdopterIdAsync();
+
+            if (!adopterId.HasValue)
+            {
+                return Forbid();
+            }
+
             try
             {
-                await _adoptions.SubmitAsync(petId, adopterId, message);
-                TempData["ok"] = "Request submitted!";
-                return RedirectToAction(nameof(Index));
+                await _adoptionService.SubmitAsync(
+                    petId,
+                    adopterId.Value,
+                    message
+                );
+
+                TempData["ok"] =
+                    "Request submitted.";
+
+                return RedirectToAction(
+                    nameof(Index)
+                );
             }
-            catch (Exception ex)
+            catch (
+                Exception exception
+            ) when (
+                exception is ArgumentException
+                or InvalidOperationException
+            )
             {
-                TempData["err"] = ex.Message;
+                TempData["err"] =
+                    exception.Message;
+
                 return View(model: petId);
             }
         }
 
-        [HttpPost, Authorize(Roles = "Shelter,Admin"), ValidateAntiForgeryToken]
-        public async Task<IActionResult> Decide(int id, AdoptionRequestStatus status)
+        [Authorize(Roles = "Shelter,Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Decide(
+            int id,
+            AdoptionRequestStatus status
+        )
         {
-            if (!User.IsInRole("Admin"))
+            if (status != AdoptionRequestStatus.Approved
+                && status != AdoptionRequestStatus.Rejected)
             {
-                var myShelterId = await _shelters.GetMyShelterIdAsync(User);
-                var requestShelterId = await _adoptions.GetShelterIdForRequestAsync(id);
-                if (myShelterId != requestShelterId) return Forbid();
+                return BadRequest(
+                    "Only approval or rejection is allowed."
+                );
             }
 
-            await _adoptions.SetStatusAsync(id, status);
-            TempData["ok"] = "Request updated.";
-            return RedirectToAction(nameof(Manage));
-        }
+            int requestShelterId;
 
-        [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Adopter")]
-        public async Task<IActionResult> Cancel(int id)
-        {
-            var adopterId = await _adopters.GetMyAdopterIdAsync(User);
             try
             {
-                await _adoptions.CancelAsync(id, adopterId);
-                TempData["ok"] = "Request cancelled.";
+                requestShelterId =
+                    await _adoptionService
+                        .GetShelterIdForRequestAsync(id);
             }
-            catch (Exception ex)
+            catch (ArgumentException)
             {
-                TempData["err"] = ex.Message;
+                return NotFound();
             }
-            return RedirectToAction(nameof(Index));
+
+            if (!User.IsInRole("Admin"))
+            {
+                var currentShelterId =
+                    await GetCurrentShelterIdAsync();
+
+                if (!currentShelterId.HasValue
+                    || currentShelterId.Value
+                    != requestShelterId)
+                {
+                    return Forbid();
+                }
+            }
+
+            try
+            {
+                await _adoptionService.SetStatusAsync(
+                    id,
+                    status
+                );
+
+                TempData["ok"] =
+                    "Request updated.";
+            }
+            catch (
+                Exception exception
+            ) when (
+                exception is ArgumentException
+                or InvalidOperationException
+            )
+            {
+                TempData["err"] =
+                    exception.Message;
+            }
+
+            return RedirectToAction(
+                nameof(Manage),
+                new
+                {
+                    shelterId = requestShelterId
+                }
+            );
+        }
+
+        [Authorize(Roles = "Adopter")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var adopterId =
+                await GetCurrentAdopterIdAsync();
+
+            if (!adopterId.HasValue)
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                await _adoptionService.CancelAsync(
+                    id,
+                    adopterId.Value
+                );
+
+                TempData["ok"] =
+                    "Request cancelled.";
+            }
+            catch (
+                Exception exception
+            ) when (
+                exception is ArgumentException
+                or InvalidOperationException
+                or UnauthorizedAccessException
+            )
+            {
+                TempData["err"] =
+                    exception.Message;
+            }
+
+            return RedirectToAction(
+                nameof(Index)
+            );
+        }
+
+        private async Task<int?> GetCurrentAdopterIdAsync()
+        {
+            var user =
+                await _userManager.GetUserAsync(User);
+
+            return user?.AdopterId;
+        }
+
+        private async Task<int?> GetCurrentShelterIdAsync()
+        {
+            var user =
+                await _userManager.GetUserAsync(User);
+
+            return user?.ShelterId;
         }
     }
 }

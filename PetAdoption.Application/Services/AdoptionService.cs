@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using PetAdoption.Application.DTOs;
+﻿using PetAdoption.Application.DTOs;
 using PetAdoption.Application.Interfaces;
 using PetAdoption.Domain.Abstractions;
 using PetAdoption.Domain.Entities;
@@ -19,171 +15,214 @@ namespace PetAdoption.Application.Services
         public AdoptionService(
             IRepository<AdoptionRequest> requests,
             IRepository<Pet> pets,
-            IRepository<Adopter> adopters)
+            IRepository<Adopter> adopters
+        )
         {
             _requests = requests;
             _pets = pets;
             _adopters = adopters;
         }
 
-        public async Task<IReadOnlyList<AdoptionRequestDto>> GetForAdopterAsync(int adopterId)
+        public async Task<IReadOnlyList<AdoptionRequestDto>> GetForAdopterAsync(
+            int adopterId
+        )
         {
-            var list = await _requests.ListAsync(
-                r => r.AdopterId == adopterId,
-                r => r.Pet,
-                r => r.Adopter
+            var requests = await _requests.ListAsync(
+                request => request.AdopterId == adopterId,
+                request => request.Pet,
+                request => request.Adopter
             );
 
-            return list
-                .OrderByDescending(r => r.CreatedAt)
+            return requests
+                .OrderByDescending(request => request.CreatedAt)
                 .Select(Map)
                 .ToList();
         }
 
-        public async Task<IReadOnlyList<AdoptionRequestDto>> GetForShelterAsync(int shelterId)
+        public async Task<IReadOnlyList<AdoptionRequestDto>> GetForShelterAsync(
+            int shelterId
+        )
         {
-            var list = await _requests.ListAsync(
-                r => r.Pet.ShelterId == shelterId,
-                r => r.Pet,
-                r => r.Adopter
+            var requests = await _requests.ListAsync(
+                request => request.Pet.ShelterId == shelterId,
+                request => request.Pet,
+                request => request.Adopter
             );
 
-            return list
-                .OrderByDescending(r => r.CreatedAt)
+            return requests
+                .OrderByDescending(request => request.CreatedAt)
                 .Select(Map)
                 .ToList();
         }
 
-        public async Task SubmitAsync(int petId, int adopterId, string? message)
+        public async Task SubmitAsync(
+            int petId,
+            int adopterId,
+            string? message
+        )
         {
-            var pet = await _pets.GetByIdAsync(petId);
-            if (pet == null) throw new ArgumentException("Pet not found.");
+            var pet = await _pets.GetByIdAsync(petId)
+                ?? throw new ArgumentException("Pet not found.");
 
             if (pet.Status != PetStatus.Available)
-                throw new InvalidOperationException("This pet is not available for adoption.");
+            {
+                throw new InvalidOperationException(
+                    "This pet is not available for adoption."
+                );
+            }
 
-            var adopter = await _adopters.GetByIdAsync(adopterId);
-            if (adopter == null) throw new ArgumentException("Adopter not found.");
+            var adopter = await _adopters.GetByIdAsync(adopterId)
+                ?? throw new ArgumentException("Adopter not found.");
 
-            var existing = await _requests.ListAsync(r =>
-                r.PetId == petId &&
-                r.AdopterId == adopterId &&
-                r.Status == AdoptionRequestStatus.Pending);
+            var existingRequests = await _requests.ListAsync(
+                request =>
+                    request.PetId == petId
+                    && request.AdopterId == adopterId
+                    && request.Status == AdoptionRequestStatus.Pending
+            );
 
-            if (existing.Any())
-                throw new InvalidOperationException("You already have a pending request for this pet.");
+            if (existingRequests.Any())
+            {
+                throw new InvalidOperationException(
+                    "You already have a pending request for this pet."
+                );
+            }
 
             pet.Status = PetStatus.Reserved;
 
-            var req = new AdoptionRequest
+            var request = new AdoptionRequest
             {
                 PetId = petId,
                 AdopterId = adopterId,
-                Message = string.IsNullOrWhiteSpace(message) ? null : message.Trim(),
+                Message = string.IsNullOrWhiteSpace(message)
+                    ? null
+                    : message.Trim(),
                 Status = AdoptionRequestStatus.Pending,
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _requests.AddAsync(req);
-
+            await _requests.AddAsync(request);
             await _requests.SaveChangesAsync();
         }
 
-        public async Task SetStatusAsync(int requestId, AdoptionRequestStatus status)
+        public async Task SetStatusAsync(
+            int requestId,
+            AdoptionRequestStatus status
+        )
         {
-            var list = await _requests.ListAsync(
-                r => r.Id == requestId,
-                r => r.Pet,
-                r => r.Adopter
-            );
-
-            var req = list.FirstOrDefault();
-            if (req == null) throw new ArgumentException("Adoption request not found.");
-
-            if (status != AdoptionRequestStatus.Approved &&
-                status != AdoptionRequestStatus.Rejected &&
-                status != AdoptionRequestStatus.Cancelled)
+            if (status != AdoptionRequestStatus.Approved
+                && status != AdoptionRequestStatus.Rejected)
             {
-                throw new ArgumentException("Invalid status transition.");
+                throw new ArgumentException(
+                    "Only approval or rejection is allowed here."
+                );
             }
 
-            if (req.Status != AdoptionRequestStatus.Pending)
-                throw new InvalidOperationException("This request has already been decided.");
+            var requests = await _requests.ListAsync(
+                request => request.Id == requestId,
+                request => request.Pet,
+                request => request.Adopter
+            );
 
-            req.Status = status;
-            req.DecisionAt = DateTime.UtcNow;
+            var request = requests.FirstOrDefault()
+                ?? throw new ArgumentException(
+                    "Adoption request not found."
+                );
 
-            if (req.Pet == null)
-                throw new InvalidOperationException("Request is missing Pet reference.");
+            if (request.Status != AdoptionRequestStatus.Pending)
+            {
+                throw new InvalidOperationException(
+                    "This request has already been decided."
+                );
+            }
+
+            request.Status = status;
+            request.DecisionAt = DateTime.UtcNow;
 
             if (status == AdoptionRequestStatus.Approved)
             {
-                req.Pet.Status = PetStatus.Adopted;
+                request.Pet.Status = PetStatus.Adopted;
             }
-            else 
+            else
             {
-                if (req.Pet.Status == PetStatus.Reserved)
-                {
-                    var others = await _requests.ListAsync(r =>
-                        r.PetId == req.PetId &&
-                        r.Status == AdoptionRequestStatus.Pending &&
-                        r.Id != req.Id);
-
-                    if (!others.Any())
-                        req.Pet.Status = PetStatus.Available;
-                }
+                request.Pet.Status = PetStatus.Available;
             }
 
+            await _requests.UpdateAsync(request);
+            await _pets.UpdateAsync(request.Pet);
             await _requests.SaveChangesAsync();
         }
 
-        public async Task CancelAsync(int requestId, int adopterId)
+        public async Task CancelAsync(
+            int requestId,
+            int adopterId
+        )
         {
-            var reqs = await _requests.ListAsync(r => r.Id == requestId, r => r.Pet);
-            var req = reqs.FirstOrDefault();
-            if (req == null) throw new ArgumentException("Request not found.");
+            var requests = await _requests.ListAsync(
+                request => request.Id == requestId,
+                request => request.Pet
+            );
 
-            if (req.AdopterId != adopterId) throw new UnauthorizedAccessException("Not your request.");
-            if (req.Status != AdoptionRequestStatus.Pending) throw new ArgumentException("Only pending requests can be cancelled.");
+            var request = requests.FirstOrDefault()
+                ?? throw new ArgumentException(
+                    "Adoption request not found."
+                );
 
-            req.Status = AdoptionRequestStatus.Cancelled;
-            req.DecisionAt = DateTime.UtcNow;
-            await _requests.UpdateAsync(req);
-
-            var otherPending = await _requests.ListAsync(r => r.PetId == req.PetId && r.Status == AdoptionRequestStatus.Pending);
-            if (otherPending.Count == 0)
+            if (request.AdopterId != adopterId)
             {
-                req.Pet.Status = PetStatus.Available;
-                await _pets.UpdateAsync(req.Pet);
+                throw new UnauthorizedAccessException(
+                    "You cannot cancel another adopter's request."
+                );
             }
 
+            if (request.Status != AdoptionRequestStatus.Pending)
+            {
+                throw new InvalidOperationException(
+                    "Only pending requests can be cancelled."
+                );
+            }
+
+            request.Status = AdoptionRequestStatus.Cancelled;
+            request.DecisionAt = DateTime.UtcNow;
+
+            request.Pet.Status = PetStatus.Available;
+
+            await _requests.UpdateAsync(request);
+            await _pets.UpdateAsync(request.Pet);
             await _requests.SaveChangesAsync();
-            await _pets.SaveChangesAsync();
         }
 
-        public async Task<int> GetShelterIdForRequestAsync(int requestId)
+        public async Task<int> GetShelterIdForRequestAsync(
+            int requestId
+        )
         {
-            var req = (await _requests.ListAsync(r => r.Id == requestId, r => r.Pet))
-                .FirstOrDefault();
+            var requests = await _requests.ListAsync(
+                request => request.Id == requestId,
+                request => request.Pet
+            );
 
-            if (req == null)
-                throw new ArgumentException("Request not found.");
+            var request = requests.FirstOrDefault()
+                ?? throw new ArgumentException(
+                    "Adoption request not found."
+                );
 
-            return req.Pet.ShelterId;
+            return request.Pet.ShelterId;
         }
 
-        private static AdoptionRequestDto Map(AdoptionRequest r)
+        private static AdoptionRequestDto Map(
+            AdoptionRequest request
+        )
         {
             return new AdoptionRequestDto(
-                r.Id,
-                r.PetId,
-                r.Pet?.Name ?? "",
-                r.AdopterId,
-                r.Adopter?.FullName ?? "",
-                r.Status,
-                r.Message,
-                r.CreatedAt,
-                r.DecisionAt
+                request.Id,
+                request.PetId,
+                request.Pet.Name,
+                request.AdopterId,
+                request.Adopter.FullName,
+                request.Status,
+                request.Message,
+                request.CreatedAt,
+                request.DecisionAt
             );
         }
     }

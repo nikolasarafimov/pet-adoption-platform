@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using PetAdoption.Application.DTOs;
+﻿using PetAdoption.Application.DTOs;
 using PetAdoption.Application.Interfaces;
 using PetAdoption.Domain.Abstractions;
 using PetAdoption.Domain.Entities;
@@ -15,61 +11,194 @@ namespace PetAdoption.Application.Services
         private readonly IRepository<Pet> _pets;
         private readonly IRepository<Shelter> _shelters;
 
-        public PetService(IRepository<Pet> pets, IRepository<Shelter> shelters)
+        public PetService(
+            IRepository<Pet> pets,
+            IRepository<Shelter> shelters
+        )
         {
-            _pets = pets; _shelters = shelters;
+            _pets = pets;
+            _shelters = shelters;
         }
 
-        public async Task<IReadOnlyList<PetDto>> GetAllAsync(string? search = null, Species? species = null, int? shelterId = null)
+        public async Task<IReadOnlyList<PetDto>> GetAllAsync(
+            string? search = null,
+            Species? species = null,
+            int? shelterId = null
+        )
         {
-            var needle = (search ?? "").Trim().ToLower();
+            var searchText =
+                string.IsNullOrWhiteSpace(search)
+                    ? string.Empty
+                    : search.Trim().ToLower();
 
-            var list = await _pets.ListAsync(
-                p => (string.IsNullOrEmpty(needle) ||
-                      p.Name.ToLower().Contains(needle) ||
-                      (p.Breed ?? "").ToLower().Contains(needle)) &&
-                     (!species.HasValue || p.Species == species) &&
-                     (!shelterId.HasValue || p.ShelterId == shelterId.Value),
-                p => p.Shelter);
+            var pets = await _pets.ListAsync(
+                pet =>
+                    (
+                        string.IsNullOrEmpty(searchText)
+                        || pet.Name.ToLower().Contains(searchText)
+                        || (pet.Breed ?? string.Empty)
+                            .ToLower()
+                            .Contains(searchText)
+                    )
+                    && (
+                        !species.HasValue
+                        || pet.Species == species.Value
+                    )
+                    && (
+                        !shelterId.HasValue
+                        || pet.ShelterId == shelterId.Value
+                    ),
+                pet => pet.Shelter
+            );
 
-            return list.Select(p => new PetDto(
-                p.Id, p.Name, p.Species, p.Breed, p.AgeYears, p.Description, p.ImageUrl,
-                p.Status, p.ShelterId, p.Shelter.Name)).ToList();
+            return pets
+                .Select(Map)
+                .ToList();
         }
 
         public async Task<PetDto?> GetAsync(int id)
         {
-            var list = await _pets.ListAsync(p => p.Id == id, p => p.Shelter);
-            var p = list.FirstOrDefault();
-            if (p == null) return null;
-            return new PetDto(p.Id, p.Name, p.Species, p.Breed, p.AgeYears, p.Description, p.ImageUrl, p.Status, p.ShelterId, p.Shelter.Name);
+            var pets = await _pets.ListAsync(
+                pet => pet.Id == id,
+                pet => pet.Shelter
+            );
+
+            var pet = pets.FirstOrDefault();
+
+            return pet == null
+                ? null
+                : Map(pet);
         }
 
-        public async Task<int> CreateAsync(string name, Species species, string? breed, int ageYears, string? description, string? imageUrl, int shelterId)
+        public async Task<int> CreateAsync(
+            string name,
+            Species species,
+            string? breed,
+            int ageYears,
+            string? description,
+            string? imageUrl,
+            int shelterId
+        )
         {
-            if (ageYears < 0) throw new ArgumentOutOfRangeException(nameof(ageYears));
-            var shelter = await _shelters.GetByIdAsync(shelterId) ?? throw new ArgumentException("Shelter not found!");
-            var pet = new Pet { Name = name, Species = species, Breed = breed, AgeYears = ageYears, Description = description, ImageUrl = imageUrl, ShelterId = shelterId, Status = PetStatus.Available };
+            ValidateName(name);
+            ValidateAge(ageYears);
+
+            _ = await _shelters.GetByIdAsync(shelterId)
+                ?? throw new ArgumentException(
+                    "Shelter not found."
+                );
+
+            var pet = new Pet
+            {
+                Name = name.Trim(),
+                Species = species,
+                Breed = NormalizeOptional(breed),
+                AgeYears = ageYears,
+                Description = NormalizeOptional(description),
+                ImageUrl = NormalizeOptional(imageUrl),
+                ShelterId = shelterId,
+                Status = PetStatus.Available
+            };
+
             await _pets.AddAsync(pet);
             await _pets.SaveChangesAsync();
+
             return pet.Id;
         }
 
-        public async Task UpdateAsync(int id, string name, Species species, string? breed, int ageYears, string? description, string? imageUrl, int shelterId, PetStatus status)
+        public async Task UpdateAsync(
+            int id,
+            string name,
+            Species species,
+            string? breed,
+            int ageYears,
+            string? description,
+            string? imageUrl,
+            int shelterId,
+            PetStatus status
+        )
         {
-            if (ageYears < 0) throw new ArgumentOutOfRangeException(nameof(ageYears));
+            ValidateName(name);
+            ValidateAge(ageYears);
 
-            var pet = await _pets.GetByIdAsync(id) ?? throw new ArgumentException("Pet not found!");
-            pet.Name = name; pet.Species = species; pet.Breed = breed; pet.AgeYears = ageYears; pet.Description = description; pet.ImageUrl = imageUrl; pet.ShelterId = shelterId; pet.Status = status;
+            var pet = await _pets.GetByIdAsync(id)
+                ?? throw new ArgumentException(
+                    "Pet not found."
+                );
+
+            _ = await _shelters.GetByIdAsync(shelterId)
+                ?? throw new ArgumentException(
+                    "Shelter not found."
+                );
+
+            pet.Name = name.Trim();
+            pet.Species = species;
+            pet.Breed = NormalizeOptional(breed);
+            pet.AgeYears = ageYears;
+            pet.Description = NormalizeOptional(description);
+            pet.ImageUrl = NormalizeOptional(imageUrl);
+            pet.ShelterId = shelterId;
+            pet.Status = status;
+
             await _pets.UpdateAsync(pet);
             await _pets.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var pet = await _pets.GetByIdAsync(id) ?? throw new ArgumentException("Pet not found!");
+            var pet = await _pets.GetByIdAsync(id)
+                ?? throw new ArgumentException(
+                    "Pet not found."
+                );
+
             await _pets.DeleteAsync(pet);
             await _pets.SaveChangesAsync();
+        }
+
+        private static PetDto Map(Pet pet)
+        {
+            return new PetDto(
+                pet.Id,
+                pet.Name,
+                pet.Species,
+                pet.Breed,
+                pet.AgeYears,
+                pet.Description,
+                pet.ImageUrl,
+                pet.Status,
+                pet.ShelterId,
+                pet.Shelter.Name
+            );
+        }
+
+        private static void ValidateName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException(
+                    "Pet name is required."
+                );
+            }
+        }
+
+        private static void ValidateAge(int ageYears)
+        {
+            if (ageYears < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(ageYears),
+                    "Pet age cannot be negative."
+                );
+            }
+        }
+
+        private static string? NormalizeOptional(
+            string? value
+        )
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? null
+                : value.Trim();
         }
     }
 }

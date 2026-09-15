@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using PetAdoption.Domain.Enums;
 
 namespace PetAdoption.Domain.Entities
@@ -29,8 +24,12 @@ namespace PetAdoption.Domain.Entities
         [MaxLength(512)]
         public string? ImageUrl { get; set; }
 
-        public PetStatus Status { get; set; } = PetStatus.Available;
+        public PetStatus Status { get; set; }
+            = PetStatus.Available;
+
         public int ShelterId { get; set; }
-        public Shelter Shelter { get; set; } = default!;
+
+        public Shelter Shelter { get; set; }
+            = default!;
     }
 }

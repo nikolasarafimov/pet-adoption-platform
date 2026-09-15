@@ -8,54 +8,113 @@ namespace PetAdoption.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IPetService _pets;
+        private readonly IPetService _petService;
 
-        public HomeController(IPetService pets)
+        public HomeController(IPetService petService)
         {
-            _pets = pets;
+            _petService = petService;
         }
 
         public async Task<IActionResult> Welcome()
         {
-            var featured = (await _pets.GetAllAsync())
-                .OrderByDescending(p => p.Status == PetStatus.Available)
-                .ThenBy(p => p.Name)
+            var featuredPets =
+                (await _petService.GetAllAsync())
+                .OrderByDescending(
+                    pet => pet.Status == PetStatus.Available
+                )
+                .ThenBy(pet => pet.Name)
                 .Take(3)
                 .ToList();
 
-            return View(featured);
+            return View(featuredPets);
         }
 
-        public async Task<IActionResult> Index(string? search, Species? species, int page = 1, int pageSize = 9)
+        public async Task<IActionResult> Index(
+            string? search,
+            Species? species,
+            int page = 1,
+            int pageSize = 9
+        )
         {
-            if (page < 1) page = 1;
-            if (pageSize <= 0 || pageSize > 30) pageSize = 9;
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 30);
 
-            var all = await _pets.GetAllAsync(search, species, null);
-            var total = all.Count;
-            var items = all.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var normalizedSearch =
+                string.IsNullOrWhiteSpace(search)
+                    ? null
+                    : search.Trim();
 
-            ViewBag.Search = search;
+            var pets =
+                await _petService.GetAllAsync(
+                    normalizedSearch,
+                    species,
+                    null
+                );
+
+            var total = pets.Count;
+
+            var totalPages =
+                Math.Max(
+                    1,
+                    (int)Math.Ceiling(
+                        total / (double)pageSize
+                    )
+                );
+
+            if (page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var items = pets
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            ViewBag.Search = normalizedSearch;
             ViewBag.Species = species;
             ViewBag.Page = page;
             ViewBag.PageSize = pageSize;
             ViewBag.Total = total;
-            ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+            ViewBag.TotalPages = totalPages;
 
             return View(items);
         }
 
         [HttpGet]
-        public IActionResult Breeds(string? q, int page = 1, int pageSize = 12)
-            => RedirectToAction("Index", "Breeds", new { q, page, pageSize });
+        public IActionResult Breeds(
+            string? q,
+            int page = 1,
+            int pageSize = 12
+        )
+        {
+            return RedirectToAction(
+                "Index",
+                "Breeds",
+                new
+                {
+                    q,
+                    page,
+                    pageSize
+                }
+            );
+        }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [ResponseCache(
+            Duration = 0,
+            Location = ResponseCacheLocation.None,
+            NoStore = true
+        )]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel
-            {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
-            });
+            return View(
+                new ErrorViewModel
+                {
+                    RequestId =
+                        Activity.Current?.Id
+                        ?? HttpContext.TraceIdentifier
+                }
+            );
         }
     }
 }

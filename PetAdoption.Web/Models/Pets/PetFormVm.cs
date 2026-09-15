@@ -8,16 +8,21 @@ namespace PetAdoption.Web.Models.Pets
     {
         public int Id { get; set; }
 
-        [Required, MaxLength(128)]
-        public string Name { get; set; } = "";
-
         [Required]
+        [MaxLength(128)]
+        public string Name { get; set; } = string.Empty;
+
+        [EnumDataType(typeof(Species))]
         public Species Species { get; set; }
 
         [MaxLength(128)]
         public string? Breed { get; set; }
 
-        [Range(0, 200)]
+        [Range(
+            0,
+            200,
+            ErrorMessage = "Age must be between 0 and 200 years."
+        )]
         public int AgeYears { get; set; }
 
         [MaxLength(1024)]
@@ -27,23 +32,31 @@ namespace PetAdoption.Web.Models.Pets
         [Url]
         public string? ImageUrl { get; set; }
 
-        [Required]
+        [Range(
+            1,
+            int.MaxValue,
+            ErrorMessage = "A shelter must be selected."
+        )]
         public int ShelterId { get; set; }
 
-        [Required]
-        public PetStatus Status { get; set; } = PetStatus.Available;
+        [EnumDataType(typeof(PetStatus))]
+        public PetStatus Status { get; set; }
+            = PetStatus.Available;
 
-        public static PetFormVm FromDto(PetDto p) => new PetFormVm
+        public static PetFormVm FromDto(PetDto pet)
         {
-            Id = p.Id,
-            Name = p.Name,
-            Species = p.Species,
-            Breed = p.Breed,
-            AgeYears = p.AgeYears,
-            Description = p.Description,
-            ImageUrl = p.ImageUrl,
-            ShelterId = p.ShelterId,
-            Status = p.Status
-        };
+            return new PetFormVm
+            {
+                Id = pet.Id,
+                Name = pet.Name,
+                Species = pet.Species,
+                Breed = pet.Breed,
+                AgeYears = pet.AgeYears,
+                Description = pet.Description,
+                ImageUrl = pet.ImageUrl,
+                ShelterId = pet.ShelterId,
+                Status = pet.Status
+            };
+        }
     }
 }

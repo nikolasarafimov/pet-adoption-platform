@@ -5,26 +5,60 @@ namespace PetAdoption.Web.Controllers
 {
     public class BreedsController : Controller
     {
-        private readonly IDogApiService _dog;
+        private readonly IDogApiService _dogApiService;
 
-        public BreedsController(IDogApiService dog)
+        public BreedsController(
+            IDogApiService dogApiService
+        )
         {
-            _dog = dog;
+            _dogApiService = dogApiService;
         }
 
-        public async Task<IActionResult> Index(string? q, int page = 1, int pageSize = 12)
+        public async Task<IActionResult> Index(
+            string? q,
+            int page = 1,
+            int pageSize = 12
+        )
         {
-            var all = await _dog.GetBreedsAsync(q, take: 1000);
-            var total = all.Count;
-            var items = all.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 100);
 
-            ViewBag.Query = q;
+            var query = string.IsNullOrWhiteSpace(q)
+                ? null
+                : q.Trim();
+
+            var breeds =
+                await _dogApiService.GetBreedsAsync(
+                    query,
+                    take: 1000
+                );
+
+            var total = breeds.Count;
+            var totalPages =
+                Math.Max(
+                    1,
+                    (int)Math.Ceiling(
+                        total / (double)pageSize
+                    )
+                );
+
+            if (page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var items = breeds
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            ViewBag.Query = query;
             ViewBag.Page = page;
             ViewBag.PageSize = pageSize;
             ViewBag.Total = total;
-            ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+            ViewBag.TotalPages = totalPages;
 
-            return View(items); 
+            return View(items);
         }
     }
 }
