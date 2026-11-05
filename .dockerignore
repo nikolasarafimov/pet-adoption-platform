@@ -9,39 +9,41 @@
 .github/
 .gitignore
 
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
 
-*.nupkg
-packages/
+**/*.nupkg
+**/packages/
 
-*.log
+**/*.log
 
 **/*.db
 **/*.db-shm
 **/*.db-wal
+**/*.db-journal
 **/*.sqlite
+**/*.sqlite-shm
+**/*.sqlite-wal
+**/*.sqlite-journal
 **/*.sqlite3
+**/*.sqlite3-shm
+**/*.sqlite3-wal
+**/*.sqlite3-journal
 
 **/appsettings.Development.json
 
-publish/
 **/publish/
-
-wwwroot/dist/
-
-node_modules/
+**/wwwroot/dist/
 **/node_modules/
 
-*.tmp
-*.temp
+**/*.tmp
+**/*.temp
 
-.DS_Store
-Thumbs.db
+**/.DS_Store
+**/Thumbs.db
 
 README.md
-
 Dockerfile
 .dockerignore

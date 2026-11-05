@@ -3,185 +3,1996 @@
 
 @{
     ViewData["Title"] = "My Adoption Requests";
+    ViewData["Description"] = "Track and manage your adoption requests on PetAdoption.";
 
-    var pendingCount =
-        Model.Count(r =>
-            r.Status == AdoptionRequestStatus.Pending
-        );
+    var totalCount = Model.Count;
 
-    var approvedCount =
-        Model.Count(r =>
-            r.Status == AdoptionRequestStatus.Approved
-        );
+    var pendingCount = Model.Count(r =>
+        r.Status == AdoptionRequestStatus.Pending);
+
+    var approvedCount = Model.Count(r =>
+        r.Status == AdoptionRequestStatus.Approved);
+
+    var rejectedCount = Model.Count(r =>
+        r.Status == AdoptionRequestStatus.Rejected);
+
+    var cancelledCount = Model.Count(r =>
+        r.Status == AdoptionRequestStatus.Cancelled);
+
+    var successMessage = TempData["ok"] as string;
+    var errorMessage = TempData["err"] as string;
 }
 
-<section class="mb-4">
-    <div class="text-primary fw-semibold text-uppercase small mb-2">
-        Adoption Dashboard
-    </div>
+<div class="pa-requests">
 
-    <h1 class="section-title mb-2">
-        My Adoption Requests
-    </h1>
-
-    <p class="section-subtitle mb-0">
-        Follow the progress of every adoption request you have submitted.
-    </p>
-</section>
-
-@if (TempData["ok"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["ok"]
-    </div>
-}
-
-@if (TempData["err"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["err"]
-    </div>
-}
-
-<div class="row g-3 mb-5">
-    <div class="col-md-4">
-        <div class="card p-4 h-100">
-            <div class="small text-muted mb-2">
-                Total Requests
-            </div>
-
-            <div class="display-6 fw-bold">
-                @Model.Count
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card p-4 h-100">
-            <div class="small text-muted mb-2">
-                Pending
-            </div>
-
-            <div class="display-6 fw-bold text-warning">
-                @pendingCount
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card p-4 h-100">
-            <div class="small text-muted mb-2">
-                Approved
-            </div>
-
-            <div class="display-6 fw-bold text-success">
-                @approvedCount
-            </div>
-        </div>
-    </div>
-</div>
-
-@if (!Model.Any())
-{
-    <div class="empty-state">
-        <div class="display-5 mb-3">
-            📭
-        </div>
-
-        <h4>No adoption requests yet</h4>
-
-        <p class="mb-4">
-            Browse available pets and submit your first adoption request.
-        </p>
+    <nav class="pa-requests__breadcrumb"
+         aria-label="Breadcrumb">
 
         <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-primary">
-            Browse Pets
+           asp-action="Welcome">
+            Home
         </a>
-    </div>
-}
-else
-{
-    <div class="row g-4">
-        @foreach (var request in Model)
-        {
-            var badgeClass =
-            request.Status switch
-            {
-                AdoptionRequestStatus.Pending => "warning text-dark",
-                AdoptionRequestStatus.Approved => "success",
-                AdoptionRequestStatus.Rejected => "danger",
-                AdoptionRequestStatus.Cancelled => "secondary",
-                _ => "dark"
-            };
 
-            <div class="col-12">
-                <div class="card p-4">
-                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
-                                <h4 class="mb-0">
-                                    @request.PetName
-                                </h4>
+        <span aria-hidden="true">/</span>
 
-                                <span class="badge bg-@badgeClass">
-                                    @request.Status
-                                </span>
-                            </div>
+        <span aria-current="page">
+            My Requests
+        </span>
+    </nav>
 
-                            @if (!string.IsNullOrWhiteSpace(request.Message))
-                            {
-                                <div class="bg-light rounded-4 p-3 mb-3">
-                                    <div class="small text-muted mb-1">
-                                        Your message
-                                    </div>
+    <header class="pa-requests__hero">
 
-                                    <div>
-                                        @request.Message
-                                    </div>
-                                </div>
-                            }
+        <div class="pa-requests__hero-glow"
+             aria-hidden="true"></div>
 
-                        <div class="d-flex flex-wrap gap-4 small text-muted">
-                            <div>
-                                <strong>Submitted:</strong>
-                                @request.CreatedAt.ToLocalTime().ToString("g")
-                            </div>
+        <div class="pa-requests__hero-content">
 
-                            <div>
-                                <strong>Decision:</strong>
+            <div class="pa-requests__eyebrow">
+                <span class="pa-requests__eyebrow-dot"></span>
+                YOUR ADOPTION JOURNEY
+            </div>
 
-                                @(request.DecisionAt.HasValue
-                                                            ? request.DecisionAt.Value
-                                                            .ToLocalTime()
-                                                            .ToString("g")
-                                                            : "Pending")
-                        </div>
-                    </div>
+            <h1>
+                Every journey
+                <span>has a story.</span>
+            </h1>
+
+            <p class="pa-requests__hero-description">
+                Stay connected to your adoption journey.
+                Review your requests, follow shelter decisions,
+                and keep track of the pets you've applied to adopt.
+            </p>
+
+            <div class="pa-requests__hero-actions">
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="pa-requests__explore-btn">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6Z" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+
+                    Explore Available Pets
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                    </svg>
+                </a>
+
+                <span class="pa-requests__hero-caption">
+                    YOUR REQUESTS, ALL IN ONE PLACE
+                </span>
+            </div>
+        </div>
+
+        <div class="pa-requests__hero-art"
+             aria-hidden="true">
+
+            <div class="pa-requests__art-ring
+                        pa-requests__art-ring--outer"></div>
+
+            <div class="pa-requests__art-ring
+                        pa-requests__art-ring--inner"></div>
+
+            <div class="pa-requests__art-center">
+
+                <svg viewBox="0 0 80 80"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.4"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M14 35 40 14l26 21" />
+                    <path d="M21 31v37h38V31" />
+                    <path d="M32 68V48h16v20" />
+                    <path d="M40 34c-4.5-6-12-2-10 4 1.5 5 10 10 10 10s8.5-5 10-10c2-6-5.5-10-10-4Z" />
+                </svg>
+            </div>
+
+            <span class="pa-requests__art-spark
+                         pa-requests__art-spark--one"></span>
+
+            <span class="pa-requests__art-spark
+                         pa-requests__art-spark--two"></span>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="pa-requests__alert pa-requests__alert--success"
+             role="status">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="m8 12 3 3 5-6" />
+            </svg>
+
+            <span>@successMessage</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="pa-requests__alert pa-requests__alert--error"
+             role="alert">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v6" />
+                <path d="M12 17h.01" />
+            </svg>
+
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <section class="pa-requests__overview"
+             aria-labelledby="requestsOverviewTitle">
+
+        <div class="pa-requests__section-intro">
+
+            <div>
+                <span class="pa-requests__section-eyebrow">
+                    YOUR ACTIVITY
+                </span>
+
+                <h2 id="requestsOverviewTitle">
+                    Request Overview
+                </h2>
+
+                <p>
+                    A snapshot of your adoption request activity.
+                </p>
+            </div>
+        </div>
+
+        <div class="pa-requests__stats">
+
+            <div class="pa-requests__stat">
+
+                <div class="pa-requests__stat-top">
+
+                    <span class="pa-requests__stat-icon
+                                 pa-requests__stat-icon--total">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="4" y="3" width="16" height="18" rx="3" />
+                            <path d="M8 8h8M8 12h8M8 16h5" />
+                        </svg>
+                    </span>
+
+                    <span class="pa-requests__stat-label">
+                        Total Requests
+                    </span>
                 </div>
 
-                @if (request.Status == AdoptionRequestStatus.Pending)
+                <div class="pa-requests__stat-value">
+                    @totalCount
+                </div>
+
+                <div class="pa-requests__stat-bottom">
+                    All submitted requests
+                </div>
+            </div>
+
+            <div class="pa-requests__stat">
+
+                <div class="pa-requests__stat-top">
+
+                    <span class="pa-requests__stat-icon
+                                 pa-requests__stat-icon--pending">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5l3 2" />
+                        </svg>
+                    </span>
+
+                    <span class="pa-requests__stat-label">
+                        Pending Review
+                    </span>
+                </div>
+
+                <div class="pa-requests__stat-value
+                            pa-requests__stat-value--pending">
+                    @pendingCount
+                </div>
+
+                <div class="pa-requests__stat-bottom">
+                    Awaiting a decision
+                </div>
+            </div>
+
+            <div class="pa-requests__stat">
+
+                <div class="pa-requests__stat-top">
+
+                    <span class="pa-requests__stat-icon
+                                 pa-requests__stat-icon--approved">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="m8 12 3 3 5-6" />
+                        </svg>
+                    </span>
+
+                    <span class="pa-requests__stat-label">
+                        Approved
+                    </span>
+                </div>
+
+                <div class="pa-requests__stat-value
+                            pa-requests__stat-value--approved">
+                    @approvedCount
+                </div>
+
+                <div class="pa-requests__stat-bottom">
+                    Approved by a shelter
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pa-requests__directory"
+             aria-labelledby="requestsDirectoryTitle">
+
+        <div class="pa-requests__directory-heading">
+
+            <div>
+                <span class="pa-requests__section-eyebrow">
+                    REQUEST HISTORY
+                </span>
+
+                <h2 id="requestsDirectoryTitle">
+                    My Applications
+                </h2>
+
+                <p>
+                    Review the status and details
+                    of your adoption requests.
+                </p>
+            </div>
+
+            <span class="pa-requests__directory-count">
+                @totalCount
+                @(totalCount == 1 ? "request" : "requests")
+            </span>
+        </div>
+
+        @if (totalCount == 0)
+        {
+            <div class="pa-requests__empty">
+
+                <div class="pa-requests__empty-art"
+                     aria-hidden="true">
+
+                    <span class="pa-requests__empty-ring"></span>
+
+                    <svg viewBox="0 0 64 64"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2.1"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="M10 14h44v35H24L10 58V14Z" />
+                        <path d="M20 25h24" />
+                        <path d="M20 33h17" />
+                        <path d="M20 41h10" />
+                    </svg>
+                </div>
+
+                <span class="pa-requests__empty-eyebrow">
+                    YOUR JOURNEY STARTS HERE
+                </span>
+
+                <h3>No adoption requests yet.</h3>
+
+                <p>
+                    You haven't submitted an adoption request.
+                    Discover available pets and take the first
+                    step toward finding your new companion.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="pa-requests__empty-button">
+
+                    Browse Available Pets
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                    </svg>
+                </a>
+            </div>
+        }
+        else
+        {
+            <div id="requestFilters"
+                 class="pa-requests__filters"
+                 role="group"
+                 aria-label="Filter requests by status"
+                 hidden>
+
+                <button type="button"
+                        class="pa-requests__filter is-active"
+                        data-pa-request-filter="all"
+                        aria-pressed="true">
+
+                    All
+                    <span>@totalCount</span>
+                </button>
+
+                <button type="button"
+                        class="pa-requests__filter"
+                        data-pa-request-filter="pending"
+                        aria-pressed="false">
+
+                    Pending
+                    <span>@pendingCount</span>
+                </button>
+
+                <button type="button"
+                        class="pa-requests__filter"
+                        data-pa-request-filter="approved"
+                        aria-pressed="false">
+
+                    Approved
+                    <span>@approvedCount</span>
+                </button>
+
+                <button type="button"
+                        class="pa-requests__filter"
+                        data-pa-request-filter="rejected"
+                        aria-pressed="false">
+
+                    Rejected
+                    <span>@rejectedCount</span>
+                </button>
+
+                <button type="button"
+                        class="pa-requests__filter"
+                        data-pa-request-filter="cancelled"
+                        aria-pressed="false">
+
+                    Cancelled
+                    <span>@cancelledCount</span>
+                </button>
+            </div>
+
+            <div id="requestResults"
+                 class="pa-requests__results"
+                 aria-live="polite"
+                 aria-atomic="true"
+                 hidden>
+
+                Showing @totalCount of @totalCount requests
+            </div>
+
+            <div id="requestList"
+                 class="pa-requests__list">
+
+                @foreach (var request in Model)
+                {
+                    var statusName = request.Status.ToString();
+
+                    var statusClass = request.Status switch
+                    {
+                        AdoptionRequestStatus.Pending => "pending",
+                        AdoptionRequestStatus.Approved => "approved",
+                        AdoptionRequestStatus.Rejected => "rejected",
+                        AdoptionRequestStatus.Cancelled => "cancelled",
+                        _ => "unknown"
+                    };
+
+                    var statusDescription = request.Status switch
+                    {
+                        AdoptionRequestStatus.Pending =>
+                            "Your request is awaiting review by the shelter.",
+
+                        AdoptionRequestStatus.Approved =>
+                            "The shelter has approved your adoption request.",
+
+                        AdoptionRequestStatus.Rejected =>
+                            "The shelter has declined your adoption request.",
+
+                        AdoptionRequestStatus.Cancelled =>
+                            "This adoption request has been cancelled.",
+
+                        _ => "Review the current request status."
+                    };
+
+                    var displayPetName =
+                        string.IsNullOrWhiteSpace(request.PetName)
+                            ? "Pet"
+                            : request.PetName;
+
+                    <article class="pa-requests__item"
+                             data-pa-request-item
+                             data-pa-status="@statusClass">
+
+                        <div class="pa-requests__item-top">
+
+                            <div class="pa-requests__pet">
+
+                                <div class="pa-requests__pet-avatar"
+                                     aria-hidden="true">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+
+                                        <circle cx="7" cy="8" r="1" />
+                                        <circle cx="12" cy="5.5" r="1" />
+                                        <circle cx="17" cy="8" r="1" />
+                                        <circle cx="20" cy="12" r="1" />
+                                        <path d="M12 12c-2.2 0-3.4 2-5 3.5-1.4 1.4-.8 4.5 1.8 4.5 1.4 0 2.2-.8 3.2-.8s1.8.8 3.2.8c2.6 0 3.2-3.1 1.8-4.5C15.4 14 14.2 12 12 12Z" />
+                                    </svg>
+                                </div>
+
+                                <div class="pa-requests__pet-info">
+
+                                    <span class="pa-requests__item-eyebrow">
+                                        ADOPTION REQUEST
+                                    </span>
+
+                                    <h3>@displayPetName</h3>
+
+                                    <span class="pa-requests__request-id">
+                                        Request #@request.Id
+                                    </span>
+                                </div>
+                            </div>
+
+                            <span class="pa-requests__status
+                                         pa-requests__status--@statusClass">
+
+                                <span class="pa-requests__status-dot"></span>
+
+                                @statusName
+                            </span>
+                        </div>
+
+                        <div class="pa-requests__status-note
+                                    pa-requests__status-note--@statusClass">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 11v5" />
+                                <path d="M12 8h.01" />
+                            </svg>
+
+                            <span>@statusDescription</span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(request.Message))
                         {
-                            <div class="d-flex align-items-center">
+                            <div class="pa-requests__message">
+
+                                <div class="pa-requests__message-heading">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         aria-hidden="true">
+
+                                        <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-5 3V7a2 2 0 0 1 1-2Z" />
+                                        <path d="M8 10h8" />
+                                        <path d="M8 14h5" />
+                                    </svg>
+
+                                    Your message to the shelter
+                                </div>
+
+                                <p>@request.Message</p>
+                            </div>
+                        }
+
+                        <div class="pa-requests__item-footer">
+
+                            <div class="pa-requests__dates">
+
+                                <div class="pa-requests__date">
+
+                                    <span class="pa-requests__date-icon"
+                                          aria-hidden="true">
+
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="1.8"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round">
+
+                                            <rect x="3" y="5" width="18" height="16" rx="2" />
+                                            <path d="M7 3v4M17 3v4M3 10h18" />
+                                        </svg>
+                                    </span>
+
+                                    <span>
+                                        <small>Submitted</small>
+
+                                        <time datetime="@request.CreatedAt.ToUniversalTime().ToString("o")">
+                                            @request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                        </time>
+                                    </span>
+                                </div>
+
+                                <div class="pa-requests__date">
+
+                                    <span class="pa-requests__date-icon"
+                                          aria-hidden="true">
+
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="1.8"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round">
+
+                                            <circle cx="12" cy="12" r="9" />
+                                            <path d="M12 7v5l3 2" />
+                                        </svg>
+                                    </span>
+
+                                    <span>
+                                        <small>
+                                            @(request.Status == AdoptionRequestStatus.Cancelled
+                                                ? "Status updated"
+                                                : "Decision")
+                                        </small>
+
+                                        @if (request.DecisionAt.HasValue)
+                                        {
+                                            <time datetime="@request.DecisionAt.Value.ToUniversalTime().ToString("o")">
+                                                @request.DecisionAt.Value.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                            </time>
+                                        }
+                                        else
+                                        {
+                                            <span class="pa-requests__date-pending">
+                                                @(request.Status == AdoptionRequestStatus.Pending
+                                                    ? "Awaiting review"
+                                                    : "Not recorded")
+                                            </span>
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+
+                            @if (request.Status == AdoptionRequestStatus.Pending)
+                            {
                                 <form asp-controller="AdoptionRequests"
                                       asp-action="Cancel"
-                                      method="post">
+                                      method="post"
+                                      asp-antiforgery="true"
+                                      class="pa-requests__cancel-form">
 
                                     <input type="hidden"
                                            name="id"
                                            value="@request.Id" />
 
                                     <button type="submit"
-                                            class="btn btn-outline-danger">
+                                            class="pa-requests__cancel"
+                                            aria-label="Cancel adoption request for @displayPetName">
+
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="1.8"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round"
+                                             aria-hidden="true">
+
+                                            <path d="M6 6l12 12" />
+                                            <path d="M18 6 6 18" />
+                                        </svg>
+
                                         Cancel Request
                                     </button>
                                 </form>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <div id="requestFilterEmpty"
+                 class="pa-requests__filter-empty"
+                 hidden>
+
+                <div class="pa-requests__filter-empty-icon"
+                     aria-hidden="true">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M8 12h8" />
+                    </svg>
                 </div>
+
+                <h3>No requests with this status</h3>
+
+                <p>
+                    You don't currently have any adoption
+                    requests in this category.
+                </p>
+
+                <button type="button"
+                        id="showAllRequests"
+                        class="pa-requests__show-all">
+
+                    View All Requests
+                </button>
             </div>
         }
-    </div>
+    </section>
+
+    <section class="pa-requests__bottom-cta">
+
+        <div class="pa-requests__bottom-cta-icon"
+             aria-hidden="true">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+            </svg>
+        </div>
+
+        <div>
+            <h2>There's always another story waiting.</h2>
+
+            <p>
+                Continue exploring pets looking for loving homes.
+            </p>
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="Index">
+
+            Explore Pets
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+            </svg>
+        </a>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .pa-requests {
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto 55px;
+        }
+
+        .pa-requests [hidden] {
+            display: none !important;
+        }
+
+        .pa-requests__breadcrumb {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            color: #89968b;
+            font-size: 0.82rem;
+        }
+
+        .pa-requests__breadcrumb a {
+            color: #637a69;
+            text-decoration: none;
+        }
+
+        .pa-requests__breadcrumb a:hover {
+            color: #c8914e;
+        }
+
+        .pa-requests__breadcrumb [aria-current="page"] {
+            color: #173d32;
+            font-weight: 700;
+        }
+
+        .pa-requests__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            min-height: 330px;
+            margin-bottom: 32px;
+            padding: clamp(32px, 4.5vw, 60px);
+            overflow: hidden;
+            isolation: isolate;
+            border-radius: 28px;
+            background:
+                radial-gradient(
+                    circle at 85% 45%,
+                    rgba(244, 197, 122, 0.16),
+                    transparent 36%
+                ),
+                linear-gradient(125deg, #173d32, #245847);
+            box-shadow: 0 22px 48px rgba(23, 61, 50, 0.15);
+        }
+
+        .pa-requests__hero-glow {
+            position: absolute;
+            right: -100px;
+            bottom: -190px;
+            z-index: -1;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: rgba(244, 197, 122, 0.12);
+            filter: blur(65px);
+            pointer-events: none;
+        }
+
+        .pa-requests__hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 720px;
+            animation: pa-requests-enter 650ms ease both;
+        }
+
+        .pa-requests__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 21px;
+            color: #f4c57a;
+            font-size: 0.71rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-requests__eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 0 5px rgba(244, 197, 122, 0.13);
+        }
+
+        .pa-requests__hero h1 {
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.7rem, 4.8vw, 4.4rem);
+            font-weight: 600;
+            letter-spacing: -0.06em;
+            line-height: 1.1;
+        }
+
+        .pa-requests__hero h1 span {
+            display: block;
+            color: #f4c57a;
+        }
+
+        .pa-requests__hero-description {
+            max-width: 560px;
+            margin: 22px 0 28px;
+            color: rgba(255, 255, 255, 0.83);
+            font-size: 0.95rem;
+            line-height: 1.85;
+        }
+
+        .pa-requests__hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px 23px;
+        }
+
+        .pa-requests__explore-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
+            min-height: 53px;
+            padding: 13px 22px;
+            border: 1px solid #f4c57a;
+            border-radius: 13px;
+            background: #f4c57a;
+            color: #173d32;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+            transition:
+                transform 220ms ease,
+                box-shadow 220ms ease;
+        }
+
+        .pa-requests__explore-btn:hover {
+            transform: translateY(-2px);
+            color: #173d32;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .pa-requests__explore-btn svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .pa-requests__hero-caption {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+        }
+
+        .pa-requests__hero-art {
+            position: relative;
+            display: grid;
+            width: 250px;
+            height: 250px;
+            flex-shrink: 0;
+            place-items: center;
+            margin-right: 15px;
+            animation: pa-requests-float 6s ease-in-out infinite;
+        }
+
+        .pa-requests__art-ring {
+            position: absolute;
+            border: 1px solid rgba(244, 197, 122, 0.23);
+            border-radius: 50%;
+        }
+
+        .pa-requests__art-ring--outer {
+            inset: 0;
+        }
+
+        .pa-requests__art-ring--inner {
+            inset: 35px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .pa-requests__art-center {
+            display: grid;
+            width: 130px;
+            height: 130px;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.34);
+            border-radius: 38px;
+            background: rgba(244, 197, 122, 0.14);
+            color: #f4c57a;
+            transform: rotate(-7deg);
+        }
+
+        .pa-requests__art-center svg {
+            width: 78px;
+            height: 78px;
+            transform: rotate(7deg);
+        }
+
+        .pa-requests__art-spark {
+            position: absolute;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 20px rgba(244, 197, 122, 0.55);
+        }
+
+        .pa-requests__art-spark--one {
+            top: 20px;
+            right: 50px;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pa-requests__art-spark--two {
+            bottom: 34px;
+            left: 20px;
+            width: 5px;
+            height: 5px;
+        }
+
+        .pa-requests__alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            margin-bottom: 25px;
+            padding: 17px 20px;
+            border: 1px solid transparent;
+            border-radius: 15px;
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        .pa-requests__alert svg {
+            width: 21px;
+            height: 21px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .pa-requests__alert--success {
+            border-color: #cce4cf;
+            background: #eef7ed;
+            color: #316745;
+        }
+
+        .pa-requests__alert--error {
+            border-color: #efc9c2;
+            background: #fff2ef;
+            color: #a9443a;
+        }
+
+        .pa-requests__overview {
+            margin-bottom: 37px;
+        }
+
+        .pa-requests__section-intro {
+            margin-bottom: 20px;
+        }
+
+        .pa-requests__section-eyebrow {
+            display: block;
+            margin-bottom: 10px;
+            color: #a97843;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-requests__section-intro h2,
+        .pa-requests__directory-heading h2 {
+            margin: 0 0 9px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-requests__section-intro p,
+        .pa-requests__directory-heading p {
+            margin: 0;
+            color: #7c897e;
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        .pa-requests__stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .pa-requests__stat {
+            min-width: 0;
+            padding: 25px;
+            border: 1px solid #e2eae0;
+            border-radius: 21px;
+            background: #fffefa;
+            box-shadow: 0 10px 30px rgba(23, 61, 50, 0.045);
+            transition:
+                transform 250ms ease,
+                box-shadow 250ms ease,
+                border-color 250ms ease;
+        }
+
+        .pa-requests__stat:hover {
+            transform: translateY(-4px);
+            border-color: #cbdccc;
+            box-shadow: 0 17px 35px rgba(23, 61, 50, 0.085);
+        }
+
+        .pa-requests__stat-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .pa-requests__stat-icon {
+            display: grid;
+            width: 43px;
+            height: 43px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 13px;
+        }
+
+        .pa-requests__stat-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .pa-requests__stat-icon--total {
+            background: #e7f0e4;
+            color: #245847;
+        }
+
+        .pa-requests__stat-icon--pending {
+            background: #fcf1dc;
+            color: #ad782e;
+        }
+
+        .pa-requests__stat-icon--approved {
+            background: #e0f1e6;
+            color: #2f8255;
+        }
+
+        .pa-requests__stat-label {
+            color: #748377;
+            font-size: 0.81rem;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .pa-requests__stat-value {
+            margin: 23px 0 6px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.6rem, 4vw, 3.5rem);
+            font-weight: 600;
+            letter-spacing: -0.06em;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pa-requests__stat-value--pending {
+            color: #bd873b;
+        }
+
+        .pa-requests__stat-value--approved {
+            color: #36825a;
+        }
+
+        .pa-requests__stat-bottom {
+            color: #96a197;
+            font-size: 0.79rem;
+            line-height: 1.6;
+        }
+
+        .pa-requests__directory-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .pa-requests__directory-count {
+            padding: 10px 15px;
+            border: 1px solid #dce8db;
+            border-radius: 12px;
+            background: #eff5ed;
+            color: #48694f;
+            font-size: 0.8rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .pa-requests__filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-bottom: 17px;
+        }
+
+        .pa-requests__filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            min-height: 42px;
+            padding: 10px 15px;
+            border: 1px solid #e0e8df;
+            border-radius: 11px;
+            background: #fffefa;
+            color: #64796a;
+            font-size: 0.81rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition:
+                background-color 200ms ease,
+                border-color 200ms ease,
+                color 200ms ease;
+        }
+
+        .pa-requests__filter span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 7px;
+            background: #eef3eb;
+            font-size: 0.72rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pa-requests__filter:hover {
+            border-color: #b8cdbb;
+            background: #f1f6ef;
+            color: #245847;
+        }
+
+        .pa-requests__filter.is-active {
+            border-color: #245847;
+            background: #245847;
+            color: #fff;
+        }
+
+        .pa-requests__filter.is-active span {
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+        }
+
+        .pa-requests__results {
+            margin-bottom: 16px;
+            color: #819085;
+            font-size: 0.79rem;
+            font-weight: 600;
+        }
+
+        .pa-requests__list {
+            display: grid;
+            gap: 18px;
+        }
+
+        .pa-requests__item {
+            min-width: 0;
+            padding: clamp(22px, 3vw, 34px);
+            border: 1px solid #e2eae0;
+            border-radius: 23px;
+            background: #fffefa;
+            box-shadow: 0 10px 30px rgba(23, 61, 50, 0.045);
+            transition:
+                border-color 250ms ease,
+                box-shadow 250ms ease,
+                transform 250ms ease;
+        }
+
+        .pa-requests__item:hover {
+            transform: translateY(-2px);
+            border-color: #cbdccc;
+            box-shadow: 0 18px 40px rgba(23, 61, 50, 0.075);
+        }
+
+        .pa-requests__item-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 17px;
+        }
+
+        .pa-requests__pet {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .pa-requests__pet-avatar {
+            display: grid;
+            width: 65px;
+            height: 65px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #d9e7d9;
+            border-radius: 19px;
+            background: linear-gradient(145deg, #e7f1e4, #f2f7ef);
+            color: #245847;
+        }
+
+        .pa-requests__pet-avatar svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .pa-requests__pet-info {
+            min-width: 0;
+        }
+
+        .pa-requests__item-eyebrow {
+            display: block;
+            margin-bottom: 7px;
+            color: #a27a48;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+        }
+
+        .pa-requests__pet-info h3 {
+            margin: 0 0 6px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.4rem, 2.3vw, 1.9rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-requests__request-id {
+            color: #89978b;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .pa-requests__status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 13px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .pa-requests__status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .pa-requests__status--pending {
+            border-color: #f0dfbb;
+            background: #fff6e5;
+            color: #a7772d;
+        }
+
+        .pa-requests__status--approved {
+            border-color: #cce6d5;
+            background: #eaf7ee;
+            color: #337d51;
+        }
+
+        .pa-requests__status--rejected {
+            border-color: #efceca;
+            background: #fff0ed;
+            color: #b25349;
+        }
+
+        .pa-requests__status--cancelled {
+            border-color: #dfe3df;
+            background: #f2f4f1;
+            color: #77847b;
+        }
+
+        .pa-requests__status--unknown {
+            border-color: #dfe3df;
+            background: #f2f4f1;
+            color: #66736a;
+        }
+
+        .pa-requests__status-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 23px;
+            padding: 14px 17px;
+            border: 1px solid #e3ebe0;
+            border-radius: 13px;
+            background: #f6f9f4;
+            color: #64796a;
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }
+
+        .pa-requests__status-note svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .pa-requests__status-note--pending {
+            border-color: #f0e2c7;
+            background: #fffaf0;
+            color: #98743d;
+        }
+
+        .pa-requests__status-note--approved {
+            border-color: #d5e8d7;
+            background: #f1f8ef;
+            color: #4e7a58;
+        }
+
+        .pa-requests__status-note--rejected {
+            border-color: #efdad5;
+            background: #fff7f5;
+            color: #a46b61;
+        }
+
+        .pa-requests__message {
+            margin-top: 20px;
+            padding: 21px;
+            border: 1px solid #e7ece3;
+            border-radius: 15px;
+            background: #f8faf6;
+        }
+
+        .pa-requests__message-heading {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 11px;
+            color: #496b53;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .pa-requests__message-heading svg {
+            width: 19px;
+            height: 19px;
+            flex-shrink: 0;
+        }
+
+        .pa-requests__message p {
+            margin: 0;
+            color: #637469;
+            font-size: 0.87rem;
+            line-height: 1.85;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-requests__item-footer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 24px;
+            padding-top: 22px;
+            border-top: 1px solid #e9eee6;
+        }
+
+        .pa-requests__dates {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 32px;
+        }
+
+        .pa-requests__date {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .pa-requests__date-icon {
+            display: grid;
+            width: 33px;
+            height: 33px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #e1e9df;
+            border-radius: 10px;
+            background: #f2f6ef;
+            color: #5d8265;
+        }
+
+        .pa-requests__date-icon svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .pa-requests__date > span:last-child {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .pa-requests__date small {
+            color: #94a095;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .pa-requests__date time,
+        .pa-requests__date-pending {
+            color: #496452;
+            font-size: 0.81rem;
+            font-weight: 800;
+        }
+
+        .pa-requests__date-pending {
+            color: #9d855d;
+        }
+
+        .pa-requests__cancel-form {
+            margin: 0;
+        }
+
+        .pa-requests__cancel {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 43px;
+            padding: 10px 16px;
+            border: 1px solid #efccc6;
+            border-radius: 11px;
+            background: #fff7f5;
+            color: #b15148;
+            font-size: 0.79rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition:
+                border-color 200ms ease,
+                background-color 200ms ease,
+                transform 200ms ease;
+        }
+
+        .pa-requests__cancel:hover {
+            transform: translateY(-1px);
+            border-color: #dfada6;
+            background: #ffedea;
+            color: #a74339;
+        }
+
+        .pa-requests__cancel svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .pa-requests__empty,
+        .pa-requests__filter-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: clamp(45px, 6vw, 85px) 24px;
+            border: 1px solid #e2eae0;
+            border-radius: 23px;
+            background: #fffefa;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(23, 61, 50, 0.045);
+        }
+
+        .pa-requests__empty-art {
+            position: relative;
+            display: grid;
+            width: 105px;
+            height: 105px;
+            margin-bottom: 28px;
+            place-items: center;
+            border-radius: 30px;
+            background: #eaf3e8;
+            color: #245847;
+        }
+
+        .pa-requests__empty-art svg {
+            width: 56px;
+            height: 56px;
+        }
+
+        .pa-requests__empty-ring {
+            position: absolute;
+            inset: -15px;
+            border: 1px solid #dfe9dd;
+            border-radius: 39px;
+        }
+
+        .pa-requests__empty-eyebrow {
+            margin-bottom: 12px;
+            color: #a97843;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+        }
+
+        .pa-requests__empty h3,
+        .pa-requests__filter-empty h3 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.7rem, 3vw, 2.3rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-requests__empty p,
+        .pa-requests__filter-empty p {
+            max-width: 450px;
+            margin: 16px 0 25px;
+            color: #7f8e82;
+            font-size: 0.88rem;
+            line-height: 1.85;
+        }
+
+        .pa-requests__empty-button,
+        .pa-requests__show-all {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 51px;
+            padding: 13px 23px;
+            border: 1px solid #173d32;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .pa-requests__empty-button:hover,
+        .pa-requests__show-all:hover {
+            color: #fff;
+            box-shadow: 0 12px 25px rgba(23, 61, 50, 0.18);
+        }
+
+        .pa-requests__empty-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pa-requests__filter-empty-icon {
+            display: grid;
+            width: 65px;
+            height: 65px;
+            margin-bottom: 20px;
+            place-items: center;
+            border-radius: 19px;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+        .pa-requests__filter-empty-icon svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .pa-requests__bottom-cta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 19px;
+            margin-top: 34px;
+            padding: 28px 32px;
+            border: 1px solid #dfe9dd;
+            border-radius: 21px;
+            background: #eff5ed;
+        }
+
+        .pa-requests__bottom-cta-icon {
+            display: grid;
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 16px;
+            background: #dcebd9;
+            color: #245847;
+        }
+
+        .pa-requests__bottom-cta-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .pa-requests__bottom-cta > div:nth-child(2) {
+            flex: 1;
+            min-width: 170px;
+        }
+
+        .pa-requests__bottom-cta h2 {
+            margin: 0 0 6px;
+            color: #244d35;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+        }
+
+        .pa-requests__bottom-cta p {
+            margin: 0;
+            color: #718473;
+            font-size: 0.83rem;
+            line-height: 1.6;
+        }
+
+        .pa-requests__bottom-cta > a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 45px;
+            padding: 11px 17px;
+            border: 1px solid #245847;
+            border-radius: 11px;
+            background: #245847;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-requests__bottom-cta > a:hover {
+            background: #173d32;
+            color: #fff;
+        }
+
+        .pa-requests__bottom-cta > a svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .pa-requests a:focus-visible,
+        .pa-requests button:focus-visible {
+            outline: 3px solid #c8914e;
+            outline-offset: 3px;
+        }
+
+        @@keyframes pa-requests-enter {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes pa-requests-float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-requests__hero-art {
+                position: absolute;
+                right: -35px;
+                opacity: 0.23;
+                pointer-events: none;
+            }
+
+            .pa-requests__hero-content {
+                max-width: 650px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-requests {
+                margin-bottom: 30px;
+            }
+
+            .pa-requests__hero {
+                min-height: auto;
+                padding: 33px;
+                border-radius: 22px;
+            }
+
+            .pa-requests__hero-art {
+                right: -85px;
+                opacity: 0.12;
+            }
+
+            .pa-requests__stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .pa-requests__stat:first-child {
+                grid-column: 1 / -1;
+            }
+
+            .pa-requests__stat {
+                padding: 22px;
+            }
+
+            .pa-requests__stat-value {
+                font-size: 2.8rem;
+            }
+
+            .pa-requests__item {
+                border-radius: 19px;
+            }
+        }
+
+        @@media (max-width: 520px) {
+            .pa-requests__breadcrumb {
+                font-size: 0.75rem;
+            }
+
+            .pa-requests__hero {
+                padding: 29px 23px;
+            }
+
+            .pa-requests__hero h1 {
+                font-size: clamp(2.35rem, 9vw, 3.15rem);
+            }
+
+            .pa-requests__hero-description {
+                font-size: 0.87rem;
+            }
+
+            .pa-requests__hero-caption {
+                display: none;
+            }
+
+            .pa-requests__explore-btn {
+                width: 100%;
+            }
+
+            .pa-requests__stat {
+                padding: 18px;
+            }
+
+            .pa-requests__stat-label {
+                font-size: 0.74rem;
+            }
+
+            .pa-requests__stat-value {
+                font-size: 2.45rem;
+            }
+
+            .pa-requests__item {
+                padding: 19px;
+            }
+
+            .pa-requests__pet {
+                gap: 12px;
+            }
+
+            .pa-requests__pet-avatar {
+                width: 51px;
+                height: 51px;
+                border-radius: 15px;
+            }
+
+            .pa-requests__pet-avatar svg {
+                width: 28px;
+                height: 28px;
+            }
+
+            .pa-requests__item-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .pa-requests__message {
+                padding: 17px;
+            }
+
+            .pa-requests__dates {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .pa-requests__item-footer {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .pa-requests__cancel {
+                width: 100%;
+            }
+
+            .pa-requests__bottom-cta {
+                padding: 22px;
+            }
+
+            .pa-requests__bottom-cta > a {
+                width: 100%;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-requests__hero-content,
+            .pa-requests__hero-art {
+                animation: none;
+            }
+
+            .pa-requests__stat,
+            .pa-requests__item,
+            .pa-requests__cancel,
+            .pa-requests__explore-btn {
+                transition: none;
+            }
+
+            .pa-requests__stat:hover,
+            .pa-requests__item:hover,
+            .pa-requests__cancel:hover,
+            .pa-requests__explore-btn:hover {
+                transform: none;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const filters = document.getElementById("requestFilters");
+            const results = document.getElementById("requestResults");
+            const emptyState = document.getElementById("requestFilterEmpty");
+            const showAllButton = document.getElementById("showAllRequests");
+
+            const buttons = Array.from(
+                document.querySelectorAll("[data-pa-request-filter]")
+            );
+
+            const items = Array.from(
+                document.querySelectorAll("[data-pa-request-item]")
+            );
+
+            const cancelForms = document.querySelectorAll(
+                ".pa-requests__cancel-form"
+            );
+
+            if (filters && results && emptyState && buttons.length) {
+                filters.hidden = false;
+                results.hidden = false;
+
+                const applyFilter = status => {
+                    let visibleCount = 0;
+
+                    items.forEach(item => {
+                        const matches =
+                            status === "all" ||
+                            item.dataset.paStatus === status;
+
+                        item.hidden = !matches;
+
+                        if (matches) {
+                            visibleCount++;
+                        }
+                    });
+
+                    buttons.forEach(button => {
+                        const selected =
+                            button.dataset.paRequestFilter === status;
+
+                        button.classList.toggle("is-active", selected);
+                        button.setAttribute("aria-pressed", String(selected));
+                    });
+
+                    emptyState.hidden = visibleCount !== 0;
+
+                    results.textContent =
+                        `Showing ${visibleCount} of ${items.length} ` +
+                        (items.length === 1 ? "request" : "requests");
+                };
+
+                buttons.forEach(button => {
+                    button.addEventListener("click", () => {
+                        applyFilter(button.dataset.paRequestFilter);
+                    });
+                });
+
+                showAllButton?.addEventListener("click", () => {
+                    applyFilter("all");
+                    buttons[0]?.focus();
+                });
+
+                applyFilter("all");
+            }
+
+            cancelForms.forEach(form => {
+                form.addEventListener("submit", event => {
+                    const confirmed = window.confirm(
+                        "Are you sure you want to cancel this adoption request?"
+                    );
+
+                    if (!confirmed) {
+                        event.preventDefault();
+                    }
+                });
+            });
+        })();
+    </script>
 }

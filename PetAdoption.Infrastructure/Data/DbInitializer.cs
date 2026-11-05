@@ -31,26 +31,24 @@ namespace PetAdoption.Infrastructure.Data
             DemoSeedCredentials credentials
         )
         {
+            ValidateCredentials(credentials);
+
             await EnsureRolesAsync(roleManager);
 
-            var shelters =
-                await EnsureSheltersAsync(db);
+            var shelters = await EnsureSheltersAsync(db);
 
-            var happyTails =
-                shelters.Single(shelter =>
-                    shelter.Name == "Happy Tails Shelter"
-                );
+            var happyTails = shelters.Single(
+                shelter => shelter.Name == "Happy Tails Shelter"
+            );
 
-            var secondChance =
-                shelters.Single(shelter =>
-                    shelter.Name == "Second Chance"
-                );
+            var secondChance = shelters.Single(
+                shelter => shelter.Name == "Second Chance"
+            );
 
-            var demoAdopter =
-                await EnsureDemoAdopterAsync(
-                    db,
-                    credentials.AdopterEmail
-                );
+            var demoAdopter = await EnsureDemoAdopterAsync(
+                db,
+                credentials.AdopterEmail
+            );
 
             await EnsureUserAsync(
                 userManager,
@@ -69,17 +67,24 @@ namespace PetAdoption.Infrastructure.Data
                 shelterId: happyTails.Id
             );
 
-            var adopterUser =
-                await EnsureUserAsync(
-                    userManager,
-                    credentials.AdopterEmail,
-                    credentials.AdopterPassword,
-                    "Adopter",
-                    "Demo Adopter",
-                    adopterId: demoAdopter.Id
-                );
+            var adopterUser = await EnsureUserAsync(
+                userManager,
+                credentials.AdopterEmail,
+                credentials.AdopterPassword,
+                "Adopter",
+                "Demo Adopter",
+                adopterId: demoAdopter.Id
+            );
 
-            if (demoAdopter.UserId != adopterUser.Id)
+            if (demoAdopter.UserId != null &&
+                demoAdopter.UserId != adopterUser.Id)
+            {
+                throw new InvalidOperationException(
+                    "The demo adopter is linked to a different user."
+                );
+            }
+
+            if (demoAdopter.UserId == null)
             {
                 demoAdopter.UserId = adopterUser.Id;
                 await db.SaveChangesAsync();
@@ -90,6 +95,74 @@ namespace PetAdoption.Infrastructure.Data
                 happyTails.Id,
                 secondChance.Id
             );
+
+            await EnsureDemoRequestsAsync(
+                db,
+                happyTails.Id,
+                secondChance.Id,
+                demoAdopter.Id
+            );
+        }
+
+        private static void ValidateCredentials(
+            DemoSeedCredentials credentials
+        )
+        {
+            var emails = new[]
+            {
+                credentials.AdminEmail,
+                credentials.ShelterEmail,
+                credentials.AdopterEmail
+            };
+
+            if (emails.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new ArgumentException(
+                    "Demo account email addresses are required.",
+                    nameof(credentials)
+                );
+            }
+
+            if (emails.Any(email => email != email.Trim()))
+            {
+                throw new ArgumentException(
+                    "Demo account email addresses must not contain surrounding whitespace.",
+                    nameof(credentials)
+                );
+            }
+
+            if (emails.Distinct(
+                    StringComparer.OrdinalIgnoreCase
+                ).Count() != emails.Length)
+            {
+                throw new ArgumentException(
+                    "Each demo account must have a unique email address.",
+                    nameof(credentials)
+                );
+            }
+
+            if (credentials.AdopterEmail.Length > 128)
+            {
+                throw new ArgumentException(
+                    "Demo adopter email cannot exceed 128 characters.",
+                    nameof(credentials)
+                );
+            }
+
+            var passwords = new[]
+            {
+                credentials.AdminPassword,
+                credentials.ShelterPassword,
+                credentials.AdopterPassword
+            };
+
+            if (passwords.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new ArgumentException(
+                    "Demo account passwords are required.",
+                    nameof(credentials)
+                );
+            }
         }
 
         private static async Task EnsureRolesAsync(
@@ -103,10 +176,9 @@ namespace PetAdoption.Infrastructure.Data
                     continue;
                 }
 
-                var result =
-                    await roleManager.CreateAsync(
-                        new IdentityRole(roleName)
-                    );
+                var result = await roleManager.CreateAsync(
+                    new IdentityRole(roleName)
+                );
 
                 EnsureIdentitySucceeded(
                     result,
@@ -119,12 +191,9 @@ namespace PetAdoption.Infrastructure.Data
             AppDbContext db
         )
         {
-            var happyTails =
-                await db.Shelters.FirstOrDefaultAsync(
-                    shelter =>
-                        shelter.Name
-                        == "Happy Tails Shelter"
-                );
+            var happyTails = await db.Shelters.FirstOrDefaultAsync(
+                shelter => shelter.Name == "Happy Tails Shelter"
+            );
 
             if (happyTails == null)
             {
@@ -140,12 +209,9 @@ namespace PetAdoption.Infrastructure.Data
                 db.Shelters.Add(happyTails);
             }
 
-            var secondChance =
-                await db.Shelters.FirstOrDefaultAsync(
-                    shelter =>
-                        shelter.Name
-                        == "Second Chance"
-                );
+            var secondChance = await db.Shelters.FirstOrDefaultAsync(
+                shelter => shelter.Name == "Second Chance"
+            );
 
             if (secondChance == null)
             {
@@ -175,11 +241,9 @@ namespace PetAdoption.Infrastructure.Data
             string email
         )
         {
-            var adopter =
-                await db.Adopters.FirstOrDefaultAsync(
-                    existing =>
-                        existing.Email == email
-                );
+            var adopter = await db.Adopters.FirstOrDefaultAsync(
+                existing => existing.Email == email
+            );
 
             if (adopter != null)
             {
@@ -196,6 +260,7 @@ namespace PetAdoption.Infrastructure.Data
             };
 
             db.Adopters.Add(adopter);
+
             await db.SaveChangesAsync();
 
             return adopter;
@@ -211,8 +276,7 @@ namespace PetAdoption.Infrastructure.Data
             int? adopterId = null
         )
         {
-            var user =
-                await userManager.FindByEmailAsync(email);
+            var user = await userManager.FindByEmailAsync(email);
 
             if (user == null)
             {
@@ -226,103 +290,86 @@ namespace PetAdoption.Infrastructure.Data
                     AdopterId = adopterId
                 };
 
-                var createResult =
-                    await userManager.CreateAsync(
-                        user,
-                        password
-                    );
+                var createResult = await userManager.CreateAsync(
+                    user,
+                    password
+                );
 
                 EnsureIdentitySucceeded(
                     createResult,
                     $"Unable to create demo user '{email}'."
                 );
-            }
-            else
-            {
-                var requiresUpdate = false;
 
-                if (user.FullName != fullName)
-                {
-                    user.FullName = fullName;
-                    requiresUpdate = true;
-                }
-
-                if (user.ShelterId != shelterId)
-                {
-                    user.ShelterId = shelterId;
-                    requiresUpdate = true;
-                }
-
-                if (user.AdopterId != adopterId)
-                {
-                    user.AdopterId = adopterId;
-                    requiresUpdate = true;
-                }
-
-                if (requiresUpdate)
-                {
-                    var updateResult =
-                        await userManager.UpdateAsync(user);
-
-                    EnsureIdentitySucceeded(
-                        updateResult,
-                        $"Unable to update demo user '{email}'."
-                    );
-                }
-            }
-
-            if (!await userManager.IsInRoleAsync(
-                user,
-                role
-            ))
-            {
-                var roleResult =
-                    await userManager.AddToRoleAsync(
-                        user,
-                        role
-                    );
+                var roleResult = await userManager.AddToRoleAsync(
+                    user,
+                    role
+                );
 
                 EnsureIdentitySucceeded(
                     roleResult,
                     $"Unable to assign role '{role}' to '{email}'."
                 );
             }
-
-            var claims =
-                await userManager.GetClaimsAsync(user);
-
-            var existingDisplayName =
-                claims.FirstOrDefault(claim =>
-                    claim.Type == "display_name"
+            else
+            {
+                var existingRoles = await userManager.GetRolesAsync(
+                    user
                 );
+
+                if (existingRoles.Count != 1 ||
+                    !string.Equals(
+                        existingRoles[0],
+                        role,
+                        StringComparison.OrdinalIgnoreCase
+                    ))
+                {
+                    throw new InvalidOperationException(
+                        $"Existing account '{email}' cannot be reused as a demo '{role}' account."
+                    );
+                }
+
+                if (user.ShelterId != shelterId ||
+                    user.AdopterId != adopterId)
+                {
+                    throw new InvalidOperationException(
+                        $"Demo account '{email}' has unexpected profile links."
+                    );
+                }
+            }
+
+            var claims = await userManager.GetClaimsAsync(user);
+
+            var existingDisplayName = claims.FirstOrDefault(
+                claim => claim.Type == "display_name"
+            );
+
+            var displayName = user.FullName ?? fullName;
 
             if (existingDisplayName == null)
             {
-                var claimResult =
-                    await userManager.AddClaimAsync(
-                        user,
-                        new Claim(
-                            "display_name",
-                            fullName
-                        )
-                    );
+                var claimResult = await userManager.AddClaimAsync(
+                    user,
+                    new Claim(
+                        "display_name",
+                        displayName
+                    )
+                );
 
                 EnsureIdentitySucceeded(
                     claimResult,
                     $"Unable to add display name claim to '{email}'."
                 );
             }
-            else if (existingDisplayName.Value != fullName)
+            else if (existingDisplayName.Value != displayName)
             {
-                var replaceResult =
-                    await userManager.ReplaceClaimAsync(
-                        user,
-                        existingDisplayName,
-                        new Claim(
-                            "display_name",
-                            fullName
-                        )
-                    );
+                var replaceResult = await userManager.ReplaceClaimAsync(
+                    user,
+                    existingDisplayName,
+                    new Claim(
+                        "display_name",
+                        displayName
+                    )
+                );
 
                 EnsureIdentitySucceeded(
                     replaceResult,
@@ -339,124 +386,91 @@ namespace PetAdoption.Infrastructure.Data
             int secondChanceId
         )
         {
-            await AddPetIfMissingAsync(
-                db,
+            var demoPets = new[]
+            {
                 new Pet
                 {
                     Name = "Buddy",
                     Species = Species.Dog,
                     Breed = "Labrador Retriever",
                     AgeYears = 3,
-                    Description =
-                        "Friendly, playful, house-trained.",
-                    ImageUrl =
-                        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1200&auto=format&fit=crop",
+                    Description = "Friendly, playful, house-trained.",
+                    ImageUrl = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1200&auto=format&fit=crop",
                     Status = PetStatus.Reserved,
                     ShelterId = happyTailsId
-                }
-            );
-
-            await AddPetIfMissingAsync(
-                db,
+                },
                 new Pet
                 {
                     Name = "Milo",
                     Species = Species.Cat,
                     Breed = "British Shorthair",
                     AgeYears = 2,
-                    Description =
-                        "Calm, cuddly, indoor-friendly.",
-                    ImageUrl =
-                        "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?q=80&w=1200&auto=format&fit=crop",
+                    Description = "Calm, cuddly, indoor-friendly.",
+                    ImageUrl = "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?q=80&w=1200&auto=format&fit=crop",
                     Status = PetStatus.Available,
                     ShelterId = happyTailsId
-                }
-            );
-
-            await AddPetIfMissingAsync(
-                db,
+                },
                 new Pet
                 {
                     Name = "Luna",
                     Species = Species.Dog,
                     Breed = "Border Collie",
                     AgeYears = 1,
-                    Description =
-                        "Smart, curious, loves long walks.",
-                    ImageUrl =
-                        "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1200&auto=format&fit=crop",
+                    Description = "Smart, curious, loves long walks.",
+                    ImageUrl = "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=1200&auto=format&fit=crop",
                     Status = PetStatus.Available,
                     ShelterId = secondChanceId
-                }
-            );
-
-            await AddPetIfMissingAsync(
-                db,
+                },
                 new Pet
                 {
                     Name = "Oliver",
                     Species = Species.Cat,
                     Breed = "Maine Coon",
                     AgeYears = 4,
-                    Description =
-                        "Big gentle boy. Great with kids.",
-                    ImageUrl =
-                        "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1200&auto=format&fit=crop",
+                    Description = "Big gentle boy. Great with kids.",
+                    ImageUrl = "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1200&auto=format&fit=crop",
                     Status = PetStatus.Adopted,
                     ShelterId = secondChanceId
-                }
-            );
-
-            await AddPetIfMissingAsync(
-                db,
+                },
                 new Pet
                 {
                     Name = "Coco",
                     Species = Species.Dog,
                     Breed = "Poodle",
                     AgeYears = 5,
-                    Description =
-                        "Hypoallergenic coat, well-trained.",
-                    ImageUrl =
-                        "https://images.unsplash.com/photo-1567752881298-894bb81f9379?q=80&w=1200&auto=format&fit=crop",
+                    Description = "Hypoallergenic coat, well-trained.",
+                    ImageUrl = "https://images.unsplash.com/photo-1567752881298-894bb81f9379?q=80&w=1200&auto=format&fit=crop",
                     Status = PetStatus.Unavailable,
                     ShelterId = happyTailsId
-                }
-            );
-
-            await AddPetIfMissingAsync(
-                db,
+                },
                 new Pet
                 {
                     Name = "Nala",
                     Species = Species.Cat,
                     Breed = "Siamese",
                     AgeYears = 2,
-                    Description =
-                        "Talkative and affectionate.",
-                    ImageUrl =
-                        "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1200&auto=format&fit=crop",
+                    Description = "Talkative and affectionate.",
+                    ImageUrl = "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1200&auto=format&fit=crop",
                     Status = PetStatus.Reserved,
                     ShelterId = secondChanceId
-                }
-            );
-
-            await AddPetIfMissingAsync(
-                db,
+                },
                 new Pet
                 {
                     Name = "Rocky",
                     Species = Species.Dog,
                     Breed = "German Shepherd",
                     AgeYears = 6,
-                    Description =
-                        "Loyal guardian, basic obedience trained.",
-                    ImageUrl =
-                        "https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=1200&auto=format&fit=crop",
+                    Description = "Loyal guardian, basic obedience trained.",
+                    ImageUrl = "https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=1200&auto=format&fit=crop",
                     Status = PetStatus.Available,
                     ShelterId = happyTailsId
                 }
-            );
+            };
+
+            foreach (var pet in demoPets)
+            {
+                await AddPetIfMissingAsync(db, pet);
+            }
 
             await db.SaveChangesAsync();
         }
@@ -466,17 +480,102 @@ namespace PetAdoption.Infrastructure.Data
             Pet pet
         )
         {
-            var exists =
-                await db.Pets.AnyAsync(existing =>
-                    existing.Name == pet.Name
-                    && existing.ShelterId
-                    == pet.ShelterId
-                );
+            var exists = await db.Pets.AnyAsync(
+                existing =>
+                    existing.Name == pet.Name &&
+                    existing.ShelterId == pet.ShelterId
+            );
 
             if (!exists)
             {
                 db.Pets.Add(pet);
             }
+        }
+
+        private static async Task EnsureDemoRequestsAsync(
+            AppDbContext db,
+            int happyTailsId,
+            int secondChanceId,
+            int adopterId
+        )
+        {
+            await AddDemoRequestIfMissingAsync(
+                db,
+                "Buddy",
+                happyTailsId,
+                PetStatus.Reserved,
+                AdoptionRequestStatus.Pending,
+                adopterId
+            );
+
+            await AddDemoRequestIfMissingAsync(
+                db,
+                "Nala",
+                secondChanceId,
+                PetStatus.Reserved,
+                AdoptionRequestStatus.Pending,
+                adopterId
+            );
+
+            await AddDemoRequestIfMissingAsync(
+                db,
+                "Oliver",
+                secondChanceId,
+                PetStatus.Adopted,
+                AdoptionRequestStatus.Approved,
+                adopterId
+            );
+
+            await db.SaveChangesAsync();
+        }
+
+        private static async Task AddDemoRequestIfMissingAsync(
+            AppDbContext db,
+            string petName,
+            int shelterId,
+            PetStatus expectedPetStatus,
+            AdoptionRequestStatus requestStatus,
+            int adopterId
+        )
+        {
+            var pet = await db.Pets.FirstOrDefaultAsync(
+                existing =>
+                    existing.Name == petName &&
+                    existing.ShelterId == shelterId
+            );
+
+            if (pet == null || pet.Status != expectedPetStatus)
+            {
+                return;
+            }
+
+            var requestExists = await db.AdoptionRequests.AnyAsync(
+                request =>
+                    request.PetId == pet.Id &&
+                    request.Status == requestStatus
+            );
+
+            if (requestExists)
+            {
+                return;
+            }
+
+            var now = DateTime.UtcNow;
+
+            db.AdoptionRequests.Add(
+                new AdoptionRequest
+                {
+                    PetId = pet.Id,
+                    AdopterId = adopterId,
+                    Status = requestStatus,
+                    Message = $"Demo adoption request for {petName}.",
+                    CreatedAt = now,
+                    DecisionAt =
+                        requestStatus == AdoptionRequestStatus.Pending
+                            ? null
+                            : now
+                }
+            );
         }
 
         private static void EnsureIdentitySucceeded(

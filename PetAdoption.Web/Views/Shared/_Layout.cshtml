@@ -1,19 +1,60 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<PetAdoption.Infrastructure.Data.ApplicationUser> SignInManager
-@inject UserManager<PetAdoption.Infrastructure.Data.ApplicationUser> UserManager
+﻿@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole("Admin");
+    var isShelter = User.IsInRole("Shelter");
+    var isAdopter = User.IsInRole("Adopter");
+
+    var displayName = User.FindFirst("display_name")?.Value;
+
+    if (string.IsNullOrWhiteSpace(displayName))
+    {
+        displayName = User.Identity?.Name ?? "My Account";
+    }
+
+    var avatarInitial = displayName.Trim()[0].ToString().ToUpperInvariant();
+
+    var roleName = isAdmin
+        ? "Administrator"
+        : isShelter
+            ? "Shelter"
+            : isAdopter
+                ? "Adopter"
+                : "Member";
+
+    var pageTitle = ViewData["Title"] as string;
+    var pageDescription = ViewData["Description"] as string
+        ?? "Discover adoptable pets, explore dog breeds, and connect with shelters through PetAdoption.";
+
+    var workspaceActive =
+        IsActive("Shelters") ||
+        IsActive("AdoptersAdmin") ||
+        IsActive("AdoptionRequests") ||
+        (isShelter && IsActive("Pets"));
+}
 
 @functions {
     bool IsActive(string? controller = null, string? action = null)
     {
         var route = Context.GetRouteData();
+
         var currentController = route.Values["controller"]?.ToString();
         var currentAction = route.Values["action"]?.ToString();
 
-        bool controllerMatch = string.IsNullOrEmpty(controller) ||
-                               string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+        var controllerMatch =
+            string.IsNullOrEmpty(controller) ||
+            string.Equals(
+                currentController,
+                controller,
+                StringComparison.OrdinalIgnoreCase
+            );
 
-        bool actionMatch = string.IsNullOrEmpty(action) ||
-                           string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+        var actionMatch =
+            string.IsNullOrEmpty(action) ||
+            string.Equals(
+                currentAction,
+                action,
+                StringComparison.OrdinalIgnoreCase
+            );
 
         return controllerMatch && actionMatch;
     }
@@ -23,170 +64,683 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@(ViewData["Title"] is string t ? $"{t} | Pet Adoption Platform" : "Pet Adoption Platform")</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1" />
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <meta name="theme-color" content="#173D32" />
+
+    <link rel="icon"
+          type="image/png"
+          href="~/icon.png"
+          asp-append-version="true" />
+
+    <meta name="description" content="@pageDescription" />
+
+    <title>
+        @(string.IsNullOrWhiteSpace(pageTitle)
+                ? "PetAdoption | Find Your Perfect Companion"
+                : $"{pageTitle} | PetAdoption")
+    </title>
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin />
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap"
+          rel="stylesheet" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" />
+
+    <link href="~/css/site.css"
+          rel="stylesheet"
+          asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <div class="app-shell">
-        <nav class="navbar navbar-expand-lg navbar-dark app-navbar fixed-top">
-            <div class="container">
-                <a class="navbar-brand app-brand" asp-controller="Home" asp-action="Welcome">
-                    <span class="brand-icon">🐾</span>
-                    <span>Pet Adoption Platform</span>
-                </a>
 
-                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+<body class="pa-body">
 
-                <div id="mainNav" class="collapse navbar-collapse">
-                    <ul class="navbar-nav me-auto mb-3 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link @(IsActive("Home", "Welcome") || IsActive("Home", "Index") ? "active" : "")"
-                               asp-controller="Home" asp-action="Welcome">
-                                Home
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @(IsActive("Pets") ? "active" : "")"
-                               asp-controller="Pets" asp-action="Index">
-                                Pets
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @(IsActive("Breeds") ? "active" : "")"
-                               asp-controller="Breeds" asp-action="Index">
-                                Dog Breeds
-                            </a>
-                        </li>
+    <svg class="pa-svg-definitions"
+         xmlns="http://www.w3.org/2000/svg"
+         aria-hidden="true"
+         focusable="false"
+         width="0"
+         height="0"
+         style="position:absolute;overflow:hidden">
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link @(IsActive("Shelters") ? "active" : "")"
-                                   asp-controller="Shelters" asp-action="Index">
-                                    Shelters
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link @(IsActive("AdoptersAdmin") ? "active" : "")"
-                                   asp-controller="AdoptersAdmin" asp-action="Index">
-                                    Adopters
-                                </a>
-                            </li>
-                        }
+        <symbol id="pa-icon-paw" viewBox="0 0 24 24">
+            <circle cx="6" cy="8" r="1.5" />
+            <circle cx="10" cy="4.5" r="1.5" />
+            <circle cx="15" cy="4.5" r="1.5" />
+            <circle cx="19" cy="8" r="1.5" />
+            <path d="M8 13.5c1.2-1.6 2.4-2.5 4-2.5s2.8.9 4 2.5l2 2.8c1.3 2.2-.1 4.2-2.5 4.2-1.5 0-2.2-.8-3.5-.8s-2 .8-3.5.8C6.1 20.5 4.7 18.5 6 16.3Z" />
+        </symbol>
 
-                        @if (User.IsInRole("Adopter"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link @(IsActive("AdoptionRequests", "Index") ? "active" : "")"
-                                   asp-controller="AdoptionRequests" asp-action="Index">
-                                    My Requests
-                                </a>
-                            </li>
-                        }
+        <symbol id="pa-icon-arrow" viewBox="0 0 24 24">
+            <path d="M5 12h14" />
+            <path d="m13 6 6 6-6 6" />
+        </symbol>
 
-                        @if (User.IsInRole("Shelter") || User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link @(IsActive("AdoptionRequests", "Manage") ? "active" : "")"
-                                   asp-controller="AdoptionRequests" asp-action="Manage">
-                                    Review Requests
-                                </a>
-                            </li>
-                        }
-                    </ul>
+        <symbol id="pa-icon-chevron" viewBox="0 0 24 24">
+            <path d="m6 9 6 6 6-6" />
+        </symbol>
 
-                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                        @if (User.Identity?.IsAuthenticated ?? false)
-                        {
-                            var name = User.FindFirst("display_name")?.Value
-                            ?? User.Identity?.Name
-                            ?? "User";
+        <symbol id="pa-icon-menu" viewBox="0 0 24 24">
+            <path d="M4 7h16" />
+            <path d="M4 12h16" />
+            <path d="M4 17h16" />
+        </symbol>
 
-                            <li class="nav-item">
-                                <span class="user-chip">
-                                    <span class="user-chip-dot"></span>
-                                    Hello, @name
-                                </span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-light btn-sm app-btn-light">
-                                        Logout
-                                    </button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">
-                                    Register
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-light btn-sm app-btn-solid" asp-controller="Account" asp-action="Login">
-                                    Login
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </div>
+        <symbol id="pa-icon-heart" viewBox="0 0 24 24">
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+        </symbol>
+
+        <symbol id="pa-icon-log-out" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="m16 17 5-5-5-5" />
+            <path d="M21 12H9" />
+        </symbol>
+
+        <symbol id="pa-icon-check" viewBox="0 0 24 24">
+            <path d="m5 12 4 4L19 6" />
+        </symbol>
+
+        <symbol id="pa-icon-alert" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6" />
+            <path d="M12 17h.01" />
+        </symbol>
+
+        <symbol id="pa-icon-sparkles" viewBox="0 0 24 24">
+            <path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z" />
+            <path d="m19 16 .7 1.3L21 18l-1.3.7L19 20l-.7-1.3L17 18l1.3-.7Z" />
+        </symbol>
+    </svg>
+
+    <a href="#main-content" class="pa-skip-link">
+        Skip to main content
+    </a>
+
+    <div class="pa-app-shell">
+
+        <header class="pa-header" data-pa-header>
+
+            <div class="pa-header__inner">
+
+                <nav class="navbar navbar-expand-xl pa-navbar"
+                     aria-label="Main navigation">
+
+                    <div class="container-fluid pa-container">
+
+                        <a class="navbar-brand pa-brand"
+                           asp-controller="Home"
+                           asp-action="Welcome"
+                           aria-label="PetAdoption home">
+
+                            <img src="~/images/logo.png"
+                                 asp-append-version="true"
+                                 alt="PetAdoption"
+                                 class="pa-brand__logo" />
+                        </a>
+
+                        <button class="navbar-toggler pa-nav-toggler"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#paMainNavigation"
+                                aria-controls="paMainNavigation"
+                                aria-expanded="false"
+                                aria-label="Toggle navigation">
+
+                            <svg class="pa-icon"
+                                 aria-hidden="true">
+                                <use href="#pa-icon-menu"></use>
+                            </svg>
+                        </button>
+
+                        <div class="collapse navbar-collapse pa-nav-collapse"
+                             id="paMainNavigation">
+
+                            <ul class="navbar-nav pa-nav-links">
+
+                                <li class="nav-item">
+                                    <a class="nav-link pa-nav-link @(IsActive("Home", "Welcome") ? "is-active" : "")"
+                                       asp-controller="Home"
+                                       asp-action="Welcome"
+                                       aria-current="@(IsActive("Home", "Welcome") ? "page" : null)">
+                                        Home
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link pa-nav-link @(IsActive("Home", "Index") ? "is-active" : "")"
+                                       asp-controller="Home"
+                                       asp-action="Index"
+                                       aria-current="@(IsActive("Home", "Index") ? "page" : null)">
+                                        Explore Pets
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link pa-nav-link @(IsActive("Breeds") ? "is-active" : "")"
+                                       asp-controller="Breeds"
+                                       asp-action="Index"
+                                       aria-current="@(IsActive("Breeds") ? "page" : null)">
+                                        Dog Breeds
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link pa-nav-link @(IsActive("Pets") && !isShelter ? "is-active" : "")"
+                                       asp-controller="Pets"
+                                       asp-action="Index"
+                                       aria-current="@(IsActive("Pets") && !isShelter ? "page" : null)">
+                                        Pet Directory
+                                    </a>
+                                </li>
+
+                                @if (isAuthenticated &&
+                                                                (isAdmin || isShelter || isAdopter))
+                                {
+                                    <li class="nav-item dropdown pa-workspace">
+
+                                        <button class="nav-link dropdown-toggle pa-nav-link pa-workspace__trigger @(workspaceActive ? "is-active" : "")"
+                                                id="paWorkspaceMenu"
+                                                type="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+
+                                            Workspace
+
+                                            <svg class="pa-icon pa-chevron"
+                                                 aria-hidden="true">
+                                                <use href="#pa-icon-chevron"></use>
+                                            </svg>
+                                        </button>
+
+                                        <ul class="dropdown-menu pa-dropdown-menu"
+                                            aria-labelledby="paWorkspaceMenu">
+
+                                            @if (isAdopter)
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item pa-dropdown-item"
+                                                       asp-controller="AdoptionRequests"
+                                                       asp-action="Index">
+                                                        My Adoption Requests
+                                                    </a>
+                                                </li>
+                                            }
+
+                                            @if (isShelter || isAdmin)
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item pa-dropdown-item"
+                                                       asp-controller="Pets"
+                                                       asp-action="Index">
+                                                        Manage Pets
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item pa-dropdown-item"
+                                                       asp-controller="AdoptionRequests"
+                                                       asp-action="Manage">
+                                                        Review Requests
+                                                    </a>
+                                                </li>
+                                            }
+
+                                            @if (isAdmin)
+                                            {
+                                                <li>
+                                                    <hr class="dropdown-divider pa-dropdown-divider" />
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item pa-dropdown-item"
+                                                       asp-controller="Shelters"
+                                                       asp-action="Index">
+                                                        Manage Shelters
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item pa-dropdown-item"
+                                                       asp-controller="AdoptersAdmin"
+                                                       asp-action="Index">
+                                                        Manage Adopters
+                                                    </a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </li>
+                                }
+
+                            </ul>
+
+                            <div class="pa-nav-actions">
+
+                                @if (isAuthenticated)
+                                {
+                                    <div class="dropdown pa-user-menu">
+
+                                        <button class="pa-user-menu__trigger"
+                                                type="button"
+                                                id="paUserMenu"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+
+                                            <span class="pa-user-avatar"
+                                                  aria-hidden="true">
+                                                @avatarInitial
+                                            </span>
+
+                                            <span class="pa-user-menu__info">
+                                                <span class="pa-user-menu__name">
+                                                    @displayName
+                                                </span>
+
+                                                <span class="pa-user-menu__role">
+                                                    @roleName
+                                                </span>
+                                            </span>
+
+                                            <svg class="pa-icon pa-chevron"
+                                                 aria-hidden="true">
+                                                <use href="#pa-icon-chevron"></use>
+                                            </svg>
+                                        </button>
+
+                                        <ul class="dropdown-menu dropdown-menu-end pa-dropdown-menu pa-account-dropdown"
+                                            aria-labelledby="paUserMenu">
+
+                                            <li class="pa-dropdown-heading">
+                                                <span class="pa-dropdown-heading__label">
+                                                    Signed in as
+                                                </span>
+
+                                                <strong class="pa-dropdown-heading__name">
+                                                    @displayName
+                                                </strong>
+
+                                                <span class="pa-dropdown-heading__role">
+                                                    @roleName
+                                                </span>
+                                            </li>
+
+                                            <li>
+                                                <hr class="dropdown-divider pa-dropdown-divider" />
+                                            </li>
+
+                                            <li>
+                                                <form asp-controller="Account"
+                                                      asp-action="Logout"
+                                                      method="post">
+
+                                                    @Html.AntiForgeryToken()
+
+                                                    <button class="dropdown-item pa-dropdown-item pa-dropdown-item--danger"
+                                                            type="submit">
+
+                                                        <svg class="pa-icon"
+                                                             aria-hidden="true">
+                                                            <use href="#pa-icon-log-out"></use>
+                                                        </svg>
+
+                                                        Sign Out
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <a class="pa-btn pa-btn--ghost"
+                                       asp-controller="Account"
+                                       asp-action="Login">
+                                        Sign In
+                                    </a>
+
+                                    <a class="pa-btn pa-btn--primary pa-btn--nav"
+                                       asp-controller="Account"
+                                       asp-action="Register">
+
+                                        Get Started
+
+                                        <svg class="pa-icon"
+                                             aria-hidden="true">
+                                            <use href="#pa-icon-arrow"></use>
+                                        </svg>
+                                    </a>
+                                }
+
+                            </div>
+                        </div>
+                    </div>
+                </nav>
             </div>
-        </nav>
+        </header>
 
-        <main class="app-main">
-            <div class="container py-4 py-lg-5">
+        <main id="main-content"
+              class="pa-main"
+              tabindex="-1">
+
+            <div class="container-fluid pa-container pa-main__inner">
+
                 @if (TempData["Ok"] is string ok)
                 {
-                    <div class="alert alert-success alert-dismissible fade show app-alert" role="alert">
-                        @ok
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="alert alert-success alert-dismissible fade show pa-alert pa-alert--success"
+                         role="status">
+
+                        <span class="pa-alert__icon">
+                            <svg class="pa-icon" aria-hidden="true">
+                                <use href="#pa-icon-check"></use>
+                            </svg>
+                        </span>
+
+                        <span class="pa-alert__content">
+                            @ok
+                        </span>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Dismiss notification">
+                        </button>
                     </div>
                 }
 
                 @if (TempData["Err"] is string err)
                 {
-                    <div class="alert alert-danger alert-dismissible fade show app-alert" role="alert">
-                        @err
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="alert alert-danger alert-dismissible fade show pa-alert pa-alert--error"
+                         role="alert">
+
+                        <span class="pa-alert__icon">
+                            <svg class="pa-icon" aria-hidden="true">
+                                <use href="#pa-icon-alert"></use>
+                            </svg>
+                        </span>
+
+                        <span class="pa-alert__content">
+                            @err
+                        </span>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Dismiss notification">
+                        </button>
                     </div>
                 }
 
-                <div class="page-enter">
+                <div class="pa-page-content">
                     @RenderBody()
                 </div>
             </div>
         </main>
 
-        <footer class="app-footer">
-            <div class="container">
-                <div class="footer-inner">
-                    <div>
-                        <div class="footer-brand">Pet Adoption Platform</div>
-                        <div class="footer-text">
-                            Modern adoption workflow for shelters and adopters.
+        <footer class="pa-footer">
+
+            <div class="pa-footer__glow pa-footer__glow--one"
+                 aria-hidden="true">
+            </div>
+
+            <div class="pa-footer__glow pa-footer__glow--two"
+                 aria-hidden="true">
+            </div>
+
+            <div class="container-fluid pa-container">
+
+                <div class="pa-footer-cta">
+
+                    <div class="pa-footer-cta__content">
+
+                        <span class="pa-eyebrow pa-eyebrow--light">
+
+                            <svg class="pa-icon"
+                                 aria-hidden="true">
+                                <use href="#pa-icon-sparkles"></use>
+                            </svg>
+
+                            A little love changes everything
+                        </span>
+
+                        <h2 class="pa-footer-cta__title">
+                            Every pet deserves
+                            <span>a loving home.</span>
+                        </h2>
+
+                        <p class="pa-footer-cta__description">
+                            Explore adoption opportunities and take
+                            the next step toward meeting your new companion.
+                        </p>
+                    </div>
+
+                    <div class="pa-footer-cta__actions">
+
+                        <a class="pa-btn pa-btn--gold"
+                           asp-controller="Home"
+                           asp-action="Index">
+
+                            Explore Pets
+
+                            <svg class="pa-icon"
+                                 aria-hidden="true">
+                                <use href="#pa-icon-arrow"></use>
+                            </svg>
+                        </a>
+
+                        @if (!isAuthenticated)
+                        {
+                            <a class="pa-btn pa-btn--footer-outline"
+                               asp-controller="Account"
+                               asp-action="Register">
+                                Create an Account
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <div class="pa-footer__divider"></div>
+
+                <div class="pa-footer__grid">
+
+                    <div class="pa-footer__about">
+
+                        <a class="pa-brand pa-brand--footer"
+                           asp-controller="Home"
+                           asp-action="Welcome">
+
+                            <img src="~/images/logo.png"
+                                 asp-append-version="true"
+                                 alt="PetAdoption"
+                                 class="pa-brand__logo pa-brand__logo--footer" />
+                        </a>
+
+                        <p class="pa-footer__description">
+                            Bringing people and pets together through
+                            a simpler, more thoughtful adoption experience.
+                        </p>
+
+                        <div class="pa-footer__signature">
+
+                            <svg class="pa-icon"
+                                 aria-hidden="true">
+                                <use href="#pa-icon-heart"></use>
+                            </svg>
+
+                            Made for second chances.
                         </div>
                     </div>
-                    <div class="footer-meta">
-                        <div>© @DateTime.Now.Year Pet Adoption Platform</div>
-                        <div>Built with ASP.NET Core MVC, EF Core and Identity</div>
+
+                    <div class="pa-footer__links">
+
+                        <h3 class="pa-footer__heading">
+                            Explore
+                        </h3>
+
+                        <ul class="pa-footer__list">
+
+                            <li>
+                                <a asp-controller="Home"
+                                   asp-action="Welcome">
+                                    Home
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Home"
+                                   asp-action="Index">
+                                    Explore Pets
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Pets"
+                                   asp-action="Index">
+                                    Pet Directory
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Breeds"
+                                   asp-action="Index">
+                                    Dog Breeds
+                                </a>
+                            </li>
+                        </ul>
                     </div>
+
+                    <div class="pa-footer__links">
+
+                        <h3 class="pa-footer__heading">
+                            Your Workspace
+                        </h3>
+
+                        <ul class="pa-footer__list">
+
+                            @if (!isAuthenticated)
+                            {
+                                <li>
+                                    <a asp-controller="Account"
+                                       asp-action="Login">
+                                        Sign In
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="Account"
+                                       asp-action="Register">
+                                        Create an Account
+                                    </a>
+                                </li>
+                            }
+
+                            @if (isAdopter)
+                            {
+                                <li>
+                                    <a asp-controller="AdoptionRequests"
+                                       asp-action="Index">
+                                        My Requests
+                                    </a>
+                                </li>
+                            }
+
+                            @if (isShelter || isAdmin)
+                            {
+                                <li>
+                                    <a asp-controller="Pets"
+                                       asp-action="Index">
+                                        Manage Pets
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="AdoptionRequests"
+                                       asp-action="Manage">
+                                        Review Requests
+                                    </a>
+                                </li>
+                            }
+
+                            @if (isAdmin)
+                            {
+                                <li>
+                                    <a asp-controller="Shelters"
+                                       asp-action="Index">
+                                        Manage Shelters
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="AdoptersAdmin"
+                                       asp-action="Index">
+                                        Manage Adopters
+                                    </a>
+                                </li>
+                            }
+
+                            @if (isAuthenticated &&
+                                                        !isAdopter &&
+                                                        !isShelter &&
+                                                        !isAdmin)
+                            {
+                                <li>
+                                    <a asp-controller="Home"
+                                       asp-action="Index">
+                                        Browse Pets
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="pa-footer__message">
+
+                        <h3 class="pa-footer__heading">
+                            Our Purpose
+                        </h3>
+
+                        <p class="pa-footer__message-text">
+                            A modern digital space that helps shelters
+                            manage their pets and gives adopters
+                            a clearer path to finding a companion.
+                        </p>
+
+                        <span class="pa-footer__message-accent">
+                            Adopt. Love. Repeat.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="pa-footer__bottom">
+
+                    <p class="pa-footer__copyright">
+                        © @DateTime.UtcNow.Year PetAdoption.
+                        All rights reserved.
+                    </p>
+
+                    <p class="pa-footer__technology">
+                        Built with ASP.NET Core MVC,
+                        Entity Framework Core &amp; Identity
+                    </p>
                 </div>
             </div>
         </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @RenderSection("Scripts", required: false)
+
+    <script src="~/js/site.js"
+            asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

@@ -1,129 +1,602 @@
 ﻿@model IReadOnlyList<PetAdoption.Application.DTOs.ShelterDto>
 
 @{
-    ViewData["Title"] = "Shelters";
+    ViewData["Title"] = "Shelter Management";
+    ViewData["Description"] = "Manage shelter organizations, contact information, and locations on PetAdoption.";
+
+    var shelterCount = Model.Count;
+    var cityOptions = Model
+        .Select(shelter => shelter.City?.Trim())
+        .Where(city => !string.IsNullOrWhiteSpace(city))
+        .Select(city => city!)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(city => city, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+    var cityCount = cityOptions.Count;
+    var contactCount = Model.Count(shelter =>
+        !string.IsNullOrWhiteSpace(shelter.Email) ||
+        !string.IsNullOrWhiteSpace(shelter.Phone));
 }
 
-<section class="mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
-        <div>
-            <div class="text-primary fw-semibold text-uppercase small mb-2">
-                Administration
-            </div>
+<div class="pa-shelters-index">
+    <nav class="pa-shelters-index__breadcrumb" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Welcome">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>Administration</span>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Shelters</span>
+    </nav>
 
-            <h1 class="section-title mb-2">
-                Shelters
+    <header class="pa-shelters-index__hero">
+        <div class="pa-shelters-index__hero-copy">
+            <span class="pa-shelters-index__eyebrow">
+                <span class="pa-shelters-index__eyebrow-dot" aria-hidden="true"></span>
+                ADMINISTRATIVE WORKSPACE
+            </span>
+
+            <h1>
+                Stronger shelters.
+                <span>Better beginnings.</span>
             </h1>
 
-            <p class="section-subtitle mb-0">
-                Manage organizations participating in the adoption platform.
+            <p>
+                Keep every partner organization organized, up to date,
+                and ready to help more animals find a home.
             </p>
+
+            <div class="pa-shelters-index__hero-actions">
+                <a asp-controller="Shelters" asp-action="Create"
+                   class="pa-shelters-index__hero-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Add new shelter
+                </a>
+
+                <a href="#shelterDirectory" class="pa-shelters-index__hero-secondary">
+                    View directory
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 4v16m-6-6 6 6 6-6" />
+                    </svg>
+                </a>
+            </div>
         </div>
 
-        <a asp-action="Create"
-           class="btn btn-primary px-4">
-            ＋ Add Shelter
-        </a>
-    </div>
-</section>
+        <div class="pa-shelters-index__hero-art" aria-hidden="true">
+            <div class="pa-shelters-index__art-circle"></div>
+            <div class="pa-shelters-index__art-circle-inner"></div>
+            <svg viewBox="0 0 120 120" fill="none" stroke="currentColor"
+                 stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m16 57 44-36 44 36" />
+                <path d="M29 52v49h62V52" />
+                <path d="M49 101V74h22v27" />
+                <path d="M60 48c3.5-5.2 11-5.4 14.7-.8 3.5 4.5 2.4 10.3-2.2 14.6L60 74 47.5 61.8c-4.6-4.3-5.7-10.1-2.2-14.6 3.7-4.6 11.2-4.4 14.7.8Z" />
+            </svg>
+            <span class="pa-shelters-index__art-spark pa-shelters-index__art-spark--one"></span>
+            <span class="pa-shelters-index__art-spark pa-shelters-index__art-spark--two"></span>
+        </div>
+    </header>
 
-@if (!Model.Any())
-{
-    <div class="empty-state">
-        <div class="display-5 mb-3">🏠</div>
+    <section class="pa-shelters-index__stats" aria-label="Shelter directory overview">
+        <div class="pa-shelters-index__stat">
+            <div class="pa-shelters-index__stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
+                    <path d="M9 21v-8h6v8" />
+                </svg>
+            </div>
+            <div>
+                <span class="pa-shelters-index__stat-value">@shelterCount</span>
+                <span class="pa-shelters-index__stat-label">Registered shelters</span>
+            </div>
+        </div>
 
-        <h4>No shelters yet</h4>
+        <div class="pa-shelters-index__stat">
+            <div class="pa-shelters-index__stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                </svg>
+            </div>
+            <div>
+                <span class="pa-shelters-index__stat-value">@cityCount</span>
+                <span class="pa-shelters-index__stat-label">Cities represented</span>
+            </div>
+        </div>
 
-        <p class="mb-4">
-            Add the first shelter to start managing pets.
-        </p>
+        <div class="pa-shelters-index__stat">
+            <div class="pa-shelters-index__stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="m4 7 8 6 8-6" />
+                </svg>
+            </div>
+            <div>
+                <span class="pa-shelters-index__stat-value">@contactCount</span>
+                <span class="pa-shelters-index__stat-label">With contact details</span>
+            </div>
+        </div>
+    </section>
 
-        <a asp-action="Create"
-           class="btn btn-primary">
-            Add Shelter
-        </a>
-    </div>
-}
-else
-{
-    <div class="card p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Shelter</th>
-                        <th>Location</th>
-                        <th>Contact</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
+    <section class="pa-shelters-index__directory" id="shelterDirectory" aria-labelledby="shelterDirectoryTitle">
+        <div class="pa-shelters-index__section-heading">
+            <div>
+                <span class="pa-shelters-index__section-kicker">ORGANIZATION MANAGEMENT</span>
+                <h2 id="shelterDirectoryTitle">Shelter directory.</h2>
+                <p>Find, review, and update the organizations in your network.</p>
+            </div>
+            <a asp-controller="Shelters" asp-action="Create"
+               class="pa-shelters-index__add-link">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                Add Shelter
+            </a>
+        </div>
 
-                <tbody>
-                    @foreach (var shelter in Model)
-                    {
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 fs-5"
-                                         style="width: 46px; height: 46px;">
-                                        🏠
-                                    </div>
-
-                                    <div>
-                                        <div class="fw-bold">
-                                            @shelter.Name
-                                        </div>
-
-                                        <div class="small text-muted">
-                                            Shelter #@shelter.Id
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <td>
-                                <div class="fw-semibold">
-                                    @shelter.City
-                                </div>
-
-                                <div class="small text-muted">
-                                    @shelter.Address
-                                </div>
-                            </td>
-
-                            <td>
-                                <div>
-                                    @(string.IsNullOrWhiteSpace(shelter.Email)
-                                                                ? "No email"
-                                                                : shelter.Email)
-                                                                            </div>
-
-                                <div class="small text-muted">
-                                    @(string.IsNullOrWhiteSpace(shelter.Phone)
-                                                                ? "No phone"
-                                                                : shelter.Phone)
+        @if (shelterCount == 0)
+        {
+            <div class="pa-shelters-index__empty">
+                <div class="pa-shelters-index__empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
+                        <path d="M9 21v-8h6v8" />
+                    </svg>
+                </div>
+                <span class="pa-shelters-index__section-kicker">READY WHEN YOU ARE</span>
+                <h3>Your shelter network starts here.</h3>
+                <p>Add your first shelter to begin managing organizations and their adoption listings.</p>
+                <a asp-controller="Shelters" asp-action="Create"
+                   class="pa-shelters-index__empty-action">
+                    Add the first shelter
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="pa-shelters-index__directory-panel">
+                <div class="pa-shelters-index__toolbar">
+                    <div class="pa-shelters-index__toolbar-search">
+                        <label for="shelterDirectorySearch">Search shelters</label>
+                        <div class="pa-shelters-index__search-wrap">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="10.5" cy="10.5" r="6.5" />
+                                <path d="m16 16 5 5" />
+                            </svg>
+                            <input id="shelterDirectorySearch"
+                                   type="search"
+                                   placeholder="Name, address, contact, ID..."
+                                   autocomplete="off" />
                         </div>
-                    </td>
+                    </div>
 
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end flex-wrap gap-2">
-                                    <a asp-action="Edit"
-                                       asp-route-id="@shelter.Id"
-                                       class="btn btn-sm btn-outline-primary">
-                                        Edit
-                                    </a>
+                    <div class="pa-shelters-index__toolbar-select">
+                        <label for="shelterDirectoryCity">City</label>
+                        <select id="shelterDirectoryCity">
+                            <option value="">All cities</option>
+                            @foreach (var city in cityOptions)
+                            {
+                                <option value="@city">@city</option>
+                            }
+                        </select>
+                    </div>
 
-                                    <a asp-action="Delete"
-                                       asp-route-id="@shelter.Id"
-                                       class="btn btn-sm btn-outline-danger">
-                                        Delete
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                                }
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    <div class="pa-shelters-index__toolbar-select">
+                        <label for="shelterDirectorySort">Sort by</label>
+                        <select id="shelterDirectorySort">
+                            <option value="name-asc">Name: A to Z</option>
+                            <option value="name-desc">Name: Z to A</option>
+                            <option value="city-asc">City: A to Z</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="pa-shelters-index__reset" id="shelterDirectoryReset" hidden>
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M6 6 18 18M18 6 6 18" />
+                        </svg>
+                        Clear
+                    </button>
+                </div>
+
+                <div class="pa-shelters-index__list-header">
+                    <div>
+                        <span class="pa-shelters-index__list-status-dot" aria-hidden="true"></span>
+                        <strong id="shelterDirectoryCount" aria-live="polite">@shelterCount</strong>
+                        <span id="shelterDirectoryCountLabel">
+                            @(shelterCount == 1 ? "shelter in the directory" : "shelters in the directory")
+                        </span>
+                    </div>
+                    <span>Manage your partner organizations</span>
+                </div>
+
+                <div class="pa-shelters-index__table-wrap">
+                    <table class="pa-shelters-index__table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Organization</th>
+                                <th scope="col">Location</th>
+                                <th scope="col">Contact details</th>
+                                <th scope="col" class="pa-shelters-index__actions-heading">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shelterDirectoryRows">
+                            @foreach (var shelter in Model)
+                            {
+                                var name = string.IsNullOrWhiteSpace(shelter.Name)
+                                    ? "Unnamed shelter"
+                                    : shelter.Name.Trim();
+                                var city = string.IsNullOrWhiteSpace(shelter.City)
+                                    ? "City not provided"
+                                    : shelter.City.Trim();
+                                var address = string.IsNullOrWhiteSpace(shelter.Address)
+                                    ? "Address not provided"
+                                    : shelter.Address.Trim();
+                                var email = shelter.Email?.Trim();
+                                var phone = shelter.Phone?.Trim();
+                                var searchText = $"{name} {city} {address} {email} {phone} {shelter.Id}";
+
+                                <tr data-shelter-row
+                                    data-name="@name"
+                                    data-city="@shelter.City"
+                                    data-search="@searchText">
+                                    <td>
+                                        <div class="pa-shelters-index__organization">
+                                            <div class="pa-shelters-index__organization-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
+                                                    <path d="M9 21v-8h6v8" />
+                                                </svg>
+                                            </div>
+                                            <div class="pa-shelters-index__organization-info">
+                                                <strong>@name</strong>
+                                                <span>Shelter #@shelter.Id</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="pa-shelters-index__mobile-label">Location</div>
+                                        <div class="pa-shelters-index__detail">
+                                            <span class="pa-shelters-index__detail-main">@city</span>
+                                            <span class="pa-shelters-index__detail-sub">@address</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="pa-shelters-index__mobile-label">Contact</div>
+                                        <div class="pa-shelters-index__contact">
+                                            @if (!string.IsNullOrWhiteSpace(email))
+                                            {
+                                                <a href="mailto:@email" title="Email @name">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                                                        <path d="m4 7 8 6 8-6" />
+                                                    </svg>
+                                                    <span>@email</span>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="pa-shelters-index__contact-missing">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                                                        <path d="m4 7 8 6 8-6" />
+                                                    </svg>
+                                                    No email provided
+                                                </span>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(phone))
+                                            {
+                                                <a href="tel:@phone" title="Call @name">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path d="M21 16.4v3a2 2 0 0 1-2.2 2A18 18 0 0 1 3.6 6.2 2 2 0 0 1 5.6 4h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L9 12a14 14 0 0 0 3 3l1.5-1.5a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.7 2Z" />
+                                                    </svg>
+                                                    <span>@phone</span>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="pa-shelters-index__contact-missing">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path d="M21 16.4v3a2 2 0 0 1-2.2 2A18 18 0 0 1 3.6 6.2 2 2 0 0 1 5.6 4h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L9 12a14 14 0 0 0 3 3l1.5-1.5a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.7 2Z" />
+                                                    </svg>
+                                                    No phone provided
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="pa-shelters-index__mobile-label">Manage</div>
+                                        <div class="pa-shelters-index__row-actions">
+                                            <a asp-controller="Shelters"
+                                               asp-action="Edit"
+                                               asp-route-id="@shelter.Id"
+                                               class="pa-shelters-index__edit"
+                                               aria-label="Edit @name">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="m15 5 4 4M4 20l4.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L4 20Z" />
+                                                </svg>
+                                                Edit
+                                            </a>
+                                            <a asp-controller="Shelters"
+                                               asp-action="Delete"
+                                               asp-route-id="@shelter.Id"
+                                               class="pa-shelters-index__delete"
+                                               aria-label="Delete @name">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M4 7h16M10 4h4m-8 3 1 13h10l1-13M10 11v5m4-5v5" />
+                                                </svg>
+                                                Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pa-shelters-index__no-results" id="shelterDirectoryNoResults" hidden>
+                    <div class="pa-shelters-index__empty-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="10.5" cy="10.5" r="6.5" />
+                            <path d="m16 16 5 5" />
+                        </svg>
+                    </div>
+                    <h3>No matching shelters.</h3>
+                    <p>Try a different search term or choose another city.</p>
+                    <button type="button" id="shelterDirectoryEmptyReset" class="pa-shelters-index__empty-action">
+                        Clear filters
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+                    </button>
+                </div>
+
+                <div class="pa-shelters-index__directory-footer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 11v5m0-8h.01" />
+                    </svg>
+                    Shelters linked to pet listings or user accounts cannot be deleted until those links are resolved.
+                </div>
+            </div>
+        }
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .pa-shelters-index { --sh-forest: var(--pa-forest, #173d32); --sh-forest-deep: var(--pa-forest-deep, #0e2b23); --sh-gold: var(--pa-gold, #c8914e); --sh-muted: var(--pa-muted, #65716a); --sh-line: var(--pa-line, #e7e8df); color: var(--pa-ink, #202c26); }
+        .pa-shelters-index svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .pa-shelters-index__breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; margin-bottom: 25px; color: #8b968f; font-size: 0.78rem; font-weight: 700; }
+        .pa-shelters-index__breadcrumb a { color: #65776d; text-decoration: none; }
+        .pa-shelters-index__breadcrumb a:hover { color: var(--sh-forest); }
+        .pa-shelters-index__breadcrumb [aria-current] { color: var(--sh-forest); }
+        .pa-shelters-index__hero { position: relative; display: flex; align-items: center; isolation: isolate; overflow: hidden; min-height: 318px; border-radius: 32px; background: linear-gradient(115deg, #102e25 0%, #174637 63%, #285642 100%); box-shadow: 0 22px 52px rgba(17, 45, 34, 0.13); }
+        .pa-shelters-index__hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 78% 23%, rgba(239, 199, 134, 0.12), transparent 29%), linear-gradient(90deg, transparent, rgba(255,255,255,0.02)); pointer-events: none; }
+        .pa-shelters-index__hero-copy { position: relative; z-index: 2; width: min(100%, 790px); padding: clamp(32px, 5.2vw, 67px); }
+        .pa-shelters-index__eyebrow { display: inline-flex; align-items: center; gap: 9px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.19em; color: #f0c886; }
+        .pa-shelters-index__eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #eabd73; box-shadow: 0 0 0 4px rgba(235,189,115,0.14); }
+        .pa-shelters-index__hero h1 { margin: 20px 0 17px; color: #fffaf1; font-family: "Fraunces", Georgia, serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 600; letter-spacing: -0.04em; line-height: 1.16; }
+        .pa-shelters-index__hero h1 span { display: block; color: #e7c28b; }
+        .pa-shelters-index__hero p { max-width: 600px; margin: 0; color: #d2dfd5; font-size: 0.96rem; line-height: 1.75; }
+        .pa-shelters-index__hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 26px; }
+        .pa-shelters-index__hero-primary, .pa-shelters-index__hero-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 45px; padding: 11px 18px; border: 1px solid transparent; border-radius: 11px; font-size: 0.83rem; font-weight: 800; text-decoration: none; transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease; }
+        .pa-shelters-index__hero-primary { background: #f0c98f; color: #203c2f; }
+        .pa-shelters-index__hero-primary:hover { background: #ffdda8; color: #183629; transform: translateY(-2px); }
+        .pa-shelters-index__hero-secondary { border-color: rgba(255,255,255,0.26); color: #f5f4ec; }
+        .pa-shelters-index__hero-secondary:hover { background: rgba(255,255,255,0.09); color: #fff; }
+        .pa-shelters-index__hero-actions svg { width: 17px; height: 17px; }
+        .pa-shelters-index__hero-art { position: absolute; right: -18px; top: 50%; z-index: 1; width: 320px; height: 320px; color: rgba(241,209,151,0.72); transform: translateY(-50%); }
+        .pa-shelters-index__art-circle, .pa-shelters-index__art-circle-inner { position: absolute; inset: 18px; border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; }
+        .pa-shelters-index__art-circle-inner { inset: 48px; border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.035); }
+        .pa-shelters-index__hero-art > svg { position: absolute; left: 102px; top: 102px; width: 116px; height: 116px; }
+        .pa-shelters-index__art-spark { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #d7a966; }
+        .pa-shelters-index__art-spark--one { top: 65px; left: 86px; }
+        .pa-shelters-index__art-spark--two { right: 41px; bottom: 65px; width: 5px; height: 5px; }
+        .pa-shelters-index__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 17px; margin: 23px 0 53px; }
+        .pa-shelters-index__stat { display: flex; align-items: center; gap: 17px; min-width: 0; padding: 23px 26px; border: 1px solid #e9ebe4; border-radius: 19px; background: #fffefa; box-shadow: 0 8px 23px rgba(26,51,39,0.035); }
+        .pa-shelters-index__stat-icon { display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; border-radius: 15px; background: #eaf1e9; color: var(--sh-forest); }
+        .pa-shelters-index__stat-icon svg { width: 23px; height: 23px; }
+        .pa-shelters-index__stat > div:last-child { display: flex; flex-direction: column; min-width: 0; }
+        .pa-shelters-index__stat-value { color: #213e31; font-size: 1.8rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .pa-shelters-index__stat-label { margin-top: 6px; color: #68766d; font-size: 0.81rem; font-weight: 700; }
+        .pa-shelters-index__section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+        .pa-shelters-index__section-kicker { display: block; color: #b17a3b; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.17em; }
+        .pa-shelters-index__section-heading h2 { margin: 9px 0 7px; color: #243b2e; font-family: "Fraunces", Georgia, serif; font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 600; letter-spacing: -0.04em; }
+        .pa-shelters-index__section-heading p { margin: 0; color: #748077; font-size: 0.89rem; }
+        .pa-shelters-index__add-link { display: inline-flex; align-items: center; gap: 9px; flex-shrink: 0; padding: 12px 17px; border-radius: 11px; background: var(--sh-forest); color: white; font-size: 0.82rem; font-weight: 800; text-decoration: none; }
+        .pa-shelters-index__add-link:hover { background: #245847; color: white; }
+        .pa-shelters-index__add-link svg { width: 16px; height: 16px; }
+        .pa-shelters-index__directory-panel { overflow: hidden; border: 1px solid #e5e9e1; border-radius: 25px; background: #fffefa; box-shadow: 0 14px 42px rgba(22,53,39,0.045); }
+        .pa-shelters-index__toolbar { display: grid; grid-template-columns: minmax(200px, 1.7fr) minmax(160px, 0.9fr) minmax(175px, 0.9fr) auto; align-items: end; gap: 13px; padding: 24px; }
+        .pa-shelters-index__toolbar-search, .pa-shelters-index__toolbar-select { min-width: 0; }
+        .pa-shelters-index__toolbar label { display: block; margin-bottom: 8px; color: #394e40; font-size: 0.78rem; font-weight: 800; }
+        .pa-shelters-index__search-wrap { position: relative; }
+        .pa-shelters-index__search-wrap svg { position: absolute; top: 50%; left: 15px; width: 18px; height: 18px; color: #83928a; transform: translateY(-50%); pointer-events: none; }
+        .pa-shelters-index__toolbar input, .pa-shelters-index__toolbar select { width: 100%; height: 46px; padding: 0 13px; border: 1px solid #dce4da; border-radius: 11px; outline: none; background: #fff; color: #283b2e; font-size: 0.85rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+        .pa-shelters-index__toolbar input { padding-left: 44px; }
+        .pa-shelters-index__toolbar input::placeholder { color: #9aa79d; }
+        .pa-shelters-index__toolbar input:focus, .pa-shelters-index__toolbar select:focus { border-color: #41715a; box-shadow: 0 0 0 3px rgba(36,88,71,0.11); }
+        .pa-shelters-index__reset { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 13px; border: 1px solid #dce4da; border-radius: 11px; background: #f7f8f4; color: #516459; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
+        .pa-shelters-index__reset:hover { background: #eaf1e9; color: #254d38; }
+        .pa-shelters-index__reset svg { width: 15px; height: 15px; }
+        .pa-shelters-index__list-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 24px; border-top: 1px solid #edf0ea; border-bottom: 1px solid #edf0ea; background: #f7f9f5; color: #6f7e73; font-size: 0.78rem; }
+        .pa-shelters-index__list-header > div { display: flex; align-items: center; gap: 7px; }
+        .pa-shelters-index__list-header strong { color: #2b4b38; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .pa-shelters-index__list-status-dot { width: 7px; height: 7px; margin-right: 3px; border-radius: 50%; background: #608a6d; }
+        .pa-shelters-index__table-wrap { overflow-x: auto; }
+        .pa-shelters-index__table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .pa-shelters-index__table th { padding: 17px 22px; border-bottom: 1px solid #e7ebe3; background: #fcfcf9; color: #7f897f; font-size: 0.69rem; font-weight: 800; letter-spacing: 0.075em; text-transform: uppercase; white-space: nowrap; }
+        .pa-shelters-index__table th:first-child, .pa-shelters-index__table td:first-child { padding-left: 28px; }
+        .pa-shelters-index__table th:last-child, .pa-shelters-index__table td:last-child { padding-right: 26px; }
+        .pa-shelters-index__table td { padding: 21px 22px; border-bottom: 1px solid #edf0ea; vertical-align: middle; }
+        .pa-shelters-index__table tbody tr:last-child td { border-bottom: none; }
+        .pa-shelters-index__table tbody tr:hover { background: #fbfcf8; }
+        .pa-shelters-index__organization { display: flex; align-items: center; gap: 14px; min-width: 200px; }
+        .pa-shelters-index__organization-icon { display: grid; flex: 0 0 46px; width: 46px; height: 46px; place-items: center; border-radius: 13px; background: #eaf1e9; color: #2b694c; }
+        .pa-shelters-index__organization-icon svg { width: 21px; height: 21px; }
+        .pa-shelters-index__organization-info { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .pa-shelters-index__organization-info strong { color: #283a2e; font-size: 0.9rem; font-weight: 800; overflow-wrap: anywhere; }
+        .pa-shelters-index__organization-info > span { color: #8a978c; font-size: 0.73rem; font-weight: 650; }
+        .pa-shelters-index__detail { display: flex; flex-direction: column; gap: 5px; min-width: 125px; }
+        .pa-shelters-index__detail-main { color: #344c3a; font-weight: 800; overflow-wrap: anywhere; }
+        .pa-shelters-index__detail-sub { max-width: 230px; color: #829086; font-size: 0.78rem; line-height: 1.5; overflow-wrap: anywhere; }
+        .pa-shelters-index__contact { display: flex; flex-direction: column; gap: 9px; min-width: 165px; }
+        .pa-shelters-index__contact a, .pa-shelters-index__contact-missing { display: inline-flex; align-items: flex-start; gap: 8px; color: #3d654d; font-size: 0.79rem; text-decoration: none; overflow-wrap: anywhere; }
+        .pa-shelters-index__contact a:hover { color: #183d2d; text-decoration: underline; }
+        .pa-shelters-index__contact svg { width: 15px; height: 15px; margin-top: 2px; }
+        .pa-shelters-index__contact-missing { color: #a0aba2; }
+        .pa-shelters-index__actions-heading { text-align: right; }
+        .pa-shelters-index__row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; white-space: nowrap; }
+        .pa-shelters-index__edit, .pa-shelters-index__delete { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 12px; border: 1px solid; border-radius: 9px; font-size: 0.75rem; font-weight: 800; text-decoration: none; transition: background 0.2s ease, border-color 0.2s ease; }
+        .pa-shelters-index__edit { border-color: #d8e7dc; background: #f0f6f0; color: #2c6544; }
+        .pa-shelters-index__edit:hover { background: #dfeee1; color: #204e36; }
+        .pa-shelters-index__delete { border-color: #f0dedb; background: #fff8f6; color: #a74f47; }
+        .pa-shelters-index__delete:hover { background: #fceae7; color: #8d362f; }
+        .pa-shelters-index__row-actions svg { width: 15px; height: 15px; }
+        .pa-shelters-index__mobile-label { display: none; }
+        .pa-shelters-index__no-results { padding: 65px 22px; text-align: center; }
+        .pa-shelters-index__no-results h3, .pa-shelters-index__empty h3 { margin: 18px 0 10px; color: #283f31; font-family: "Fraunces", Georgia, serif; font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 600; }
+        .pa-shelters-index__no-results p, .pa-shelters-index__empty p { max-width: 470px; margin: 0 auto 23px; color: #7e8d81; font-size: 0.9rem; }
+        .pa-shelters-index__empty { padding: 76px 20px; border: 1px solid #e5e9e1; border-radius: 25px; background: #fffefa; text-align: center; }
+        .pa-shelters-index__empty-icon { display: grid; width: 70px; height: 70px; margin: 0 auto 19px; place-items: center; border-radius: 20px; background: #eaf2e8; color: #285b40; }
+        .pa-shelters-index__empty-icon svg { width: 32px; height: 32px; }
+        .pa-shelters-index__empty-action { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 17px; border: 0; border-radius: 11px; background: var(--sh-forest); color: white; font-size: 0.82rem; font-weight: 800; text-decoration: none; cursor: pointer; }
+        .pa-shelters-index__empty-action:hover { background: #245847; color: white; }
+        .pa-shelters-index__empty-action svg { width: 17px; height: 17px; }
+        .pa-shelters-index__directory-footer { display: flex; align-items: flex-start; gap: 9px; padding: 18px 25px; border-top: 1px solid #edf0ea; background: #fafbf7; color: #7c897e; font-size: 0.76rem; line-height: 1.65; }
+        .pa-shelters-index__directory-footer svg { width: 17px; height: 17px; margin-top: 1px; color: #6d9076; }
+        [data-shelter-row][hidden], .pa-shelters-index__no-results[hidden], .pa-shelters-index__reset[hidden] { display: none !important; }
+        @@media (max-width: 1199.98px) {
+            .pa-shelters-index__toolbar { grid-template-columns: minmax(230px, 1fr) minmax(150px, 0.55fr) minmax(175px, 0.6fr); }
+            .pa-shelters-index__reset { grid-column: 1 / -1; justify-self: start; }
+            .pa-shelters-index__hero-art { right: -85px; opacity: 0.65; }
+            .pa-shelters-index__table th, .pa-shelters-index__table td { padding-inline: 15px; }
+        }
+        @@media (max-width: 991.98px) {
+            .pa-shelters-index__stats { gap: 12px; }
+            .pa-shelters-index__stat { padding: 19px; gap: 12px; }
+            .pa-shelters-index__stat-icon { width: 43px; height: 43px; flex-basis: 43px; }
+            .pa-shelters-index__stat-value { font-size: 1.55rem; }
+            .pa-shelters-index__table thead { display: none; }
+            .pa-shelters-index__table, .pa-shelters-index__table tbody { display: block; }
+            .pa-shelters-index__table tbody { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; padding: 18px; }
+            .pa-shelters-index__table tbody tr { display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e7eae2; border-radius: 17px; background: white; }
+            .pa-shelters-index__table td { display: block; padding: 13px 20px !important; border-bottom: 1px solid #f0f1ec; }
+            .pa-shelters-index__table td:first-child { padding-top: 21px !important; }
+            .pa-shelters-index__table td:last-child { margin-top: auto; border-bottom: 0; padding-top: 16px !important; padding-bottom: 19px !important; }
+            .pa-shelters-index__mobile-label { display: block; margin-bottom: 7px; color: #9aa79b; font-size: 0.67rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+            .pa-shelters-index__detail { min-width: 0; }
+            .pa-shelters-index__detail-sub { max-width: 100%; }
+            .pa-shelters-index__contact { min-width: 0; }
+            .pa-shelters-index__row-actions { justify-content: flex-start; }
+        }
+        @@media (max-width: 767.98px) {
+            .pa-shelters-index__hero { min-height: 0; border-radius: 24px; }
+            .pa-shelters-index__hero-copy { padding: 35px 28px; }
+            .pa-shelters-index__hero-art { right: -180px; opacity: 0.22; }
+            .pa-shelters-index__stats { grid-template-columns: 1fr; margin: 17px 0 40px; }
+            .pa-shelters-index__stat { padding: 18px 20px; }
+            .pa-shelters-index__section-heading { flex-direction: column; align-items: flex-start; }
+            .pa-shelters-index__toolbar { grid-template-columns: 1fr 1fr; gap: 13px; padding: 18px; }
+            .pa-shelters-index__toolbar-search { grid-column: 1 / -1; }
+            .pa-shelters-index__reset { grid-column: 1 / -1; }
+            .pa-shelters-index__table tbody { grid-template-columns: 1fr; }
+            .pa-shelters-index__list-header { padding: 15px 18px; }
+            .pa-shelters-index__list-header > span { display: none; }
+        }
+        @@media (max-width: 420px) {
+            .pa-shelters-index__hero-copy { padding: 31px 21px; }
+            .pa-shelters-index__hero h1 { font-size: 1.9rem; }
+            .pa-shelters-index__hero-actions { flex-direction: column; align-items: stretch; }
+            .pa-shelters-index__toolbar { grid-template-columns: 1fr; }
+            .pa-shelters-index__toolbar-search { grid-column: auto; }
+            .pa-shelters-index__reset { grid-column: auto; }
+            .pa-shelters-index__row-actions a { flex: 1; }
+            .pa-shelters-index__directory-panel { border-radius: 19px; }
+        }
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-shelters-index *, .pa-shelters-index *::before, .pa-shelters-index *::after { transition: none !important; scroll-behavior: auto !important; }
+        }
+    </style>
+}
+
+@section Scripts {
+    @if (shelterCount > 0)
+    {
+        <script>
+            (() => {
+                "use strict";
+
+                const searchInput = document.getElementById("shelterDirectorySearch");
+                const citySelect = document.getElementById("shelterDirectoryCity");
+                const sortSelect = document.getElementById("shelterDirectorySort");
+                const resetButton = document.getElementById("shelterDirectoryReset");
+                const emptyReset = document.getElementById("shelterDirectoryEmptyReset");
+                const resultCount = document.getElementById("shelterDirectoryCount");
+                const resultLabel = document.getElementById("shelterDirectoryCountLabel");
+                const noResults = document.getElementById("shelterDirectoryNoResults");
+                const tbody = document.getElementById("shelterDirectoryRows");
+                const rows = Array.from(tbody.querySelectorAll("[data-shelter-row]"));
+                const normalize = (value) => (value || "").trim().toLocaleLowerCase();
+
+                const updateDirectory = () => {
+                    const query = normalize(searchInput.value);
+                    const selectedCity = normalize(citySelect.value);
+                    const sortMode = sortSelect.value;
+                    let visibleCount = 0;
+
+                    const sorted = [...rows].sort((first, second) => {
+                        const firstName = first.dataset.name || "";
+                        const secondName = second.dataset.name || "";
+                        const firstCity = first.dataset.city || "";
+                        const secondCity = second.dataset.city || "";
+
+                        if (sortMode === "name-desc") {
+                            return secondName.localeCompare(firstName, undefined, { sensitivity: "base" });
+                        }
+
+                        if (sortMode === "city-asc") {
+                            return firstCity.localeCompare(secondCity, undefined, { sensitivity: "base" })
+                                || firstName.localeCompare(secondName, undefined, { sensitivity: "base" });
+                        }
+
+                        return firstName.localeCompare(secondName, undefined, { sensitivity: "base" });
+                    });
+
+                    sorted.forEach((row) => {
+                        const matchesSearch = normalize(row.dataset.search).includes(query);
+                        const matchesCity = !selectedCity || normalize(row.dataset.city) === selectedCity;
+                        const isVisible = matchesSearch && matchesCity;
+
+                        row.hidden = !isVisible;
+                        if (isVisible) visibleCount += 1;
+                        tbody.appendChild(row);
+                    });
+
+                    resultCount.textContent = String(visibleCount);
+                    resultLabel.textContent = visibleCount === 1
+                        ? "shelter found"
+                        : "shelters found";
+                    noResults.hidden = visibleCount !== 0;
+                    resetButton.hidden = !query && !selectedCity && sortMode === "name-asc";
+                };
+
+                const resetDirectory = () => {
+                    searchInput.value = "";
+                    citySelect.value = "";
+                    sortSelect.value = "name-asc";
+                    updateDirectory();
+                    searchInput.focus();
+                };
+
+                searchInput.addEventListener("input", updateDirectory);
+                citySelect.addEventListener("change", updateDirectory);
+                sortSelect.addEventListener("change", updateDirectory);
+                resetButton.addEventListener("click", resetDirectory);
+                emptyReset.addEventListener("click", resetDirectory);
+                updateDirectory();
+            })();
+        </script>
+    }
 }

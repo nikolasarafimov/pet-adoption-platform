@@ -2,127 +2,1716 @@
 
 @{
     ViewData["Title"] = "Adopters";
+    ViewData["Description"] = "Manage adopter profiles and contact information in the PetAdoption administration workspace.";
+
+    var adopterCount = Model.Count;
 }
 
-<section class="mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
-        <div>
-            <div class="text-primary fw-semibold text-uppercase small mb-2">
-                Administration
+<div class="pa-adopters-index">
+
+    <nav class="pa-adopters-index__breadcrumb"
+         aria-label="Breadcrumb">
+
+        <a asp-controller="Home"
+           asp-action="Welcome">
+            Home
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Adopters
+        </span>
+    </nav>
+
+    <header class="pa-adopters-index__hero">
+
+        <div class="pa-adopters-index__hero-glow"
+             aria-hidden="true"></div>
+
+        <div class="pa-adopters-index__hero-content">
+
+            <div class="pa-adopters-index__eyebrow">
+
+                <span class="pa-adopters-index__eyebrow-dot"></span>
+
+                ADMINISTRATION WORKSPACE
             </div>
 
-            <h1 class="section-title mb-2">
-                Adopters
+            <h1>
+                Adopter
+                <span>Directory.</span>
             </h1>
 
-            <p class="section-subtitle mb-0">
-                Review and maintain adopter profiles registered on the platform.
+            <p class="pa-adopters-index__hero-description">
+                Manage adopter profiles, review contact
+                information, and keep your records organized
+                in one convenient workspace.
             </p>
+
+            <div class="pa-adopters-index__hero-actions">
+
+                <a asp-controller="AdoptersAdmin"
+                   asp-action="Create"
+                   class="pa-adopters-index__add-btn">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.9"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M12 5v14" />
+                        <path d="M5 12h14" />
+                    </svg>
+
+                    Add New Adopter
+                </a>
+
+                <span class="pa-adopters-index__hero-count">
+
+                    <span class="pa-adopters-index__hero-count-dot"></span>
+
+                    @adopterCount
+                    @(adopterCount == 1 ? "profile" : "profiles")
+                    in directory
+                </span>
+            </div>
         </div>
 
-        <a asp-action="Create"
-           class="btn btn-primary px-4">
-            ＋ Add Adopter
-        </a>
-    </div>
-</section>
+        <div class="pa-adopters-index__hero-art"
+             aria-hidden="true">
 
-@if (!Model.Any())
-{
-    <div class="empty-state">
-        <div class="display-5 mb-3">
-            👥
+            <div class="pa-adopters-index__art-ring
+                        pa-adopters-index__art-ring--outer"></div>
+
+            <div class="pa-adopters-index__art-ring
+                        pa-adopters-index__art-ring--inner"></div>
+
+            <div class="pa-adopters-index__art-center">
+
+                <svg viewBox="0 0 64 64"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <circle cx="24" cy="23" r="9" />
+
+                    <path d="M7 53v-4c0-10 7-16 17-16s17 6 17 16v4" />
+
+                    <circle cx="44" cy="23" r="7" />
+
+                    <path d="M46 36c7 1 11 6 11 13v4" />
+                </svg>
+            </div>
+
+            <span class="pa-adopters-index__art-spark
+                         pa-adopters-index__art-spark--one"></span>
+
+            <span class="pa-adopters-index__art-spark
+                         pa-adopters-index__art-spark--two"></span>
+        </div>
+    </header>
+
+    <section class="pa-adopters-index__directory"
+             aria-labelledby="adopterDirectoryTitle">
+
+        <div class="pa-adopters-index__directory-header">
+
+            <div class="pa-adopters-index__directory-heading">
+
+                <span class="pa-adopters-index__section-eyebrow">
+                    ADOPTER MANAGEMENT
+                </span>
+
+                <h2 id="adopterDirectoryTitle">
+                    All Adopters
+                </h2>
+
+                <p>
+                    Browse and manage the adopter profiles
+                    currently recorded on the platform.
+                </p>
+            </div>
+
+            <div class="pa-adopters-index__directory-icon"
+                 aria-hidden="true">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <rect x="3" y="4" width="18" height="16" rx="3" />
+
+                    <path d="M8 9h8" />
+                    <path d="M8 13h8" />
+                    <path d="M8 17h5" />
+                </svg>
+            </div>
         </div>
 
-        <h4>No adopters</h4>
+        @if (adopterCount == 0)
+        {
+            <div class="pa-adopters-index__empty">
 
-        <p class="mb-0">
-            Registered adopters will appear here.
-        </p>
-    </div>
-}
-else
-{
-    <div class="card p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Adopter</th>
-                        <th>Contact</th>
-                        <th>Address</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
+                <div class="pa-adopters-index__empty-art"
+                     aria-hidden="true">
 
-                <tbody>
-                    @foreach (var adopter in Model)
-                    {
+                    <span class="pa-adopters-index__empty-ring"></span>
+
+                    <svg viewBox="0 0 64 64"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <circle cx="25" cy="22" r="10" />
+                        <path d="M7 54v-5c0-11 8-17 18-17 8 0 14 4 17 10" />
+                        <path d="M49 40v17" />
+                        <path d="M40.5 48.5h17" />
+                    </svg>
+                </div>
+
+                <span class="pa-adopters-index__empty-eyebrow">
+                    YOUR DIRECTORY IS EMPTY
+                </span>
+
+                <h3>
+                    No adopter profiles yet.
+                </h3>
+
+                <p>
+                    Adopter profiles will appear here once
+                    they have been created or registered.
+                    You can also add a profile manually.
+                </p>
+
+                <a asp-controller="AdoptersAdmin"
+                   asp-action="Create"
+                   class="pa-adopters-index__empty-btn">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.9"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M12 5v14" />
+                        <path d="M5 12h14" />
+                    </svg>
+
+                    Add First Adopter
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="pa-adopters-index__toolbar">
+
+                <div class="pa-adopters-index__search">
+
+                    <label for="adopterSearch"
+                           class="pa-adopters-index__search-label">
+
+                        Search directory
+                    </label>
+
+                    <div class="pa-adopters-index__search-wrap">
+
+                        <svg class="pa-adopters-index__search-icon"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+
+                            <circle cx="10.8" cy="10.8" r="6.8" />
+                            <path d="m16 16 5 5" />
+                        </svg>
+
+                        <input type="search"
+                               id="adopterSearch"
+                               class="pa-adopters-index__search-input"
+                               placeholder="Search name, email, phone, address..."
+                               autocomplete="off"
+                               aria-controls="adoptersTable"
+                               aria-describedby="adopterSearchHint" />
+
+                        <button type="button"
+                                id="clearAdopterSearch"
+                                class="pa-adopters-index__search-clear"
+                                aria-label="Clear search"
+                                hidden>
+
+                            Clear
+                        </button>
+                    </div>
+
+                    <span id="adopterSearchHint"
+                          class="pa-adopters-index__search-hint">
+
+                        Search the profiles currently displayed
+                        in this directory.
+                    </span>
+                </div>
+
+                <div class="pa-adopters-index__results">
+
+                    <span class="pa-adopters-index__results-icon"
+                          aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <rect x="3" y="4" width="18" height="16" rx="3" />
+                            <path d="M8 9h8" />
+                            <path d="M8 13h8" />
+                            <path d="M8 17h5" />
+                        </svg>
+                    </span>
+
+                    <span id="adopterResultsCount"
+                          aria-live="polite"
+                          aria-atomic="true">
+
+                        Showing @adopterCount of @adopterCount
+                        @(adopterCount == 1 ? "adopter" : "adopters")
+                    </span>
+                </div>
+            </div>
+
+            <div id="adoptersTableContainer"
+                 class="pa-adopters-index__table-wrap">
+
+                <table id="adoptersTable"
+                       class="pa-adopters-index__table">
+
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10"
-                                         style="width: 46px; height: 46px;">
-                                        👤
-                                    </div>
+                            <th scope="col">
+                                Adopter
+                            </th>
 
-                                    <div>
-                                        <div class="fw-bold">
-                                            @adopter.FullName
-                                        </div>
+                            <th scope="col">
+                                Contact
+                            </th>
 
-                                        <div class="small text-muted">
-                                            Adopter #@adopter.Id
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
+                            <th scope="col">
+                                Address
+                            </th>
 
-                            <td>
-                                <div>
-                                    @(string.IsNullOrWhiteSpace(adopter.Email)
-                                                                ? "No email"
-                                                                : adopter.Email)
-                                                                            </div>
-
-                                <div class="small text-muted">
-                                    @(string.IsNullOrWhiteSpace(adopter.Phone)
-                                                                ? "No phone"
-                                                                : adopter.Phone)
-                                                                            </div>
-                                                                        </td>
-
-                            <td>
-                                @(string.IsNullOrWhiteSpace(adopter.Address)
-                                                        ? "-"
-                                                        : adopter.Address)
-                    </td>
-
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end flex-wrap gap-2">
-                                    <a asp-action="Details"
-                                       asp-route-id="@adopter.Id"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        Details
-                                    </a>
-
-                                    <a asp-action="Edit"
-                                       asp-route-id="@adopter.Id"
-                                       class="btn btn-sm btn-outline-primary">
-                                        Edit
-                                    </a>
-
-                                    <a asp-action="Delete"
-                                       asp-route-id="@adopter.Id"
-                                       class="btn btn-sm btn-outline-danger">
-                                        Delete
-                                    </a>
-                                </div>
-                            </td>
+                            <th scope="col"
+                                class="pa-adopters-index__actions-heading">
+                                Actions
+                            </th>
                         </tr>
-                                }
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var adopter in Model)
+                        {
+                            var displayName = string.IsNullOrWhiteSpace(adopter.FullName)
+                            ? "Unnamed Adopter"
+                            : adopter.FullName.Trim();
+
+                            var initial = displayName[0]
+                            .ToString()
+                            .ToUpperInvariant();
+
+                            var hasEmail = !string.IsNullOrWhiteSpace(adopter.Email);
+                            var hasPhone = !string.IsNullOrWhiteSpace(adopter.Phone);
+                            var hasAddress = !string.IsNullOrWhiteSpace(adopter.Address);
+
+                            var searchText = $"{displayName} {adopter.Email} {adopter.Phone} {adopter.Address} {adopter.Id}";
+
+                            <tr data-pa-adopter-row
+                                data-pa-search="@searchText">
+
+                                <td data-label="Adopter">
+
+                                    <div class="pa-adopters-index__person">
+
+                                        <div class="pa-adopters-index__avatar"
+                                             aria-hidden="true">
+
+                                            @initial
+                                        </div>
+
+                                        <div class="pa-adopters-index__person-info">
+
+                                            <a asp-controller="AdoptersAdmin"
+                                               asp-action="Details"
+                                               asp-route-id="@adopter.Id"
+                                               class="pa-adopters-index__person-name">
+
+                                                @displayName
+                                            </a>
+
+                                            <span class="pa-adopters-index__person-id">
+                                                Adopter #@adopter.Id
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td data-label="Contact">
+
+                                    <div class="pa-adopters-index__contact">
+
+                                        @if (hasEmail)
+                                        {
+                                            <a href="mailto:@adopter.Email"
+                                               class="pa-adopters-index__contact-email">
+
+                                                @adopter.Email
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="pa-adopters-index__muted">
+                                                No email
+                                            </span>
+                                        }
+
+                                        @if (hasPhone)
+                                        {
+                                            <a href="tel:@adopter.Phone"
+                                               class="pa-adopters-index__contact-phone">
+
+                                                @adopter.Phone
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="pa-adopters-index__contact-phone
+                                                                     pa-adopters-index__muted">
+
+                                                No phone
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td data-label="Address">
+
+                                    <div class="pa-adopters-index__address">
+
+                                        @if (hasAddress)
+                                        {
+                                            @adopter.Address
+                                        }
+                                        else
+                                        {
+                                            <span class="pa-adopters-index__muted">
+                                                Not provided
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td data-label="Actions">
+
+                                    <div class="pa-adopters-index__row-actions">
+
+                                        <a asp-controller="AdoptersAdmin"
+                                           asp-action="Details"
+                                           asp-route-id="@adopter.Id"
+                                           class="pa-adopters-index__action
+                                                          pa-adopters-index__action--details"
+                                           aria-label="View details for @displayName">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="1.8"
+                                                 stroke-linecap="round"
+                                                 stroke-linejoin="round"
+                                                 aria-hidden="true">
+
+                                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+
+                                            Details
+                                        </a>
+
+                                        <a asp-controller="AdoptersAdmin"
+                                           asp-action="Edit"
+                                           asp-route-id="@adopter.Id"
+                                           class="pa-adopters-index__action
+                                                          pa-adopters-index__action--edit"
+                                           aria-label="Edit @displayName">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="1.8"
+                                                 stroke-linecap="round"
+                                                 stroke-linejoin="round"
+                                                 aria-hidden="true">
+
+                                                <path d="m15 5 4 4" />
+                                                <path d="M4 20h4l12-12a2.8 2.8 0 0 0-4-4L4 16Z" />
+                                            </svg>
+
+                                            Edit
+                                        </a>
+
+                                        <a asp-controller="AdoptersAdmin"
+                                           asp-action="Delete"
+                                           asp-route-id="@adopter.Id"
+                                           class="pa-adopters-index__action
+                                                          pa-adopters-index__action--delete"
+                                           aria-label="Delete @displayName">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="1.8"
+                                                 stroke-linecap="round"
+                                                 stroke-linejoin="round"
+                                                 aria-hidden="true">
+
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4h8v2" />
+                                                <path d="M6 6l1 15h10l1-15" />
+                                                <path d="M10 10v7" />
+                                                <path d="M14 10v7" />
+                                            </svg>
+
+                                            Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="adopterSearchEmpty"
+                 class="pa-adopters-index__search-empty"
+                 hidden>
+
+                <div class="pa-adopters-index__search-empty-icon">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <circle cx="10.8" cy="10.8" r="6.8" />
+                        <path d="m16 16 5 5" />
+                    </svg>
+                </div>
+
+                <h3>No matching adopters</h3>
+
+                <p>
+                    No profiles match your search.
+                    Try a different name or contact detail.
+                </p>
+
+                <button type="button"
+                        id="resetAdopterSearch"
+                        class="pa-adopters-index__reset-btn">
+
+                    Clear Search
+                </button>
+            </div>
+
+            <div class="pa-adopters-index__table-footer">
+
+                <div class="pa-adopters-index__footer-note">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 11v5" />
+                        <path d="M12 8h.01" />
+                    </svg>
+
+                    Select Details to view a complete adopter profile.
+                </div>
+
+                <span class="pa-adopters-index__footer-total">
+
+                    @adopterCount total
+                    @(adopterCount == 1 ? "profile" : "profiles")
+                </span>
+            </div>
+        }
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .pa-adopters-index {
+            width: 100%;
+            max-width: 1350px;
+            margin: 0 auto 55px;
+        }
+
+        .pa-adopters-index__breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 11px;
+            margin-bottom: 24px;
+            color: #89968b;
+            font-size: 0.83rem;
+        }
+
+            .pa-adopters-index__breadcrumb a {
+                color: #637a69;
+                text-decoration: none;
+                transition: color 200ms ease;
+            }
+
+                .pa-adopters-index__breadcrumb a:hover {
+                    color: #c8914e;
+                }
+
+            .pa-adopters-index__breadcrumb [aria-current="page"] {
+                color: #173d32;
+                font-weight: 700;
+            }
+
+        .pa-adopters-index__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            min-height: 300px;
+            margin-bottom: 29px;
+            padding: clamp(30px, 4.5vw, 58px);
+            overflow: hidden;
+            isolation: isolate;
+            border-radius: 28px;
+            background: radial-gradient( circle at 85% 45%, rgba(244, 197, 122, 0.16), transparent 35% ), linear-gradient(125deg, #173d32, #245847);
+            box-shadow: 0 22px 48px rgba(23, 61, 50, 0.15);
+        }
+
+        .pa-adopters-index__hero-glow {
+            position: absolute;
+            right: -100px;
+            bottom: -190px;
+            z-index: -1;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: rgba(244, 197, 122, 0.12);
+            filter: blur(65px);
+            pointer-events: none;
+        }
+
+        .pa-adopters-index__hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 720px;
+            animation: pa-adopters-enter 650ms ease both;
+        }
+
+        .pa-adopters-index__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 20px;
+            color: #f4c57a;
+            font-size: 0.71rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-adopters-index__eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 0 5px rgba(244, 197, 122, 0.13);
+        }
+
+        .pa-adopters-index__hero h1 {
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.7rem, 4.8vw, 4.4rem);
+            font-weight: 600;
+            letter-spacing: -0.06em;
+            line-height: 1.08;
+        }
+
+            .pa-adopters-index__hero h1 span {
+                display: block;
+                color: #f4c57a;
+            }
+
+        .pa-adopters-index__hero-description {
+            max-width: 550px;
+            margin: 21px 0 28px;
+            color: rgba(255, 255, 255, 0.83);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .pa-adopters-index__hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px 25px;
+        }
+
+        .pa-adopters-index__add-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
+            min-height: 52px;
+            padding: 13px 23px;
+            border: 1px solid #f4c57a;
+            border-radius: 13px;
+            background: #f4c57a;
+            color: #173d32;
+            font-size: 0.88rem;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+            transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+        }
+
+            .pa-adopters-index__add-btn:hover {
+                transform: translateY(-2px);
+                background: #ffdc9b;
+                color: #173d32;
+                box-shadow: 0 16px 30px rgba(0, 0, 0, 0.15);
+            }
+
+            .pa-adopters-index__add-btn svg {
+                width: 19px;
+                height: 19px;
+            }
+
+        .pa-adopters-index__hero-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .pa-adopters-index__hero-count-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #f4c57a;
+        }
+
+        .pa-adopters-index__hero-art {
+            position: relative;
+            display: grid;
+            width: 245px;
+            height: 245px;
+            flex-shrink: 0;
+            place-items: center;
+            margin-right: 20px;
+            animation: pa-adopters-float 6s ease-in-out infinite;
+        }
+
+        .pa-adopters-index__art-ring {
+            position: absolute;
+            border: 1px solid rgba(244, 197, 122, 0.23);
+            border-radius: 50%;
+        }
+
+        .pa-adopters-index__art-ring--outer {
+            inset: 0;
+        }
+
+        .pa-adopters-index__art-ring--inner {
+            inset: 35px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .pa-adopters-index__art-center {
+            display: grid;
+            width: 125px;
+            height: 125px;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.34);
+            border-radius: 36px;
+            background: rgba(244, 197, 122, 0.14);
+            color: #f4c57a;
+            transform: rotate(-7deg);
+        }
+
+            .pa-adopters-index__art-center svg {
+                width: 67px;
+                height: 67px;
+                transform: rotate(7deg);
+            }
+
+        .pa-adopters-index__art-spark {
+            position: absolute;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 20px rgba(244, 197, 122, 0.55);
+        }
+
+        .pa-adopters-index__art-spark--one {
+            top: 20px;
+            right: 50px;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pa-adopters-index__art-spark--two {
+            bottom: 35px;
+            left: 25px;
+            width: 5px;
+            height: 5px;
+        }
+
+        .pa-adopters-index__directory {
+            overflow: hidden;
+            border: 1px solid #e3ebe1;
+            border-radius: 25px;
+            background: #fffefa;
+            box-shadow: 0 15px 45px rgba(23, 61, 50, 0.055);
+        }
+
+        .pa-adopters-index__directory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 34px 35px 27px;
+        }
+
+        .pa-adopters-index__section-eyebrow {
+            display: block;
+            margin-bottom: 10px;
+            color: #a97843;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-adopters-index__directory-heading h2 {
+            margin: 0 0 8px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.7rem, 2.5vw, 2.3rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-adopters-index__directory-heading p {
+            margin: 0;
+            color: #7a887d;
+            font-size: 0.87rem;
+            line-height: 1.7;
+        }
+
+        .pa-adopters-index__directory-icon {
+            display: grid;
+            width: 49px;
+            height: 49px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #dce9dc;
+            border-radius: 15px;
+            background: #edf5ec;
+            color: #245847;
+        }
+
+            .pa-adopters-index__directory-icon svg {
+                width: 24px;
+                height: 24px;
+            }
+
+        .pa-adopters-index__toolbar {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 23px 35px;
+            border-top: 1px solid #e8eee6;
+            border-bottom: 1px solid #e8eee6;
+            background: #fbfcf9;
+        }
+
+        .pa-adopters-index__search {
+            width: min(100%, 470px);
+            min-width: 0;
+        }
+
+        .pa-adopters-index__search-label {
+            display: block;
+            margin-bottom: 9px;
+            color: #365344;
+            font-size: 0.83rem;
+            font-weight: 800;
+        }
+
+        .pa-adopters-index__search-wrap {
+            position: relative;
+        }
+
+        .pa-adopters-index__search-icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            width: 20px;
+            height: 20px;
+            color: #84988a;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .pa-adopters-index__search-input {
+            width: 100%;
+            min-height: 51px;
+            padding: 12px 70px 12px 45px;
+            border: 1px solid #dce7dd;
+            border-radius: 13px;
+            background: #fff;
+            color: #173d32;
+            font-family: "DM Sans", sans-serif;
+            font-size: 0.86rem;
+            outline: none;
+            transition: border-color 220ms ease, box-shadow 220ms ease;
+        }
+
+            .pa-adopters-index__search-input::placeholder {
+                color: #9aa79c;
+            }
+
+            .pa-adopters-index__search-input:focus {
+                border-color: #42755b;
+                box-shadow: 0 0 0 4px rgba(36, 88, 71, 0.11);
+            }
+
+        .pa-adopters-index__search-clear {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            padding: 6px 9px;
+            border: 0;
+            border-radius: 7px;
+            background: #ecf3ea;
+            color: #245847;
+            font-size: 0.73rem;
+            font-weight: 800;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+
+            .pa-adopters-index__search-clear:hover {
+                background: #dcebdd;
+            }
+
+        .pa-adopters-index__search-hint {
+            display: block;
+            margin-top: 8px;
+            color: #929e94;
+            font-size: 0.74rem;
+            line-height: 1.5;
+        }
+
+        .pa-adopters-index__results {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding-bottom: 14px;
+            color: #6c8070;
+            font-size: 0.81rem;
+            font-weight: 700;
+        }
+
+        .pa-adopters-index__results-icon {
+            display: flex;
+            color: #75927c;
+        }
+
+            .pa-adopters-index__results-icon svg {
+                width: 18px;
+                height: 18px;
+            }
+
+        .pa-adopters-index__table-wrap {
+            overflow-x: auto;
+        }
+
+        .pa-adopters-index__table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            color: #304a3a;
+        }
+
+            .pa-adopters-index__table thead {
+                background: #f7f9f5;
+            }
+
+            .pa-adopters-index__table th {
+                padding: 17px 24px;
+                border-bottom: 1px solid #e5ece3;
+                color: #829084;
+                font-size: 0.7rem;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+
+                .pa-adopters-index__table th:first-child,
+                .pa-adopters-index__table td:first-child {
+                    padding-left: 34px;
+                }
+
+                .pa-adopters-index__table th:last-child,
+                .pa-adopters-index__table td:last-child {
+                    padding-right: 34px;
+                }
+
+            .pa-adopters-index__table td {
+                padding: 22px 24px;
+                border-bottom: 1px solid #edf0e9;
+                vertical-align: middle;
+                font-size: 0.88rem;
+            }
+
+            .pa-adopters-index__table tbody tr {
+                transition: background-color 200ms ease;
+            }
+
+                .pa-adopters-index__table tbody tr:hover {
+                    background: #f9fbf7;
+                }
+
+                .pa-adopters-index__table tbody tr:last-child td {
+                    border-bottom: none;
+                }
+
+        .pa-adopters-index__actions-heading {
+            text-align: right;
+        }
+
+        .pa-adopters-index__person {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 180px;
+        }
+
+        .pa-adopters-index__avatar {
+            display: grid;
+            width: 47px;
+            height: 47px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #d7e5d6;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #dfeddf, #eaf3e9);
+            color: #245847;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.55rem;
+            font-weight: 600;
+        }
+
+        .pa-adopters-index__person-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .pa-adopters-index__person-name {
+            color: #254535;
+            font-size: 0.9rem;
+            font-weight: 800;
+            line-height: 1.45;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+            .pa-adopters-index__person-name:hover {
+                color: #b17a3e;
+                text-decoration: underline;
+                text-underline-offset: 3px;
+            }
+
+        .pa-adopters-index__person-id {
+            color: #91a095;
+            font-size: 0.75rem;
+        }
+
+        .pa-adopters-index__contact {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 145px;
+        }
+
+        .pa-adopters-index__contact-email {
+            color: #2d5540;
+            font-weight: 700;
+            line-height: 1.5;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+            .pa-adopters-index__contact-email:hover {
+                color: #b17a3e;
+                text-decoration: underline;
+            }
+
+        .pa-adopters-index__contact-phone {
+            color: #7f8e82;
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+
+        a.pa-adopters-index__contact-phone:hover {
+            color: #245847;
+        }
+
+        .pa-adopters-index__address {
+            max-width: 240px;
+            color: #52675a;
+            font-size: 0.85rem;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-adopters-index__muted {
+            color: #a0aba2;
+            font-weight: 500;
+        }
+
+        .pa-adopters-index__row-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .pa-adopters-index__action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 36px;
+            padding: 8px 11px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            line-height: 1.3;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: border-color 200ms ease, background-color 200ms ease, transform 200ms ease;
+        }
+
+            .pa-adopters-index__action svg {
+                width: 15px;
+                height: 15px;
+            }
+
+            .pa-adopters-index__action:hover {
+                transform: translateY(-1px);
+            }
+
+        .pa-adopters-index__action--details {
+            border-color: #dce8dc;
+            background: #f0f6ef;
+            color: #336148;
+        }
+
+            .pa-adopters-index__action--details:hover {
+                border-color: #b8d0bb;
+                background: #e4f0e3;
+                color: #245847;
+            }
+
+        .pa-adopters-index__action--edit {
+            border-color: #dce5ed;
+            background: #f2f6fa;
+            color: #456884;
+        }
+
+            .pa-adopters-index__action--edit:hover {
+                border-color: #bdcfdf;
+                background: #e9f0f8;
+                color: #31536c;
+            }
+
+        .pa-adopters-index__action--delete {
+            border-color: #f0d8d4;
+            background: #fff6f4;
+            color: #b15d52;
+        }
+
+            .pa-adopters-index__action--delete:hover {
+                border-color: #e7b9b2;
+                background: #ffebe8;
+                color: #a7473c;
+            }
+
+        .pa-adopters-index__table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px 34px;
+            border-top: 1px solid #e9eee6;
+            background: #fbfcf9;
+        }
+
+        .pa-adopters-index__footer-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #87968b;
+            font-size: 0.77rem;
+            line-height: 1.6;
+        }
+
+            .pa-adopters-index__footer-note svg {
+                width: 17px;
+                height: 17px;
+                flex-shrink: 0;
+                color: #739078;
+            }
+
+        .pa-adopters-index__footer-total {
+            color: #54705b;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .pa-adopters-index__empty,
+        .pa-adopters-index__search-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: clamp(45px, 6vw, 85px) 24px;
+            text-align: center;
+        }
+
+        .pa-adopters-index__empty {
+            border-top: 1px solid #e8eee6;
+        }
+
+        .pa-adopters-index__empty-art {
+            position: relative;
+            display: grid;
+            width: 104px;
+            height: 104px;
+            margin-bottom: 26px;
+            place-items: center;
+            border-radius: 30px;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+            .pa-adopters-index__empty-art > svg {
+                position: relative;
+                z-index: 1;
+                width: 57px;
+                height: 57px;
+            }
+
+        .pa-adopters-index__empty-ring {
+            position: absolute;
+            inset: -15px;
+            border: 1px solid #e1eae0;
+            border-radius: 38px;
+        }
+
+        .pa-adopters-index__empty-eyebrow {
+            margin-bottom: 13px;
+            color: #a97843;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+        }
+
+        .pa-adopters-index__empty h3,
+        .pa-adopters-index__search-empty h3 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.7rem, 3vw, 2.3rem);
+            font-weight: 600;
+            letter-spacing: -0.04em;
+        }
+
+        .pa-adopters-index__empty p,
+        .pa-adopters-index__search-empty p {
+            max-width: 440px;
+            margin: 15px 0 25px;
+            color: #819084;
+            font-size: 0.89rem;
+            line-height: 1.8;
+        }
+
+        .pa-adopters-index__empty-btn,
+        .pa-adopters-index__reset-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 50px;
+            padding: 13px 23px;
+            border: 1px solid #173d32;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 220ms ease, box-shadow 220ms ease;
+        }
+
+            .pa-adopters-index__empty-btn:hover,
+            .pa-adopters-index__reset-btn:hover {
+                transform: translateY(-2px);
+                color: #fff;
+                box-shadow: 0 12px 25px rgba(23, 61, 50, 0.18);
+            }
+
+            .pa-adopters-index__empty-btn svg {
+                width: 19px;
+                height: 19px;
+            }
+
+        .pa-adopters-index__search-empty {
+            padding: 65px 24px;
+        }
+
+        .pa-adopters-index__search-empty-icon {
+            display: grid;
+            width: 65px;
+            height: 65px;
+            margin-bottom: 21px;
+            place-items: center;
+            border-radius: 20px;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+            .pa-adopters-index__search-empty-icon svg {
+                width: 29px;
+                height: 29px;
+            }
+
+        .pa-adopters-index [hidden] {
+            display: none !important;
+        }
+
+        .pa-adopters-index a:focus-visible,
+        .pa-adopters-index button:focus-visible {
+            outline: 3px solid #c8914e;
+            outline-offset: 3px;
+        }
+
+        @@keyframes pa-adopters-enter {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes pa-adopters-float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .pa-adopters-index__hero-art {
+                width: 205px;
+                height: 205px;
+                margin-right: 0;
+            }
+
+            .pa-adopters-index__art-center {
+                width: 105px;
+                height: 105px;
+            }
+
+                .pa-adopters-index__art-center svg {
+                    width: 54px;
+                    height: 54px;
+                }
+
+            .pa-adopters-index__table th,
+            .pa-adopters-index__table td {
+                padding-inline: 16px;
+            }
+
+                .pa-adopters-index__table th:first-child,
+                .pa-adopters-index__table td:first-child {
+                    padding-left: 22px;
+                }
+
+                .pa-adopters-index__table th:last-child,
+                .pa-adopters-index__table td:last-child {
+                    padding-right: 22px;
+                }
+
+            .pa-adopters-index__row-actions {
+                max-width: 175px;
+                margin-left: auto;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-adopters-index__hero-art {
+                position: absolute;
+                right: 20px;
+                opacity: 0.25;
+                pointer-events: none;
+            }
+
+            .pa-adopters-index__hero-content {
+                max-width: 100%;
+            }
+
+            .pa-adopters-index__directory-header,
+            .pa-adopters-index__toolbar {
+                padding-inline: 25px;
+            }
+
+            .pa-adopters-index__results {
+                padding-bottom: 0;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-adopters-index {
+                margin-bottom: 30px;
+            }
+
+            .pa-adopters-index__hero {
+                min-height: auto;
+                padding: 32px;
+                border-radius: 22px;
+            }
+
+            .pa-adopters-index__hero-art {
+                right: -70px;
+                opacity: 0.13;
+            }
+
+            .pa-adopters-index__directory {
+                border-radius: 21px;
+            }
+
+            .pa-adopters-index__directory-header {
+                padding: 26px 23px;
+            }
+
+            .pa-adopters-index__toolbar {
+                padding: 20px 23px;
+            }
+
+            .pa-adopters-index__search {
+                width: 100%;
+            }
+
+            .pa-adopters-index__table-wrap {
+                overflow: visible;
+            }
+
+            .pa-adopters-index__table,
+            .pa-adopters-index__table tbody,
+            .pa-adopters-index__table tr,
+            .pa-adopters-index__table td {
+                display: block;
+                width: 100%;
+            }
+
+                .pa-adopters-index__table thead {
+                    display: none;
+                }
+
+                .pa-adopters-index__table tbody {
+                    display: grid;
+                    gap: 14px;
+                    padding: 18px;
+                }
+
+                    .pa-adopters-index__table tbody tr {
+                        padding: 18px;
+                        border: 1px solid #e3ebe1;
+                        border-radius: 17px;
+                        background: #fff;
+                    }
+
+                        .pa-adopters-index__table tbody tr:hover {
+                            background: #fff;
+                        }
+
+                .pa-adopters-index__table td,
+                .pa-adopters-index__table td:first-child,
+                .pa-adopters-index__table td:last-child {
+                    padding: 12px 0;
+                    border: 0;
+                }
+
+                    .pa-adopters-index__table td:first-child {
+                        padding-top: 0;
+                        padding-bottom: 18px;
+                        border-bottom: 1px solid #edf0e9;
+                    }
+
+                    .pa-adopters-index__table td:nth-child(2),
+                    .pa-adopters-index__table td:nth-child(3) {
+                        padding-top: 14px;
+                        padding-bottom: 8px;
+                    }
+
+                    .pa-adopters-index__table td[data-label]:not(:first-child)::before {
+                        display: block;
+                        margin-bottom: 9px;
+                        color: #929f94;
+                        content: attr(data-label);
+                        font-size: 0.7rem;
+                        font-weight: 800;
+                        letter-spacing: 0.08em;
+                        text-transform: uppercase;
+                    }
+
+                    .pa-adopters-index__table td:last-child {
+                        margin-top: 13px;
+                        padding-top: 17px;
+                        border-top: 1px solid #edf0e9;
+                    }
+
+            .pa-adopters-index__person {
+                min-width: 0;
+            }
+
+            .pa-adopters-index__contact {
+                min-width: 0;
+            }
+
+            .pa-adopters-index__row-actions {
+                justify-content: flex-start;
+                max-width: none;
+                margin-left: 0;
+            }
+
+            .pa-adopters-index__address {
+                max-width: none;
+            }
+
+            .pa-adopters-index__table-footer {
+                padding: 18px 23px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .pa-adopters-index__breadcrumb {
+                gap: 8px;
+                font-size: 0.77rem;
+            }
+
+            .pa-adopters-index__hero {
+                padding: 28px 23px;
+            }
+
+                .pa-adopters-index__hero h1 {
+                    font-size: 2.8rem;
+                }
+
+            .pa-adopters-index__hero-description {
+                font-size: 0.88rem;
+            }
+
+            .pa-adopters-index__hero-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .pa-adopters-index__add-btn {
+                width: 100%;
+            }
+
+            .pa-adopters-index__directory-header {
+                padding: 23px 19px;
+            }
+
+            .pa-adopters-index__directory-icon {
+                width: 41px;
+                height: 41px;
+            }
+
+                .pa-adopters-index__directory-icon svg {
+                    width: 21px;
+                    height: 21px;
+                }
+
+            .pa-adopters-index__toolbar {
+                padding: 19px;
+            }
+
+            .pa-adopters-index__table tbody {
+                padding: 13px;
+            }
+
+                .pa-adopters-index__table tbody tr {
+                    padding: 16px;
+                }
+
+            .pa-adopters-index__action {
+                flex: 1;
+                padding-inline: 8px;
+            }
+
+            .pa-adopters-index__table-footer {
+                padding: 18px 19px;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-adopters-index__hero-content,
+            .pa-adopters-index__hero-art {
+                animation: none;
+            }
+
+            .pa-adopters-index__action,
+            .pa-adopters-index__add-btn,
+            .pa-adopters-index__empty-btn,
+            .pa-adopters-index__reset-btn,
+            .pa-adopters-index__table tbody tr {
+                transition: none;
+            }
+
+                .pa-adopters-index__action:hover,
+                .pa-adopters-index__add-btn:hover,
+                .pa-adopters-index__empty-btn:hover,
+                .pa-adopters-index__reset-btn:hover {
+                    transform: none;
+                }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const searchInput = document.getElementById("adopterSearch");
+            const clearButton = document.getElementById("clearAdopterSearch");
+            const resetButton = document.getElementById("resetAdopterSearch");
+            const tableContainer = document.getElementById("adoptersTableContainer");
+            const emptyState = document.getElementById("adopterSearchEmpty");
+            const resultsCount = document.getElementById("adopterResultsCount");
+
+            if (!searchInput || !tableContainer || !emptyState || !resultsCount) {
+                return;
+            }
+
+            const rows = Array.from(
+                document.querySelectorAll("[data-pa-adopter-row]")
+            );
+
+            const total = rows.length;
+
+            const normalize = value =>
+                value.trim().toLocaleLowerCase();
+
+            const searchableRows = rows.map(row => ({
+                element: row,
+                searchText: normalize(row.dataset.paSearch || "")
+            }));
+
+            const filterAdopters = () => {
+                const query = normalize(searchInput.value);
+                let visibleCount = 0;
+
+                searchableRows.forEach(({ element, searchText }) => {
+                    const matches = !query || searchText.includes(query);
+
+                    element.hidden = !matches;
+
+                    if (matches) {
+                        visibleCount++;
+                    }
+                });
+
+                tableContainer.hidden = visibleCount === 0;
+                emptyState.hidden = visibleCount !== 0;
+
+                if (clearButton) {
+                    clearButton.hidden = query.length === 0;
+                }
+
+                resultsCount.textContent =
+                    `Showing ${visibleCount} of ${total} ` +
+                    (total === 1 ? "adopter" : "adopters");
+            };
+
+            const resetSearch = () => {
+                searchInput.value = "";
+                filterAdopters();
+                searchInput.focus();
+            };
+
+            searchInput.addEventListener("input", filterAdopters);
+
+            searchInput.addEventListener("keydown", event => {
+                if (event.key === "Escape" && searchInput.value) {
+                    event.preventDefault();
+                    resetSearch();
+                }
+            });
+
+            clearButton?.addEventListener("click", resetSearch);
+            resetButton?.addEventListener("click", resetSearch);
+
+            filterAdopters();
+        })();
+    </script>
 }

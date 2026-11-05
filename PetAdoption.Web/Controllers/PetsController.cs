@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PetAdoption.Application.Interfaces;
 using PetAdoption.Domain.Enums;
 using PetAdoption.Infrastructure.Data;
@@ -14,25 +15,38 @@ namespace PetAdoption.Web.Controllers
         private readonly IPetService _petService;
         private readonly IShelterService _shelterService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<PetsController> _logger;
 
         public PetsController(
             IPetService petService,
             IShelterService shelterService,
-            UserManager<ApplicationUser> userManager
+            UserManager<ApplicationUser> userManager,
+            ILogger<PetsController> logger
         )
         {
             _petService = petService;
             _shelterService = shelterService;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [AllowAnonymous]
+        [HttpGet]
         public async Task<IActionResult> Index(
             string? search,
             Species? species,
             PetStatus? status
         )
         {
+            if (!ModelState.IsValid ||
+                (species.HasValue &&
+                 !Enum.IsDefined(species.Value)) ||
+                (status.HasValue &&
+                 !Enum.IsDefined(status.Value)))
+            {
+                return BadRequest("Invalid filter parameters.");
+            }
+
             var isAdmin = User.IsInRole("Admin");
             var isShelter = User.IsInRole("Shelter");
             var isAdopter = User.IsInRole("Adopter");
@@ -49,10 +63,9 @@ namespace PetAdoption.Web.Controllers
                 }
             }
 
-            var normalizedSearch =
-                string.IsNullOrWhiteSpace(search)
-                    ? null
-                    : search.Trim();
+            var normalizedSearch = string.IsNullOrWhiteSpace(search)
+                ? null
+                : search.Trim();
 
             var pets = await _petService.GetAllAsync(
                 search: normalizedSearch,
@@ -60,18 +73,25 @@ namespace PetAdoption.Web.Controllers
                 shelterId: shelterId
             );
 
+            var filteredPets = pets.AsEnumerable();
+
             if (status.HasValue)
             {
-                pets = pets
-                    .Where(pet =>
-                        pet.Status == status.Value
-                    )
-                    .ToList();
+                filteredPets = filteredPets.Where(
+                    pet => pet.Status == status.Value
+                );
             }
 
             var viewModel = new PetListVm
             {
-                Pets = pets,
+                Pets = filteredPets
+                    .OrderBy(
+                        pet => pet.Name,
+                        StringComparer.OrdinalIgnoreCase
+                    )
+                    .ThenBy(pet => pet.Id)
+                    .ToList(),
+
                 IsAdmin = isAdmin,
                 IsShelter = isShelter,
                 IsAdopter = isAdopter,
@@ -88,53 +108,48 @@ namespace PetAdoption.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            var viewModel = new PetFormVm();
+            var model = new PetFormVm();
 
-            if (User.IsInRole("Shelter")
-                && !User.IsInRole("Admin"))
+            if (IsShelterOnly())
             {
-                var shelterId =
-                    await GetCurrentShelterIdAsync();
+                var shelterId = await GetCurrentShelterIdAsync();
 
                 if (!shelterId.HasValue)
                 {
                     return Forbid();
                 }
 
-                viewModel.ShelterId =
-                    shelterId.Value;
+                model.ShelterId = shelterId.Value;
             }
 
             await LoadSheltersAsync();
 
-            return View(viewModel);
+            return View(model);
         }
 
         [Authorize(Roles = "Admin,Shelter")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            PetFormVm model
-        )
+        public async Task<IActionResult> Create(PetFormVm model)
         {
-            if (User.IsInRole("Shelter")
-                && !User.IsInRole("Admin"))
+            if (IsShelterOnly())
             {
-                var shelterId =
-                    await GetCurrentShelterIdAsync();
+                var shelterId = await GetCurrentShelterIdAsync();
 
                 if (!shelterId.HasValue)
                 {
                     return Forbid();
                 }
 
-                model.ShelterId =
-                    shelterId.Value;
+                model.ShelterId = shelterId.Value;
+
+                ModelState.Remove(nameof(PetFormVm.ShelterId));
             }
 
             if (!ModelState.IsValid)
             {
                 await LoadSheltersAsync();
+
                 return View(model);
             }
 
@@ -150,12 +165,9 @@ namespace PetAdoption.Web.Controllers
                     model.ShelterId
                 );
 
-                TempData["ok"] =
-                    "Pet created.";
+                TempData["Ok"] = "Pet created successfully.";
 
-                return RedirectToAction(
-                    nameof(Index)
-                );
+                return RedirectToAction(nameof(Index));
             }
             catch (ArgumentException exception)
             {
@@ -163,81 +175,87 @@ namespace PetAdoption.Web.Controllers
                     string.Empty,
                     exception.Message
                 );
-
-                await LoadSheltersAsync();
-
-                return View(model);
             }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while creating a pet for shelter {ShelterId}.",
+                    model.ShelterId
+                );
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Unable to create the pet. Please try again."
+                );
+            }
+
+            await LoadSheltersAsync();
+
+            return View(model);
         }
 
         [Authorize(Roles = "Admin,Shelter")]
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var pet =
-                await _petService.GetAsync(id);
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var pet = await _petService.GetAsync(id);
 
             if (pet == null)
             {
                 return NotFound();
             }
 
-            if (!await CanManagePetAsync(
-                pet.ShelterId
-            ))
+            if (!await CanManagePetAsync(pet.ShelterId))
             {
                 return Forbid();
             }
 
             await LoadSheltersAsync();
 
-            return View(
-                PetFormVm.FromDto(pet)
-            );
+            return View(PetFormVm.FromDto(pet));
         }
 
         [Authorize(Roles = "Admin,Shelter")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(
-            PetFormVm model
-        )
+        public async Task<IActionResult> Edit(PetFormVm model)
         {
-            var existingPet =
-                await _petService.GetAsync(
-                    model.Id
-                );
+            if (model.Id <= 0)
+            {
+                return NotFound();
+            }
+
+            var existingPet = await _petService.GetAsync(
+                model.Id
+            );
 
             if (existingPet == null)
             {
                 return NotFound();
             }
 
-            if (!await CanManagePetAsync(
-                existingPet.ShelterId
-            ))
+            if (!await CanManagePetAsync(existingPet.ShelterId))
             {
                 return Forbid();
             }
 
-            if (User.IsInRole("Shelter")
-                && !User.IsInRole("Admin"))
+            if (IsShelterOnly())
             {
-                var shelterId =
-                    await GetCurrentShelterIdAsync();
+                model.ShelterId = existingPet.ShelterId;
 
-                if (!shelterId.HasValue)
-                {
-                    return Forbid();
-                }
-
-                model.ShelterId =
-                    shelterId.Value;
+                ModelState.Remove(nameof(PetFormVm.ShelterId));
             }
 
             if (!ModelState.IsValid)
             {
                 await LoadSheltersAsync();
+
                 return View(model);
             }
 
@@ -255,12 +273,9 @@ namespace PetAdoption.Web.Controllers
                     model.Status
                 );
 
-                TempData["ok"] =
-                    "Pet updated.";
+                TempData["Ok"] = "Pet updated successfully.";
 
-                return RedirectToAction(
-                    nameof(Index)
-                );
+                return RedirectToAction(nameof(Index));
             }
             catch (ArgumentException exception)
             {
@@ -268,28 +283,50 @@ namespace PetAdoption.Web.Controllers
                     string.Empty,
                     exception.Message
                 );
-
-                await LoadSheltersAsync();
-
-                return View(model);
             }
+            catch (InvalidOperationException exception)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    exception.Message
+                );
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while updating pet {PetId}.",
+                    model.Id
+                );
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Unable to update the pet. Please try again."
+                );
+            }
+
+            await LoadSheltersAsync();
+
+            return View(model);
         }
 
         [Authorize(Roles = "Admin,Shelter")]
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var pet =
-                await _petService.GetAsync(id);
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var pet = await _petService.GetAsync(id);
 
             if (pet == null)
             {
                 return NotFound();
             }
 
-            if (!await CanManagePetAsync(
-                pet.ShelterId
-            ))
+            if (!await CanManagePetAsync(pet.ShelterId))
             {
                 return Forbid();
             }
@@ -301,21 +338,21 @@ namespace PetAdoption.Web.Controllers
         [HttpPost]
         [ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(
-            int id
-        )
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var pet =
-                await _petService.GetAsync(id);
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var pet = await _petService.GetAsync(id);
 
             if (pet == null)
             {
                 return NotFound();
             }
 
-            if (!await CanManagePetAsync(
-                pet.ShelterId
-            ))
+            if (!await CanManagePetAsync(pet.ShelterId))
             {
                 return Forbid();
             }
@@ -324,26 +361,41 @@ namespace PetAdoption.Web.Controllers
             {
                 await _petService.DeleteAsync(id);
 
-                TempData["ok"] =
-                    "Pet deleted.";
+                TempData["Ok"] = "Pet deleted successfully.";
             }
             catch (ArgumentException exception)
             {
-                TempData["err"] =
-                    exception.Message;
+                TempData["Err"] = exception.Message;
+            }
+            catch (InvalidOperationException exception)
+            {
+                TempData["Err"] = exception.Message;
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while deleting pet {PetId}.",
+                    id
+                );
+
+                TempData["Err"] =
+                    "Unable to delete the pet because of related records or a database error.";
             }
 
-            return RedirectToAction(
-                nameof(Index)
-            );
+            return RedirectToAction(nameof(Index));
         }
 
         [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var pet =
-                await _petService.GetAsync(id);
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var pet = await _petService.GetAsync(id);
 
             if (pet == null)
             {
@@ -355,16 +407,20 @@ namespace PetAdoption.Web.Controllers
 
         private async Task LoadSheltersAsync()
         {
-            ViewBag.Shelters =
-                await _shelterService.GetAllAsync();
+            ViewBag.Shelters = await _shelterService.GetAllAsync();
         }
 
         private async Task<int?> GetCurrentShelterIdAsync()
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             return user?.ShelterId;
+        }
+
+        private bool IsShelterOnly()
+        {
+            return User.IsInRole("Shelter") &&
+                   !User.IsInRole("Admin");
         }
 
         private async Task<bool> CanManagePetAsync(
@@ -381,12 +437,10 @@ namespace PetAdoption.Web.Controllers
                 return false;
             }
 
-            var currentShelterId =
-                await GetCurrentShelterIdAsync();
+            var currentShelterId = await GetCurrentShelterIdAsync();
 
-            return currentShelterId.HasValue
-                && currentShelterId.Value
-                == petShelterId;
+            return currentShelterId.HasValue &&
+                   currentShelterId.Value == petShelterId;
         }
     }
 }

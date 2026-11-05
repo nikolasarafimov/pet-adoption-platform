@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PetAdoption.Application.Interfaces;
+using PetAdoption.Infrastructure.Data;
 using PetAdoption.Web.Models.Shelters;
 
 namespace PetAdoption.Web.Controllers
@@ -9,83 +11,260 @@ namespace PetAdoption.Web.Controllers
     public class SheltersController : Controller
     {
         private readonly IShelterService _shelters;
+        private readonly AppDbContext _db;
+        private readonly ILogger<SheltersController> _logger;
 
-        public SheltersController(IShelterService shelters)
+        public SheltersController(
+            IShelterService shelters,
+            AppDbContext db,
+            ILogger<SheltersController> logger
+        )
         {
             _shelters = shelters;
+            _db = db;
+            _logger = logger;
         }
 
-        // GET: /Shelters
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var list = await _shelters.GetAllAsync();
-            return View(list);
+            var shelters = await _shelters.GetAllAsync();
+
+            return View(
+                shelters.OrderBy(shelter => shelter.Name).ToList()
+            );
         }
 
-        // GET: /Shelters/Create
-        public IActionResult Create() => View(new ShelterFormVm());
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(new ShelterFormVm());
+        }
 
-        // POST: /Shelters/Create
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ShelterFormVm model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
 
-            var id = await _shelters.CreateAsync(model.Name, model.Address, model.City, model.Phone, model.Email);
-            TempData["Ok"] = "Shelter created.";
-            return RedirectToAction(nameof(Edit), new { id });
+            try
+            {
+                var id = await _shelters.CreateAsync(
+                    model.Name,
+                    model.Address,
+                    model.City,
+                    model.Phone,
+                    model.Email
+                );
+
+                TempData["Ok"] = "Shelter created successfully.";
+
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+            catch (ArgumentException exception)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    exception.Message
+                );
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while creating a shelter."
+                );
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Unable to create the shelter. Please try again."
+                );
+            }
+
+            return View(model);
         }
 
-        // GET: /Shelters/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var dto = await _shelters.GetAsync(id);
-            if (dto == null) return NotFound();
-
-            var vm = new ShelterFormVm
+            if (id <= 0)
             {
-                Id = dto.Id,
-                Name = dto.Name,
-                Address = dto.Address,
-                City = dto.City,
-                Phone = dto.Phone,
-                Email = dto.Email
+                return NotFound();
+            }
+
+            var shelter = await _shelters.GetAsync(id);
+
+            if (shelter == null)
+            {
+                return NotFound();
+            }
+
+            var model = new ShelterFormVm
+            {
+                Id = shelter.Id,
+                Name = shelter.Name,
+                Address = shelter.Address,
+                City = shelter.City,
+                Phone = shelter.Phone,
+                Email = shelter.Email
             };
-            return View(vm);
+
+            return View(model);
         }
 
-        // POST: /Shelters/Edit/5
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ShelterFormVm model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (model.Id <= 0)
+            {
+                return NotFound();
+            }
 
-            await _shelters.UpdateAsync(model.Id, model.Name, model.Address, model.City, model.Phone, model.Email);
-            TempData["Ok"] = "Shelter updated.";
-            return RedirectToAction(nameof(Index));
+            var existingShelter = await _shelters.GetAsync(model.Id);
+
+            if (existingShelter == null)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                await _shelters.UpdateAsync(
+                    model.Id,
+                    model.Name,
+                    model.Address,
+                    model.City,
+                    model.Phone,
+                    model.Email
+                );
+
+                TempData["Ok"] = "Shelter updated successfully.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ArgumentException exception)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    exception.Message
+                );
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while updating shelter {ShelterId}.",
+                    model.Id
+                );
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Unable to update the shelter. Please try again."
+                );
+            }
+
+            return View(model);
         }
 
-        // GET: /Shelters/Delete/5
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var dto = await _shelters.GetAsync(id);
-            if (dto == null) return NotFound();
-            return View(dto);
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var shelter = await _shelters.GetAsync(id);
+
+            if (shelter == null)
+            {
+                return NotFound();
+            }
+
+            return View(shelter);
         }
 
-        // POST: /Shelters/Delete/5
-        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        [HttpPost]
+        [ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var shelter = await _shelters.GetAsync(id);
+
+            if (shelter == null)
+            {
+                return NotFound();
+            }
+
+            var hasLinkedAccount = await _db.Users
+                .AnyAsync(user => user.ShelterId == id);
+
+            if (hasLinkedAccount)
+            {
+                TempData["Err"] =
+                    "Cannot delete a shelter linked to a user account.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            var hasPets = await _db.Pets
+                .AnyAsync(pet => pet.ShelterId == id);
+
+            if (hasPets)
+            {
+                TempData["Err"] =
+                    "Cannot delete a shelter that has pets. Move or delete the pets first.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
                 await _shelters.DeleteAsync(id);
-                TempData["Ok"] = "Shelter deleted.";
+
+                TempData["Ok"] = "Shelter deleted successfully.";
             }
-            catch
+            catch (ArgumentException)
             {
-                TempData["Err"] = "Shelter cannot be deleted because it has pets. Move or delete the pets first.";
+                return NotFound();
             }
+            catch (InvalidOperationException exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Deletion blocked for shelter {ShelterId}.",
+                    id
+                );
+
+                TempData["Err"] =
+                    "The shelter cannot be deleted in its current state.";
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while deleting shelter {ShelterId}.",
+                    id
+                );
+
+                TempData["Err"] =
+                    "Unable to delete the shelter because of related records or a database error.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }

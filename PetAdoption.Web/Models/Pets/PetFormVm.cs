@@ -10,12 +10,15 @@ namespace PetAdoption.Web.Models.Pets
 
         [Required]
         [MaxLength(128)]
+        [Display(Name = "Pet name")]
         public string Name { get; set; } = string.Empty;
 
         [EnumDataType(typeof(Species))]
+        [Display(Name = "Species")]
         public Species Species { get; set; }
 
         [MaxLength(128)]
+        [Display(Name = "Breed")]
         public string? Breed { get; set; }
 
         [Range(
@@ -23,13 +26,16 @@ namespace PetAdoption.Web.Models.Pets
             200,
             ErrorMessage = "Age must be between 0 and 200 years."
         )]
+        [Display(Name = "Age (years)")]
         public int AgeYears { get; set; }
 
         [MaxLength(1024)]
+        [Display(Name = "Description")]
         public string? Description { get; set; }
 
         [MaxLength(512)]
         [Url]
+        [Display(Name = "Image URL")]
         public string? ImageUrl { get; set; }
 
         [Range(
@@ -37,14 +43,17 @@ namespace PetAdoption.Web.Models.Pets
             int.MaxValue,
             ErrorMessage = "A shelter must be selected."
         )]
+        [Display(Name = "Shelter")]
         public int ShelterId { get; set; }
 
         [EnumDataType(typeof(PetStatus))]
-        public PetStatus Status { get; set; }
-            = PetStatus.Available;
+        [Display(Name = "Status")]
+        public PetStatus Status { get; set; } = PetStatus.Available;
 
         public static PetFormVm FromDto(PetDto pet)
         {
+            ArgumentNullException.ThrowIfNull(pet);
+
             return new PetFormVm
             {
                 Id = pet.Id,

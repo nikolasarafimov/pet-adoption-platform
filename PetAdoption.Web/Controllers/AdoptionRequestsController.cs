@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using PetAdoption.Application.Interfaces;
 using PetAdoption.Domain.Enums;
 using PetAdoption.Infrastructure.Data;
@@ -13,41 +15,42 @@ namespace PetAdoption.Web.Controllers
         private readonly IAdoptionService _adoptionService;
         private readonly IShelterService _shelterService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<AdoptionRequestsController> _logger;
 
         public AdoptionRequestsController(
             IAdoptionService adoptionService,
             IShelterService shelterService,
-            UserManager<ApplicationUser> userManager
+            UserManager<ApplicationUser> userManager,
+            ILogger<AdoptionRequestsController> logger
         )
         {
             _adoptionService = adoptionService;
             _shelterService = shelterService;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [Authorize(Roles = "Adopter")]
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var adopterId =
-                await GetCurrentAdopterIdAsync();
+            var adopterId = await GetCurrentAdopterIdAsync();
 
             if (!adopterId.HasValue)
             {
                 return Forbid();
             }
 
-            var requests =
-                await _adoptionService.GetForAdopterAsync(
-                    adopterId.Value
-                );
+            var requests = await _adoptionService.GetForAdopterAsync(
+                adopterId.Value
+            );
 
             return View(requests);
         }
 
         [Authorize(Roles = "Shelter,Admin")]
-        public async Task<IActionResult> Manage(
-            int? shelterId
-        )
+        [HttpGet]
+        public async Task<IActionResult> Manage(int? shelterId)
         {
             int effectiveShelterId;
 
@@ -55,57 +58,48 @@ namespace PetAdoption.Web.Controllers
             {
                 if (shelterId.HasValue)
                 {
-                    var shelter =
-                        await _shelterService.GetAsync(
-                            shelterId.Value
-                        );
+                    var shelter = await _shelterService.GetAsync(
+                        shelterId.Value
+                    );
 
                     if (shelter == null)
                     {
                         return NotFound();
                     }
 
-                    effectiveShelterId =
-                        shelter.Id;
+                    effectiveShelterId = shelter.Id;
                 }
                 else
                 {
-                    var shelters =
-                        await _shelterService.GetAllAsync();
+                    var shelters = await _shelterService.GetAllAsync();
 
-                    var firstShelter =
-                        shelters.FirstOrDefault();
+                    var firstShelter = shelters.FirstOrDefault();
 
                     if (firstShelter == null)
                     {
                         return NotFound();
                     }
 
-                    effectiveShelterId =
-                        firstShelter.Id;
+                    effectiveShelterId = firstShelter.Id;
                 }
             }
             else
             {
-                var currentShelterId =
-                    await GetCurrentShelterIdAsync();
+                var currentShelterId = await GetCurrentShelterIdAsync();
 
                 if (!currentShelterId.HasValue)
                 {
                     return Forbid();
                 }
 
-                effectiveShelterId =
-                    currentShelterId.Value;
+                effectiveShelterId = currentShelterId.Value;
             }
 
-            var requests =
-                await _adoptionService.GetForShelterAsync(
-                    effectiveShelterId
-                );
+            var requests = await _adoptionService.GetForShelterAsync(
+                effectiveShelterId
+            );
 
-            ViewBag.ShelterId =
-                effectiveShelterId;
+            ViewBag.ShelterId = effectiveShelterId;
 
             return View(requests);
         }
@@ -114,6 +108,11 @@ namespace PetAdoption.Web.Controllers
         [HttpGet]
         public IActionResult Create(int petId)
         {
+            if (petId <= 0)
+            {
+                return NotFound();
+            }
+
             return View(model: petId);
         }
 
@@ -125,8 +124,12 @@ namespace PetAdoption.Web.Controllers
             string? message
         )
         {
-            var adopterId =
-                await GetCurrentAdopterIdAsync();
+            if (petId <= 0)
+            {
+                return NotFound();
+            }
+
+            var adopterId = await GetCurrentAdopterIdAsync();
 
             if (!adopterId.HasValue)
             {
@@ -141,25 +144,43 @@ namespace PetAdoption.Web.Controllers
                     message
                 );
 
-                TempData["ok"] =
-                    "Request submitted.";
+                TempData["Ok"] = "Request submitted successfully.";
 
-                return RedirectToAction(
-                    nameof(Index)
-                );
+                return RedirectToAction(nameof(Index));
             }
-            catch (
-                Exception exception
-            ) when (
-                exception is ArgumentException
-                or InvalidOperationException
-            )
+            catch (ArgumentException exception)
             {
-                TempData["err"] =
-                    exception.Message;
-
-                return View(model: petId);
+                TempData["Err"] = exception.Message;
             }
+            catch (InvalidOperationException exception)
+            {
+                TempData["Err"] = exception.Message;
+            }
+            catch (DbUpdateException exception)
+                when (IsUniqueConstraintViolation(exception))
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Duplicate adoption request prevented for pet {PetId}.",
+                    petId
+                );
+
+                TempData["Err"] =
+                    "This pet already has a pending adoption request.";
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while submitting an adoption request for pet {PetId}.",
+                    petId
+                );
+
+                TempData["Err"] =
+                    "Unable to submit the request. Please try again later.";
+            }
+
+            return View(model: petId);
         }
 
         [Authorize(Roles = "Shelter,Admin")]
@@ -170,8 +191,13 @@ namespace PetAdoption.Web.Controllers
             AdoptionRequestStatus status
         )
         {
-            if (status != AdoptionRequestStatus.Approved
-                && status != AdoptionRequestStatus.Rejected)
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            if (status != AdoptionRequestStatus.Approved &&
+                status != AdoptionRequestStatus.Rejected)
             {
                 return BadRequest(
                     "Only approval or rejection is allowed."
@@ -182,9 +208,8 @@ namespace PetAdoption.Web.Controllers
 
             try
             {
-                requestShelterId =
-                    await _adoptionService
-                        .GetShelterIdForRequestAsync(id);
+                requestShelterId = await _adoptionService
+                    .GetShelterIdForRequestAsync(id);
             }
             catch (ArgumentException)
             {
@@ -193,12 +218,10 @@ namespace PetAdoption.Web.Controllers
 
             if (!User.IsInRole("Admin"))
             {
-                var currentShelterId =
-                    await GetCurrentShelterIdAsync();
+                var currentShelterId = await GetCurrentShelterIdAsync();
 
-                if (!currentShelterId.HasValue
-                    || currentShelterId.Value
-                    != requestShelterId)
+                if (!currentShelterId.HasValue ||
+                    currentShelterId.Value != requestShelterId)
                 {
                     return Forbid();
                 }
@@ -211,26 +234,42 @@ namespace PetAdoption.Web.Controllers
                     status
                 );
 
-                TempData["ok"] =
-                    "Request updated.";
+                TempData["Ok"] = "Request updated successfully.";
             }
-            catch (
-                Exception exception
-            ) when (
-                exception is ArgumentException
-                or InvalidOperationException
-            )
+            catch (ArgumentException exception)
             {
-                TempData["err"] =
-                    exception.Message;
+                TempData["Err"] = exception.Message;
+            }
+            catch (InvalidOperationException exception)
+            {
+                TempData["Err"] = exception.Message;
+            }
+            catch (DbUpdateConcurrencyException exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Concurrency conflict while deciding adoption request {RequestId}.",
+                    id
+                );
+
+                TempData["Err"] =
+                    "The request was changed by another operation. Please refresh and try again.";
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while deciding adoption request {RequestId}.",
+                    id
+                );
+
+                TempData["Err"] =
+                    "Unable to update the request. Please try again later.";
             }
 
             return RedirectToAction(
                 nameof(Manage),
-                new
-                {
-                    shelterId = requestShelterId
-                }
+                new { shelterId = requestShelterId }
             );
         }
 
@@ -239,8 +278,12 @@ namespace PetAdoption.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)
         {
-            var adopterId =
-                await GetCurrentAdopterIdAsync();
+            if (id <= 0)
+            {
+                return NotFound();
+            }
+
+            var adopterId = await GetCurrentAdopterIdAsync();
 
             if (!adopterId.HasValue)
             {
@@ -254,40 +297,66 @@ namespace PetAdoption.Web.Controllers
                     adopterId.Value
                 );
 
-                TempData["ok"] =
-                    "Request cancelled.";
+                TempData["Ok"] = "Request cancelled successfully.";
             }
-            catch (
-                Exception exception
-            ) when (
-                exception is ArgumentException
-                or InvalidOperationException
-                or UnauthorizedAccessException
-            )
+            catch (UnauthorizedAccessException)
             {
-                TempData["err"] =
-                    exception.Message;
+                return Forbid();
+            }
+            catch (ArgumentException)
+            {
+                return NotFound();
+            }
+            catch (InvalidOperationException exception)
+            {
+                TempData["Err"] = exception.Message;
+            }
+            catch (DbUpdateConcurrencyException exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Concurrency conflict while cancelling adoption request {RequestId}.",
+                    id
+                );
+
+                TempData["Err"] =
+                    "The request was changed by another operation. Please refresh and try again.";
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Database error while cancelling adoption request {RequestId}.",
+                    id
+                );
+
+                TempData["Err"] =
+                    "Unable to cancel the request. Please try again later.";
             }
 
-            return RedirectToAction(
-                nameof(Index)
-            );
+            return RedirectToAction(nameof(Index));
         }
 
         private async Task<int?> GetCurrentAdopterIdAsync()
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             return user?.AdopterId;
         }
 
         private async Task<int?> GetCurrentShelterIdAsync()
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             return user?.ShelterId;
+        }
+
+        private static bool IsUniqueConstraintViolation(
+            DbUpdateException exception
+        )
+        {
+            return exception.InnerException is SqliteException sqliteException
+                && sqliteException.SqliteExtendedErrorCode == 2067;
         }
     }
 }

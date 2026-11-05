@@ -1,5 +1,7 @@
-﻿using System.Net.Http.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using PetAdoption.Application.DTOs;
 using PetAdoption.Application.Interfaces;
 
@@ -7,6 +9,12 @@ namespace PetAdoption.Infrastructure.External
 {
     public class DogApiService : IDogApiService
     {
+        private static readonly Regex NumberPattern = new(
+            @"[0-9]+(?:[.,][0-9]+)?",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1)
+        );
+
         private readonly HttpClient _httpClient;
 
         public DogApiService(HttpClient httpClient)
@@ -19,18 +27,16 @@ namespace PetAdoption.Infrastructure.External
             int take = 20
         )
         {
-            var breeds =
-                await _httpClient.GetFromJsonAsync<List<BreedRaw>>(
-                    "v1/breeds"
-                )
-                ?? new List<BreedRaw>();
+            var breeds = await FetchBreedsAsync();
 
-            if (!string.IsNullOrWhiteSpace(nameLike))
+            var searchTerm = nameLike?.Trim();
+
+            if (!string.IsNullOrEmpty(searchTerm))
             {
                 breeds = breeds
                     .Where(breed =>
                         breed.Name.Contains(
-                            nameLike.Trim(),
+                            searchTerm,
                             StringComparison.OrdinalIgnoreCase
                         )
                     )
@@ -54,98 +60,185 @@ namespace PetAdoption.Infrastructure.External
                 return null;
             }
 
-            var breeds = await GetBreedsAsync(
-                nameLike: name.Trim(),
-                take: 1000
-            );
+            var searchTerm = name.Trim();
 
-            return breeds.FirstOrDefault(breed =>
-                string.Equals(
-                    breed.Name,
-                    name.Trim(),
+            var breeds = await FetchBreedsAsync();
+
+            var breed = breeds.FirstOrDefault(
+                candidate => string.Equals(
+                    candidate.Name.Trim(),
+                    searchTerm,
                     StringComparison.OrdinalIgnoreCase
                 )
             );
+
+            return breed == null ? null : Map(breed);
+        }
+
+        private async Task<List<BreedRaw>> FetchBreedsAsync()
+        {
+            var breeds = await _httpClient
+                .GetFromJsonAsync<List<BreedRaw>>("v1/breeds");
+
+            if (breeds == null)
+            {
+                return new List<BreedRaw>();
+            }
+
+            return breeds
+                .Where(breed =>
+                    breed != null &&
+                    !string.IsNullOrWhiteSpace(breed.Name)
+                )
+                .ToList();
         }
 
         private static BreedDto Map(BreedRaw breed)
         {
-            int? minimumLifeSpan = null;
-            int? maximumLifeSpan = null;
+            var (minimumLifeSpan, maximumLifeSpan) =
+                ParseLifeSpan(breed.LifeSpan);
 
-            var lifeSpanParts =
-                (breed.LifeSpan ?? string.Empty)
-                .Split(
-                    ' ',
-                    StringSplitOptions.RemoveEmptyEntries
-                );
-
-            if (lifeSpanParts.Length >= 1
-                && int.TryParse(
-                    lifeSpanParts[0],
-                    out var minimum
-                ))
-            {
-                minimumLifeSpan = minimum;
-            }
-
-            if (lifeSpanParts.Length >= 3
-                && int.TryParse(
-                    lifeSpanParts[2],
-                    out var maximum
-                ))
-            {
-                maximumLifeSpan = maximum;
-            }
-
-            double? averageWeight = null;
-
-            var weights =
-                (breed.Weight?.Metric ?? string.Empty)
-                .Split(
-                    '-',
-                    StringSplitOptions.RemoveEmptyEntries
-                )
-                .Select(value =>
-                    double.TryParse(
-                        value.Trim(),
-                        out var parsed
-                    )
-                        ? parsed
-                        : (double?)null
-                )
-                .Where(value => value.HasValue)
-                .Select(value => value!.Value)
-                .ToList();
-
-            if (weights.Count == 1)
-            {
-                averageWeight = weights[0];
-            }
-            else if (weights.Count >= 2)
-            {
-                averageWeight =
-                    (weights[0] + weights[1]) / 2.0;
-            }
+            var averageWeight =
+                ParseAverageWeight(breed.Weight?.Metric);
 
             var temperaments =
                 (breed.Temperament ?? string.Empty)
                 .Split(
                     ',',
-                    StringSplitOptions.RemoveEmptyEntries
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries
                 )
-                .Select(value => value.Trim())
-                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Where(value =>
+                    !string.IsNullOrWhiteSpace(value)
+                )
                 .ToArray();
 
             return new BreedDto(
-                breed.Name,
+                breed.Name.Trim(),
                 temperaments,
                 minimumLifeSpan,
                 maximumLifeSpan,
                 averageWeight,
-                breed.Image?.Url
+                NormalizeImageUrl(breed.Image?.Url)
             );
+        }
+
+        private static (int? Minimum, int? Maximum) ParseLifeSpan(
+            string? lifeSpan
+        )
+        {
+            if (string.IsNullOrWhiteSpace(lifeSpan))
+            {
+                return (null, null);
+            }
+
+            var matches = NumberPattern.Matches(lifeSpan);
+
+            if (matches.Count == 0)
+            {
+                return (null, null);
+            }
+
+            int? minimum = null;
+            int? maximum = null;
+
+            if (int.TryParse(
+                matches[0].Value,
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out var minimumValue
+            ))
+            {
+                minimum = minimumValue;
+            }
+
+            if (matches.Count > 1 &&
+                int.TryParse(
+                    matches[1].Value,
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out var maximumValue
+                ))
+            {
+                maximum = maximumValue;
+            }
+
+            return (minimum, maximum);
+        }
+
+        private static double? ParseAverageWeight(
+            string? metricWeight
+        )
+        {
+            if (string.IsNullOrWhiteSpace(metricWeight))
+            {
+                return null;
+            }
+
+            var values = new List<double>(2);
+
+            foreach (Match match in NumberPattern.Matches(metricWeight))
+            {
+                var number = match.Value.Replace(',', '.');
+
+                if (!double.TryParse(
+                    number,
+                    NumberStyles.AllowDecimalPoint,
+                    CultureInfo.InvariantCulture,
+                    out var value
+                ))
+                {
+                    continue;
+                }
+
+                if (!double.IsFinite(value) || value <= 0)
+                {
+                    continue;
+                }
+
+                values.Add(value);
+
+                if (values.Count == 2)
+                {
+                    break;
+                }
+            }
+
+            return values.Count switch
+            {
+                0 => null,
+                1 => values[0],
+                _ => (values[0] + values[1]) / 2.0
+            };
+        }
+
+        private static string? NormalizeImageUrl(
+            string? imageUrl
+        )
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return null;
+            }
+
+            var normalized = imageUrl.Trim();
+
+            if (!Uri.TryCreate(
+                normalized,
+                UriKind.Absolute,
+                out var uri
+            ))
+            {
+                return null;
+            }
+
+            if (uri.Scheme != Uri.UriSchemeHttp &&
+                uri.Scheme != Uri.UriSchemeHttps)
+            {
+                return null;
+            }
+
+            return normalized;
         }
 
         private sealed class BreedRaw

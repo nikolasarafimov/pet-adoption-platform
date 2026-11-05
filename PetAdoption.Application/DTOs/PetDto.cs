@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PetAdoption.Domain.Enums;
+﻿using PetAdoption.Domain.Enums;
 
 namespace PetAdoption.Application.DTOs
 {
-    public record PetDto
-    (
-        int Id, 
-        string Name, 
-        Species Species, 
+    public record PetDto(
+        int Id,
+        string Name,
+        Species Species,
         string? Breed,
-        int AgeYears, 
-        string? Description, 
+        int AgeYears,
+        string? Description,
         string? ImageUrl,
-        PetStatus Status, 
-        int ShelterId, 
+        PetStatus Status,
+        int ShelterId,
         string ShelterName
     );
 }

@@ -15,20 +15,25 @@ namespace PetAdoption.Web.Controllers
             _petService = petService;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Welcome()
         {
-            var featuredPets =
-                (await _petService.GetAllAsync())
-                .OrderByDescending(
-                    pet => pet.Status == PetStatus.Available
+            var pets = await _petService.GetAllAsync();
+
+            var featuredPets = pets
+                .Where(pet => pet.Status == PetStatus.Available)
+                .OrderBy(
+                    pet => pet.Name,
+                    StringComparer.OrdinalIgnoreCase
                 )
-                .ThenBy(pet => pet.Name)
+                .ThenBy(pet => pet.Id)
                 .Take(3)
                 .ToList();
 
             return View(featuredPets);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index(
             string? search,
             Species? species,
@@ -36,37 +41,47 @@ namespace PetAdoption.Web.Controllers
             int pageSize = 9
         )
         {
+            if (!ModelState.IsValid ||
+                (species.HasValue && !Enum.IsDefined(species.Value)))
+            {
+                return BadRequest(
+                    "Invalid search or pagination parameters."
+                );
+            }
+
             page = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 1, 30);
 
-            var normalizedSearch =
-                string.IsNullOrWhiteSpace(search)
-                    ? null
-                    : search.Trim();
+            var normalizedSearch = string.IsNullOrWhiteSpace(search)
+                ? null
+                : search.Trim();
 
-            var pets =
-                await _petService.GetAllAsync(
-                    normalizedSearch,
-                    species,
-                    null
-                );
+            var pets = await _petService.GetAllAsync(
+                search: normalizedSearch,
+                species: species
+            );
 
-            var total = pets.Count;
+            var orderedPets = pets
+                .OrderBy(
+                    pet => pet.Name,
+                    StringComparer.OrdinalIgnoreCase
+                )
+                .ThenBy(pet => pet.Id)
+                .ToList();
 
-            var totalPages =
-                Math.Max(
-                    1,
-                    (int)Math.Ceiling(
-                        total / (double)pageSize
-                    )
-                );
+            var total = orderedPets.Count;
+
+            var totalPages = Math.Max(
+                1,
+                (int)Math.Ceiling(total / (double)pageSize)
+            );
 
             if (page > totalPages)
             {
                 page = totalPages;
             }
 
-            var items = pets
+            var items = orderedPets
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
@@ -110,8 +125,7 @@ namespace PetAdoption.Web.Controllers
             return View(
                 new ErrorViewModel
                 {
-                    RequestId =
-                        Activity.Current?.Id
+                    RequestId = Activity.Current?.Id
                         ?? HttpContext.TraceIdentifier
                 }
             );

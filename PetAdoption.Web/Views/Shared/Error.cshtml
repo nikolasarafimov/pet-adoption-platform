@@ -1,52 +1,481 @@
 ﻿@model ErrorViewModel
 
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = "Something Went Wrong";
+    ViewData["Description"] = "An unexpected problem interrupted your request on PetAdoption.";
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-7">
-        <div class="card p-4 p-md-5 text-center">
-            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mx-auto mb-4"
-                 style="width: 90px; height: 90px;">
-                <span class="display-6">
-                    !
-                </span>
-            </div>
+<div class="pa-error">
+    <nav class="pa-error__breadcrumb" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Welcome">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Error</span>
+    </nav>
 
-            <div class="text-danger fw-semibold text-uppercase small mb-2">
-                Something Went Wrong
-            </div>
+    <section class="pa-error__hero" aria-labelledby="errorPageTitle">
+        <div class="pa-error__hero-content">
+            <span class="pa-error__eyebrow">
+                <span class="pa-error__eyebrow-dot" aria-hidden="true"></span>
+                WE'RE HERE TO HELP
+            </span>
 
-            <h1 class="section-title mb-3">
-                We couldn't complete your request
+            <h1 id="errorPageTitle">
+                A little bump
+                <span>along the way.</span>
             </h1>
 
-            <p class="section-subtitle mx-auto mb-4"
-               style="max-width: 560px;">
-                An unexpected error occurred.
-                Please try again or return to the home page.
+            <p>
+                Something unexpected happened while processing your request.
+                You can head back home or keep exploring the pets waiting for a family.
             </p>
 
-            @if (Model.ShowRequestId)
-            {
-                <div class="bg-light rounded-4 p-3 mb-4 mx-auto"
-                     style="max-width: 500px;">
-                    <div class="small text-muted">
-                        Request ID
-                    </div>
+            <div class="pa-error__hero-actions">
+                <a asp-controller="Home"
+                   asp-action="Welcome"
+                   class="pa-error__button pa-error__button--primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m3 10 9-7 9 7" />
+                        <path d="M5 9v11h14V9" />
+                        <path d="M9 20v-7h6v7" />
+                    </svg>
+                    Return Home
+                </a>
 
-                    <code>
-                        @Model.RequestId
-                    </code>
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="pa-error__button pa-error__button--secondary">
+                    Explore Pets
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 12h14m-6-6 6 6-6 6" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <div class="pa-error__art" aria-hidden="true">
+            <div class="pa-error__orbit pa-error__orbit--outer"></div>
+            <div class="pa-error__orbit pa-error__orbit--inner"></div>
+            <div class="pa-error__art-icon">
+                <svg viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="42" />
+                    <path d="M60 34v35" />
+                    <path d="M60 84h.01" />
+                </svg>
+            </div>
+            <span class="pa-error__spark pa-error__spark--top"></span>
+            <span class="pa-error__spark pa-error__spark--bottom"></span>
+        </div>
+    </section>
+
+    <section class="pa-error__support" aria-labelledby="errorSupportHeading">
+        <div class="pa-error__support-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 21s-8-4.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.5-8 11-8 11Z" />
+            </svg>
+        </div>
+
+        <div class="pa-error__support-copy">
+            <span class="pa-error__section-label">WHAT CAN YOU DO NEXT?</span>
+            <h2 id="errorSupportHeading">There's still a way forward.</h2>
+            <p>
+                Try opening the page again in a moment. If the problem persists,
+                report the issue and include the request reference shown below, if available.
+            </p>
+
+            @if (Model?.ShowRequestId == true)
+            {
+                <div class="pa-error__reference">
+                    <div class="pa-error__reference-label">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="4" y="3" width="16" height="18" rx="2" />
+                            <path d="M8 8h8M8 12h8M8 16h5" />
+                        </svg>
+                        <span>Request reference</span>
+                    </div>
+                    <code>@Model.RequestId</code>
                 </div>
             }
-
-            <a asp-controller="Home"
-               asp-action="Welcome"
-               class="btn btn-primary px-4">
-                Return Home
-            </a>
         </div>
-    </div>
+    </section>
 </div>
+
+@section Styles {
+    <style>
+        .pa-error {
+            padding-bottom: 34px;
+        }
+
+        .pa-error__breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            color: var(--pa-muted, #65716a);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+            .pa-error__breadcrumb a {
+                color: var(--pa-forest, #173d32);
+                text-decoration: none;
+            }
+
+                .pa-error__breadcrumb a:hover {
+                    text-decoration: underline;
+                }
+
+        .pa-error__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 420px;
+            overflow: hidden;
+            border-radius: 30px;
+            isolation: isolate;
+            background: radial-gradient(circle at 85% 26%, rgba(201, 145, 78, 0.19), transparent 32%), linear-gradient(130deg, #173d32 0%, #0e2b23 100%);
+            color: #fff;
+        }
+
+            .pa-error__hero::before {
+                position: absolute;
+                inset: 0;
+                z-index: -1;
+                content: "";
+                background: radial-gradient(circle at 5% 100%, rgba(255, 255, 255, 0.065), transparent 40%);
+            }
+
+        .pa-error__hero-content {
+            position: relative;
+            z-index: 2;
+            width: min(69%, 760px);
+            padding: clamp(36px, 5.5vw, 76px);
+        }
+
+        .pa-error__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 22px;
+            color: #f4c57a;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+        }
+
+        .pa-error__eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 0 5px rgba(244, 197, 122, 0.12);
+        }
+
+        .pa-error__hero h1 {
+            margin: 0;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.6rem, 5vw, 4.9rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+            line-height: 1.09;
+        }
+
+            .pa-error__hero h1 span {
+                display: block;
+                color: #f4c57a;
+                font-style: italic;
+            }
+
+        .pa-error__hero p {
+            max-width: 530px;
+            margin: 24px 0 30px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        .pa-error__hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pa-error__button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 12px 20px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+            .pa-error__button:hover {
+                transform: translateY(-2px);
+            }
+
+            .pa-error__button svg {
+                width: 19px;
+                height: 19px;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.8;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+        .pa-error__button--primary {
+            background: #f4c57a;
+            color: #173d32;
+        }
+
+            .pa-error__button--primary:hover {
+                background: #ffdaa1;
+                color: #173d32;
+            }
+
+        .pa-error__button--secondary {
+            border-color: rgba(255, 255, 255, 0.28);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+            .pa-error__button--secondary:hover {
+                border-color: rgba(255, 255, 255, 0.5);
+                background: rgba(255, 255, 255, 0.15);
+                color: #fff;
+            }
+
+        .pa-error__art {
+            position: absolute;
+            top: 50%;
+            right: -2%;
+            width: min(42vw, 470px);
+            aspect-ratio: 1;
+            transform: translateY(-50%);
+        }
+
+        .pa-error__orbit {
+            position: absolute;
+            border: 1px solid rgba(244, 197, 122, 0.17);
+            border-radius: 50%;
+        }
+
+        .pa-error__orbit--outer {
+            inset: 0;
+        }
+
+        .pa-error__orbit--inner {
+            inset: 14%;
+            background: rgba(244, 197, 122, 0.045);
+        }
+
+        .pa-error__art-icon {
+            position: absolute;
+            inset: 29%;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.3);
+            border-radius: 50%;
+            background: rgba(244, 197, 122, 0.12);
+            color: #f4c57a;
+        }
+
+            .pa-error__art-icon svg {
+                width: 74%;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 3;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+        .pa-error__spark {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            transform: rotate(45deg);
+            background: #f4c57a;
+            opacity: 0.68;
+        }
+
+        .pa-error__spark--top {
+            top: 15%;
+            right: 26%;
+        }
+
+        .pa-error__spark--bottom {
+            bottom: 18%;
+            left: 16%;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pa-error__support {
+            display: flex;
+            align-items: flex-start;
+            gap: 22px;
+            max-width: 920px;
+            margin: 28px auto 0;
+            padding: clamp(24px, 4vw, 40px);
+            border: 1px solid #e7e8df;
+            border-radius: 24px;
+            background: #fff;
+            box-shadow: 0 16px 36px rgba(25, 54, 40, 0.055);
+        }
+
+        .pa-error__support-icon {
+            display: grid;
+            flex: 0 0 56px;
+            place-items: center;
+            height: 56px;
+            border-radius: 16px;
+            background: #e9f0e8;
+            color: #173d32;
+        }
+
+            .pa-error__support-icon svg,
+            .pa-error__reference-label svg {
+                width: 24px;
+                height: 24px;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.8;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+        .pa-error__support-copy {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pa-error__section-label {
+            color: #a4773d;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+        }
+
+        .pa-error__support h2 {
+            margin: 8px 0 10px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.45rem, 2.5vw, 2rem);
+            font-weight: 600;
+            letter-spacing: -0.03em;
+        }
+
+        .pa-error__support p {
+            max-width: 650px;
+            margin: 0;
+            color: #65716a;
+            line-height: 1.75;
+        }
+
+        .pa-error__reference {
+            display: grid;
+            gap: 10px;
+            max-width: 650px;
+            margin-top: 22px;
+            padding: 16px 18px;
+            border: 1px solid #e7e8df;
+            border-radius: 14px;
+            background: #f7f5ef;
+        }
+
+        .pa-error__reference-label {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #65716a;
+            font-size: 0.79rem;
+            font-weight: 700;
+        }
+
+            .pa-error__reference-label svg {
+                width: 17px;
+                height: 17px;
+            }
+
+        .pa-error__reference code {
+            overflow-wrap: anywhere;
+            color: #173d32;
+            font-size: 0.88rem;
+            user-select: all;
+        }
+
+        @@media (max-width: 900px) {
+            .pa-error__hero-content {
+                width: 80%;
+            }
+
+            .pa-error__art {
+                right: -14%;
+                opacity: 0.35;
+            }
+        }
+
+        @@media (max-width: 640px) {
+            .pa-error__breadcrumb {
+                margin-bottom: 16px;
+            }
+
+            .pa-error__hero {
+                min-height: 0;
+                border-radius: 22px;
+            }
+
+            .pa-error__hero-content {
+                width: 100%;
+                padding: 38px 24px 42px;
+            }
+
+            .pa-error__hero h1 {
+                font-size: clamp(2.35rem, 9vw, 3.1rem);
+            }
+
+            .pa-error__hero p {
+                font-size: 0.95rem;
+            }
+
+            .pa-error__art {
+                right: -42%;
+                width: 90vw;
+                opacity: 0.12;
+            }
+
+            .pa-error__hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .pa-error__button {
+                width: 100%;
+            }
+
+            .pa-error__support {
+                flex-direction: column;
+                gap: 16px;
+                margin-top: 20px;
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-error__button {
+                transition: none;
+            }
+
+                .pa-error__button:hover {
+                    transform: none;
+                }
+        }
+    </style>
+}

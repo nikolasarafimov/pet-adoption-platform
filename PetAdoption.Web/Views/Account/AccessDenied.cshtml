@@ -1,47 +1,639 @@
 ﻿@{
-    ViewData["Title"] = "Access Denied";
+    ViewData["Title"] = "Access Restricted";
+    ViewData["Description"] = "You do not have permission to access this area of PetAdoption.";
+
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-7">
-        <div class="card p-4 p-md-5 text-center">
-            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mx-auto mb-4"
-                 style="width: 90px; height: 90px;">
-                <span class="display-6">
-                    🔒
+<section class="pa-access" aria-labelledby="accessTitle">
+
+    <div class="pa-access__shell">
+
+        <div class="pa-access__content">
+
+            <div class="pa-access__eyebrow">
+                <span class="pa-access__eyebrow-icon">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="5" y="10" width="14" height="11" rx="2" />
+                        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                    </svg>
                 </span>
+
+                PRIVATE AREA
             </div>
 
-            <div class="text-danger fw-semibold text-uppercase small mb-2">
-                Access Restricted
+            <div class="pa-access__code" aria-hidden="true">
+                403<span>.</span>
             </div>
 
-            <h1 class="section-title mb-3">
-                You don't have permission to access this page
+            <div class="pa-access__rule"></div>
+
+            <h1 id="accessTitle" class="pa-access__title">
+                This space is
+                <span>restricted.</span>
             </h1>
 
-            <p class="section-subtitle mx-auto mb-4"
-               style="max-width: 560px;">
-                Your account does not have the required role or permissions
-                for this resource.
+            <p class="pa-access__description">
+                @if (isAuthenticated)
+                {
+                    <text>
+                        You're signed in, but your account doesn't
+                        have permission to access this page.
+                        Some areas are reserved for specific
+                        members of the PetAdoption community.
+                    </text>
+                }
+                else
+                {
+                    <text>
+                        You need to sign in with an account that
+                        has the appropriate permissions to access
+                        this part of PetAdoption.
+                    </text>
+                }
             </p>
 
-            <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+            <div class="pa-access__actions">
+
                 <a asp-controller="Home"
                    asp-action="Welcome"
-                   class="btn btn-primary px-4">
+                   class="pa-btn pa-btn--primary pa-access__primary">
+
+                    <svg class="pa-icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="m3 10 9-7 9 7" />
+                        <path d="M5 9v11h14V9" />
+                        <path d="M9 20v-7h6v7" />
+                    </svg>
+
                     Return Home
                 </a>
 
-                @if (!(User.Identity?.IsAuthenticated ?? false))
+                @if (!isAuthenticated)
                 {
                     <a asp-controller="Account"
                        asp-action="Login"
-                       class="btn btn-outline-secondary px-4">
-                        Login
+                       class="pa-btn pa-btn--ghost pa-access__secondary">
+
+                        Sign In
+
+                        <svg class="pa-icon"
+                             aria-hidden="true">
+                            <use href="#pa-icon-arrow"></use>
+                        </svg>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="pa-btn pa-btn--ghost pa-access__secondary">
+
+                        Explore Pets
+
+                        <svg class="pa-icon"
+                             aria-hidden="true">
+                            <use href="#pa-icon-arrow"></use>
+                        </svg>
                     </a>
                 }
             </div>
+
+            <div class="pa-access__help">
+
+                <svg class="pa-icon"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M9.5 9a2.5 2.5 0 1 1 4.1 1.9c-1.2 1-1.6 1.5-1.6 2.6" />
+                    <path d="M12 17h.01" />
+                </svg>
+
+                <span>
+                    Need a different account?
+                    You can sign out and sign in again.
+                </span>
+            </div>
+        </div>
+
+        <div class="pa-access__visual" aria-hidden="true">
+
+            <div class="pa-access__visual-noise"></div>
+
+            <div class="pa-access__orbit pa-access__orbit--outer"></div>
+            <div class="pa-access__orbit pa-access__orbit--middle"></div>
+            <div class="pa-access__orbit pa-access__orbit--inner"></div>
+
+            <span class="pa-access__spark pa-access__spark--one"></span>
+            <span class="pa-access__spark pa-access__spark--two"></span>
+            <span class="pa-access__spark pa-access__spark--three"></span>
+
+            <div class="pa-access__art">
+
+                <div class="pa-access__art-halo"></div>
+
+                <div class="pa-access__lock">
+
+                    <svg viewBox="0 0 120 144"
+                         fill="none"
+                         xmlns="http://www.w3.org/2000/svg">
+
+                        <path d="M28 60V43C28 25.3 42.3 11 60 11S92 25.3 92 43V60"
+                              stroke="#F4C57A"
+                              stroke-width="11"
+                              stroke-linecap="round" />
+
+                        <rect x="12"
+                              y="56"
+                              width="96"
+                              height="78"
+                              rx="22"
+                              fill="#F4C57A" />
+
+                        <rect x="19"
+                              y="63"
+                              width="82"
+                              height="64"
+                              rx="16"
+                              fill="#E8AB57" />
+
+                        <circle cx="60"
+                                cy="91"
+                                r="10"
+                                fill="#173D32" />
+
+                        <path d="M60 97V112"
+                              stroke="#173D32"
+                              stroke-width="8"
+                              stroke-linecap="round" />
+
+                    </svg>
+                </div>
+
+                <div class="pa-access__paw pa-access__paw--one">
+                    <svg class="pa-icon">
+                        <use href="#pa-icon-paw"></use>
+                    </svg>
+                </div>
+
+                <div class="pa-access__paw pa-access__paw--two">
+                    <svg class="pa-icon">
+                        <use href="#pa-icon-paw"></use>
+                    </svg>
+                </div>
+
+            </div>
+
+            <div class="pa-access__visual-caption">
+                <span class="pa-access__caption-line"></span>
+                <span>YOUR SPACE. YOUR PERMISSIONS.</span>
+                <span class="pa-access__caption-line"></span>
+            </div>
         </div>
     </div>
-</div>
+
+    <div class="pa-access__bottom">
+        <span class="pa-access__bottom-dot"></span>
+        A safer space for pets, adopters and shelters.
+    </div>
+
+</section>
+
+@section Styles {
+    <style>
+        .pa-access {
+            width: 100%;
+            max-width: 1120px;
+            margin: clamp(18px, 3vw, 52px) auto;
+        }
+
+        .pa-access__shell {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            min-height: 570px;
+            overflow: hidden;
+            border: 1px solid rgba(23, 61, 50, 0.08);
+            border-radius: 32px;
+            background: #fffdf9;
+            box-shadow: 0 35px 90px rgba(23, 61, 50, 0.09), 0 8px 25px rgba(23, 61, 50, 0.035);
+        }
+
+        .pa-access__content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            padding: clamp(32px, 5.2vw, 80px);
+        }
+
+        .pa-access__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--pa-forest, #173d32);
+            font-size: 0.73rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+        }
+
+        .pa-access__eyebrow-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 33px;
+            height: 33px;
+            border: 1px solid #dce8dd;
+            border-radius: 11px;
+            background: #edf3ec;
+        }
+
+            .pa-access__eyebrow-icon svg {
+                width: 17px;
+                height: 17px;
+            }
+
+        .pa-access__code {
+            margin-top: 22px;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(6.2rem, 10.5vw, 10rem);
+            font-weight: 600;
+            letter-spacing: -0.105em;
+            line-height: 1;
+            color: var(--pa-forest, #173d32);
+        }
+
+            .pa-access__code span {
+                color: var(--pa-gold, #c8914e);
+            }
+
+        .pa-access__rule {
+            width: 46px;
+            height: 3px;
+            margin: 25px 0 27px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #c8914e, #f4c57a);
+        }
+
+        .pa-access__title {
+            max-width: 470px;
+            margin: 0;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2rem, 3.2vw, 3.45rem);
+            font-weight: 600;
+            letter-spacing: -0.055em;
+            line-height: 1.12;
+            color: #173d32;
+        }
+
+            .pa-access__title span {
+                color: #c8914e;
+            }
+
+        .pa-access__description {
+            max-width: 460px;
+            margin: 23px 0 0;
+            color: #65716a;
+            font-size: 0.98rem;
+            line-height: 1.85;
+        }
+
+        .pa-access__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 33px;
+        }
+
+            .pa-access__actions .pa-btn {
+                min-height: 51px;
+                padding-inline: 23px;
+            }
+
+        .pa-access__help {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 420px;
+            margin-top: 35px;
+            color: #849088;
+            font-size: 0.79rem;
+            line-height: 1.7;
+        }
+
+            .pa-access__help .pa-icon {
+                width: 17px;
+                height: 17px;
+                margin-top: 2px;
+                flex-shrink: 0;
+            }
+
+        .pa-access__visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            overflow: hidden;
+            isolation: isolate;
+            background: radial-gradient(circle at 54% 42%, rgba(93, 143, 109, 0.38), transparent 43%), radial-gradient(circle at 95% 95%, rgba(200, 145, 78, 0.16), transparent 48%), linear-gradient(145deg, #245847 0%, #173d32 54%, #0e2b23 100%);
+        }
+
+        .pa-access__visual-noise {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.28;
+            background-image: radial-gradient(rgba(255,255,255,0.15) 0.7px, transparent 0.7px);
+            background-size: 17px 17px;
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black);
+            mask-image: linear-gradient(to bottom, transparent, black);
+        }
+
+        .pa-access__orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            aspect-ratio: 1;
+            border: 1px solid rgba(255, 255, 255, 0.085);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .pa-access__orbit--outer {
+            width: 115%;
+        }
+
+        .pa-access__orbit--middle {
+            width: 88%;
+        }
+
+        .pa-access__orbit--inner {
+            width: 63%;
+            border-color: rgba(244, 197, 122, 0.18);
+        }
+
+        .pa-access__art {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: min(70%, 320px);
+            aspect-ratio: 1;
+            animation: pa-access-float 6s ease-in-out infinite;
+        }
+
+        .pa-access__art-halo {
+            position: absolute;
+            inset: 7%;
+            border: 1px solid rgba(244, 197, 122, 0.28);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(244, 197, 122, 0.12), transparent 68%);
+            box-shadow: 0 0 100px rgba(244, 197, 122, 0.1), inset 0 0 70px rgba(244, 197, 122, 0.07);
+        }
+
+        .pa-access__lock {
+            position: relative;
+            z-index: 2;
+            width: 130px;
+            filter: drop-shadow(0 22px 32px rgba(0, 0, 0, 0.18));
+        }
+
+            .pa-access__lock svg {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+
+        .pa-access__paw {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 55px;
+            height: 55px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            color: #f4c57a;
+            backdrop-filter: blur(12px);
+        }
+
+            .pa-access__paw .pa-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+        .pa-access__paw--one {
+            top: 8%;
+            right: -5%;
+            transform: rotate(13deg);
+        }
+
+        .pa-access__paw--two {
+            bottom: 8%;
+            left: -4%;
+            transform: rotate(-14deg);
+        }
+
+        .pa-access__spark {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 18px rgba(244, 197, 122, 0.55);
+        }
+
+        .pa-access__spark--one {
+            top: 20%;
+            left: 21%;
+        }
+
+        .pa-access__spark--two {
+            top: 36%;
+            right: 14%;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pa-access__spark--three {
+            bottom: 24%;
+            right: 23%;
+        }
+
+        .pa-access__visual-caption {
+            position: absolute;
+            right: 20px;
+            bottom: 40px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.64);
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.13em;
+            text-align: center;
+        }
+
+        .pa-access__caption-line {
+            width: 23px;
+            height: 1px;
+            background: rgba(244, 197, 122, 0.55);
+        }
+
+        .pa-access__bottom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            margin-top: 23px;
+            color: #89948b;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .pa-access__bottom-dot {
+            width: 6px;
+            height: 6px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #c8914e;
+        }
+
+        @@keyframes pa-access-float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-access__shell {
+                grid-template-columns: 1.1fr 0.9fr;
+            }
+
+            .pa-access__content {
+                padding: 35px;
+            }
+
+            .pa-access__code {
+                font-size: clamp(6.5rem, 13vw, 9rem);
+            }
+
+            .pa-access__lock {
+                width: 105px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-access__shell {
+                grid-template-columns: 1fr;
+                border-radius: 25px;
+            }
+
+            .pa-access__content {
+                padding: clamp(27px, 6vw, 48px);
+            }
+
+            .pa-access__code {
+                font-size: clamp(6.8rem, 22vw, 9rem);
+            }
+
+            .pa-access__title {
+                font-size: clamp(2.1rem, 7vw, 3rem);
+            }
+
+            .pa-access__visual {
+                min-height: 245px;
+            }
+
+            .pa-access__art {
+                width: 190px;
+            }
+
+            .pa-access__lock {
+                width: 86px;
+            }
+
+            .pa-access__paw {
+                width: 42px;
+                height: 42px;
+                border-radius: 13px;
+            }
+
+                .pa-access__paw .pa-icon {
+                    width: 22px;
+                    height: 22px;
+                }
+
+            .pa-access__visual-caption {
+                bottom: 19px;
+                font-size: 0.59rem;
+            }
+
+            .pa-access__bottom {
+                font-size: 0.74rem;
+            }
+        }
+
+        @@media (max-width: 420px) {
+            .pa-access__actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+                .pa-access__actions .pa-btn {
+                    width: 100%;
+                }
+
+            .pa-access__help {
+                margin-top: 27px;
+            }
+
+            .pa-access__visual {
+                min-height: 210px;
+            }
+
+            .pa-access__art {
+                width: 155px;
+            }
+
+            .pa-access__visual-caption {
+                gap: 7px;
+                letter-spacing: 0.07em;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-access__art {
+                animation: none;
+            }
+        }
+    </style>
+}

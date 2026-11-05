@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using System.Linq.Expressions;
+using Moq;
 using PetAdoption.Application.Services;
 using PetAdoption.Domain.Abstractions;
 using PetAdoption.Domain.Entities;
@@ -11,52 +12,28 @@ public class PetServiceTests
     [Fact]
     public async Task CreateAsync_WhenValid_CreatesAvailablePetAndNormalizesValues()
     {
-        var shelter = new Shelter
-        {
-            Id = 10,
-            Name = "Happy Tails",
-            Address = "Test Address",
-            City = "Skopje"
-        };
+        var (service, pets, shelters, _) = CreateService();
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
+        var shelter = CreateShelter();
 
-        var shelterRepository =
-            new Mock<IRepository<Shelter>>();
-
-        shelterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(shelter.Id))
+        shelters
+            .Setup(repository => repository.GetByIdAsync(shelter.Id))
             .ReturnsAsync(shelter);
 
         Pet? createdPet = null;
 
-        petRepository
-            .Setup(repository =>
-                repository.AddAsync(
-                    It.IsAny<Pet>()
-                ))
-            .Callback<Pet>(
-                pet =>
-                {
-                    pet.Id = 42;
-                    createdPet = pet;
-                }
-            )
-            .ReturnsAsync(
-                (Pet pet) => pet
-            );
+        pets
+            .Setup(repository => repository.AddAsync(It.IsAny<Pet>()))
+            .Callback<Pet>(pet =>
+            {
+                pet.Id = 42;
+                createdPet = pet;
+            })
+            .ReturnsAsync((Pet pet) => pet);
 
-        petRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
+        pets
+            .Setup(repository => repository.SaveChangesAsync())
             .ReturnsAsync(1);
-
-        var service = new PetService(
-            petRepository.Object,
-            shelterRepository.Object
-        );
 
         var id = await service.CreateAsync(
             "  Luna  ",
@@ -68,64 +45,26 @@ public class PetServiceTests
             shelter.Id
         );
 
-        Assert.Equal(
-            42,
-            id
-        );
+        Assert.Equal(42, id);
 
-        Assert.NotNull(createdPet);
+        var savedPet = Assert.IsType<Pet>(createdPet);
 
-        Assert.Equal(
-            "Luna",
-            createdPet.Name
-        );
+        Assert.Equal("Luna", savedPet.Name);
+        Assert.Equal(Species.Dog, savedPet.Species);
+        Assert.Equal("Labrador", savedPet.Breed);
+        Assert.Equal(4, savedPet.AgeYears);
+        Assert.Equal("Friendly and playful", savedPet.Description);
+        Assert.Equal("https://example.com/luna.jpg", savedPet.ImageUrl);
+        Assert.Equal(shelter.Id, savedPet.ShelterId);
+        Assert.Equal(PetStatus.Available, savedPet.Status);
 
-        Assert.Equal(
-            Species.Dog,
-            createdPet.Species
-        );
-
-        Assert.Equal(
-            "Labrador",
-            createdPet.Breed
-        );
-
-        Assert.Equal(
-            4,
-            createdPet.AgeYears
-        );
-
-        Assert.Equal(
-            "Friendly and playful",
-            createdPet.Description
-        );
-
-        Assert.Equal(
-            "https://example.com/luna.jpg",
-            createdPet.ImageUrl
-        );
-
-        Assert.Equal(
-            shelter.Id,
-            createdPet.ShelterId
-        );
-
-        Assert.Equal(
-            PetStatus.Available,
-            createdPet.Status
-        );
-
-        petRepository.Verify(
-            repository =>
-                repository.AddAsync(
-                    It.IsAny<Pet>()
-                ),
+        pets.Verify(
+            repository => repository.AddAsync(It.IsAny<Pet>()),
             Times.Once
         );
 
-        petRepository.Verify(
-            repository =>
-                repository.SaveChangesAsync(),
+        pets.Verify(
+            repository => repository.SaveChangesAsync(),
             Times.Once
         );
     }
@@ -133,48 +72,18 @@ public class PetServiceTests
     [Fact]
     public async Task CreateAsync_WhenOptionalValuesAreWhitespace_StoresNull()
     {
-        var shelter = new Shelter
-        {
-            Id = 10,
-            Name = "Happy Tails",
-            Address = "Test Address",
-            City = "Skopje"
-        };
+        var (service, pets, shelters, _) = CreateService();
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var shelterRepository =
-            new Mock<IRepository<Shelter>>();
-
-        shelterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(shelter.Id))
-            .ReturnsAsync(shelter);
+        shelters
+            .Setup(repository => repository.GetByIdAsync(10))
+            .ReturnsAsync(CreateShelter());
 
         Pet? createdPet = null;
 
-        petRepository
-            .Setup(repository =>
-                repository.AddAsync(
-                    It.IsAny<Pet>()
-                ))
-            .Callback<Pet>(
-                pet => createdPet = pet
-            )
-            .ReturnsAsync(
-                (Pet pet) => pet
-            );
-
-        petRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var service = new PetService(
-            petRepository.Object,
-            shelterRepository.Object
-        );
+        pets
+            .Setup(repository => repository.AddAsync(It.IsAny<Pet>()))
+            .Callback<Pet>(pet => createdPet = pet)
+            .ReturnsAsync((Pet pet) => pet);
 
         await service.CreateAsync(
             "Luna",
@@ -183,39 +92,55 @@ public class PetServiceTests
             3,
             "",
             " ",
-            shelter.Id
+            10
         );
 
-        Assert.NotNull(createdPet);
+        var savedPet = Assert.IsType<Pet>(createdPet);
 
-        Assert.Null(createdPet.Breed);
-        Assert.Null(createdPet.Description);
-        Assert.Null(createdPet.ImageUrl);
+        Assert.Null(savedPet.Breed);
+        Assert.Null(savedPet.Description);
+        Assert.Null(savedPet.ImageUrl);
     }
 
     [Fact]
     public async Task CreateAsync_WhenNameIsBlank_ThrowsArgumentException()
     {
-        var service = new PetService(
-            Mock.Of<IRepository<Pet>>(),
-            Mock.Of<IRepository<Shelter>>()
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                "   ",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                10
+            )
         );
 
-        var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.CreateAsync(
-                    "   ",
-                    Species.Dog,
-                    null,
-                    3,
-                    null,
-                    null,
-                    1
-                )
-            );
+        Assert.Equal("Pet name is required.", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenNameIsTooLong_ThrowsArgumentException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                new string('A', 129),
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                10
+            )
+        );
 
         Assert.Equal(
-            "Pet name is required.",
+            "Pet name cannot exceed 128 characters.",
             exception.Message
         );
     }
@@ -223,14 +148,9 @@ public class PetServiceTests
     [Fact]
     public async Task CreateAsync_WhenAgeIsNegative_ThrowsArgumentOutOfRangeException()
     {
-        var service = new PetService(
-            Mock.Of<IRepository<Pet>>(),
-            Mock.Of<IRepository<Shelter>>()
-        );
+        var (service, _, _, _) = CreateService();
 
-        await Assert.ThrowsAsync<
-            ArgumentOutOfRangeException
-        >(
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
             () => service.CreateAsync(
                 "Luna",
                 Species.Dog,
@@ -238,100 +158,165 @@ public class PetServiceTests
                 -1,
                 null,
                 null,
-                1
+                10
             )
+        );
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenAgeExceedsMaximum_ThrowsArgumentOutOfRangeException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => service.CreateAsync(
+                "Luna",
+                Species.Dog,
+                null,
+                201,
+                null,
+                null,
+                10
+            )
+        );
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenSpeciesIsInvalid_ThrowsArgumentOutOfRangeException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => service.CreateAsync(
+                "Luna",
+                (Species)999,
+                null,
+                3,
+                null,
+                null,
+                10
+            )
+        );
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenBreedIsTooLong_ThrowsArgumentException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                "Luna",
+                Species.Dog,
+                new string('B', 129),
+                3,
+                null,
+                null,
+                10
+            )
+        );
+
+        Assert.Contains("128 characters", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenDescriptionIsTooLong_ThrowsArgumentException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                new string('D', 1025),
+                null,
+                10
+            )
+        );
+
+        Assert.Contains("1024 characters", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenImageUrlIsInvalid_ThrowsArgumentException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                "ftp://example.com/luna.jpg",
+                10
+            )
+        );
+
+        Assert.Equal(
+            "Image URL must be a valid HTTP or HTTPS URL.",
+            exception.Message
         );
     }
 
     [Fact]
     public async Task CreateAsync_WhenShelterDoesNotExist_ThrowsArgumentException()
     {
-        var shelterRepository =
-            new Mock<IRepository<Shelter>>();
+        var (service, pets, _, _) = CreateService();
 
-        shelterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(999))
-            .ReturnsAsync((Shelter?)null);
-
-        var service = new PetService(
-            Mock.Of<IRepository<Pet>>(),
-            shelterRepository.Object
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                999
+            )
         );
 
-        var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.CreateAsync(
-                    "Luna",
-                    Species.Dog,
-                    null,
-                    3,
-                    null,
-                    null,
-                    999
-                )
-            );
+        Assert.Equal("Shelter not found.", exception.Message);
 
-        Assert.Equal(
-            "Shelter not found.",
-            exception.Message
+        pets.Verify(
+            repository => repository.AddAsync(It.IsAny<Pet>()),
+            Times.Never
         );
     }
 
     [Fact]
     public async Task UpdateAsync_WhenValid_UpdatesAndNormalizesPet()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Old Name",
-            Species = Species.Cat,
-            Breed = "Old Breed",
-            AgeYears = 2,
-            Description = "Old description",
-            ImageUrl = "https://example.com/old.jpg",
-            ShelterId = 5,
-            Status = PetStatus.Available
-        };
+        var (service, pets, shelters, _) = CreateService();
 
-        var shelter = new Shelter
-        {
-            Id = 10,
-            Name = "New Shelter",
-            Address = "Test Address",
-            City = "Skopje"
-        };
+        var pet = CreatePet(shelterId: 5);
+        pet.Name = "Old Name";
+        pet.Species = Species.Cat;
+        pet.Breed = "Old Breed";
+        pet.AgeYears = 2;
+        pet.Description = "Old description";
+        pet.ImageUrl = "https://example.com/old.jpg";
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
+        var shelter = CreateShelter();
 
-        var shelterRepository =
-            new Mock<IRepository<Shelter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(pet.Id))
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
             .ReturnsAsync(pet);
 
-        shelterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(shelter.Id))
+        shelters
+            .Setup(repository => repository.GetByIdAsync(shelter.Id))
             .ReturnsAsync(shelter);
 
-        petRepository
-            .Setup(repository =>
-                repository.UpdateAsync(pet))
+        pets
+            .Setup(repository => repository.UpdateAsync(pet))
             .Returns(Task.CompletedTask);
 
-        petRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
+        pets
+            .Setup(repository => repository.SaveChangesAsync())
             .ReturnsAsync(1);
-
-        var service = new PetService(
-            petRepository.Object,
-            shelterRepository.Object
-        );
 
         await service.UpdateAsync(
             pet.Id,
@@ -345,54 +330,22 @@ public class PetServiceTests
             PetStatus.Unavailable
         );
 
-        Assert.Equal(
-            "Luna",
-            pet.Name
-        );
+        Assert.Equal("Luna", pet.Name);
+        Assert.Equal(Species.Dog, pet.Species);
+        Assert.Equal("Labrador", pet.Breed);
+        Assert.Equal(5, pet.AgeYears);
+        Assert.Null(pet.Description);
+        Assert.Equal("https://example.com/luna.jpg", pet.ImageUrl);
+        Assert.Equal(shelter.Id, pet.ShelterId);
+        Assert.Equal(PetStatus.Unavailable, pet.Status);
 
-        Assert.Equal(
-            Species.Dog,
-            pet.Species
-        );
-
-        Assert.Equal(
-            "Labrador",
-            pet.Breed
-        );
-
-        Assert.Equal(
-            5,
-            pet.AgeYears
-        );
-
-        Assert.Null(
-            pet.Description
-        );
-
-        Assert.Equal(
-            "https://example.com/luna.jpg",
-            pet.ImageUrl
-        );
-
-        Assert.Equal(
-            shelter.Id,
-            pet.ShelterId
-        );
-
-        Assert.Equal(
-            PetStatus.Unavailable,
-            pet.Status
-        );
-
-        petRepository.Verify(
-            repository =>
-                repository.UpdateAsync(pet),
+        pets.Verify(
+            repository => repository.UpdateAsync(pet),
             Times.Once
         );
 
-        petRepository.Verify(
-            repository =>
-                repository.SaveChangesAsync(),
+        pets.Verify(
+            repository => repository.SaveChangesAsync(),
             Times.Once
         );
     }
@@ -400,146 +353,280 @@ public class PetServiceTests
     [Fact]
     public async Task UpdateAsync_WhenPetDoesNotExist_ThrowsArgumentException()
     {
-        var petRepository =
-            new Mock<IRepository<Pet>>();
+        var (service, pets, _, _) = CreateService();
 
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(999))
-            .ReturnsAsync((Pet?)null);
-
-        var service = new PetService(
-            petRepository.Object,
-            Mock.Of<IRepository<Shelter>>()
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.UpdateAsync(
+                999,
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                10,
+                PetStatus.Available
+            )
         );
 
-        var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.UpdateAsync(
-                    999,
-                    "Luna",
-                    Species.Dog,
-                    null,
-                    3,
-                    null,
-                    null,
-                    1,
-                    PetStatus.Available
-                )
-            );
+        Assert.Equal("Pet not found.", exception.Message);
 
-        Assert.Equal(
-            "Pet not found.",
-            exception.Message
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
+            Times.Never
         );
     }
 
     [Fact]
     public async Task UpdateAsync_WhenShelterDoesNotExist_ThrowsArgumentException()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Species = Species.Dog,
-            AgeYears = 3,
-            ShelterId = 1,
-            Status = PetStatus.Available
-        };
+        var (service, pets, _, _) = CreateService();
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
+        var pet = CreatePet();
 
-        var shelterRepository =
-            new Mock<IRepository<Shelter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(pet.Id))
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
             .ReturnsAsync(pet);
 
-        shelterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(999))
-            .ReturnsAsync((Shelter?)null);
-
-        var service = new PetService(
-            petRepository.Object,
-            shelterRepository.Object
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.UpdateAsync(
+                pet.Id,
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                999,
+                PetStatus.Available
+            )
         );
 
-        var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.UpdateAsync(
-                    pet.Id,
-                    "Luna",
-                    Species.Dog,
-                    null,
-                    3,
-                    null,
-                    null,
-                    999,
-                    PetStatus.Available
-                )
-            );
+        Assert.Equal("Shelter not found.", exception.Message);
+
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenStatusIsInvalid_ThrowsArgumentOutOfRangeException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => service.UpdateAsync(
+                1,
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                10,
+                (PetStatus)999
+            )
+        );
+    }
+
+    [Theory]
+    [InlineData(PetStatus.Available, PetStatus.Reserved)]
+    [InlineData(PetStatus.Available, PetStatus.Adopted)]
+    [InlineData(PetStatus.Reserved, PetStatus.Available)]
+    [InlineData(PetStatus.Adopted, PetStatus.Available)]
+    public async Task UpdateAsync_WhenAdoptionStatusChangedDirectly_ThrowsInvalidOperationException(
+        PetStatus currentStatus,
+        PetStatus newStatus
+    )
+    {
+        var (service, pets, shelters, _) = CreateService();
+
+        var pet = CreatePet(status: currentStatus);
+
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
+            .ReturnsAsync(pet);
+
+        shelters
+            .Setup(repository => repository.GetByIdAsync(10))
+            .ReturnsAsync(CreateShelter());
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.UpdateAsync(
+                pet.Id,
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                10,
+                newStatus
+            )
+        );
 
         Assert.Equal(
-            "Shelter not found.",
+            "Reserved and adopted statuses can only be changed through the adoption workflow.",
             exception.Message
         );
 
-        petRepository.Verify(
-            repository =>
-                repository.UpdateAsync(
-                    It.IsAny<Pet>()
-                ),
+        Assert.Equal(currentStatus, pet.Status);
+
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
             Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenReservedPetChangesShelter_ThrowsInvalidOperationException()
+    {
+        var (service, pets, shelters, _) = CreateService();
+
+        var pet = CreatePet(
+            status: PetStatus.Reserved,
+            shelterId: 5
+        );
+
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
+            .ReturnsAsync(pet);
+
+        shelters
+            .Setup(repository => repository.GetByIdAsync(10))
+            .ReturnsAsync(CreateShelter());
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.UpdateAsync(
+                pet.Id,
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                10,
+                PetStatus.Reserved
+            )
+        );
+
+        Assert.Equal(
+            "Cannot change the shelter of a reserved or adopted pet.",
+            exception.Message
+        );
+
+        Assert.Equal(5, pet.ShelterId);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenShelterChangesWithAdoptionHistory_ThrowsInvalidOperationException()
+    {
+        var (service, pets, shelters, requests) = CreateService();
+
+        var pet = CreatePet(shelterId: 5);
+
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
+            .ReturnsAsync(pet);
+
+        shelters
+            .Setup(repository => repository.GetByIdAsync(10))
+            .ReturnsAsync(CreateShelter());
+
+        ConfigureAdoptionHistory(requests, pet.Id);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.UpdateAsync(
+                pet.Id,
+                "Luna",
+                Species.Dog,
+                null,
+                3,
+                null,
+                null,
+                10,
+                PetStatus.Available
+            )
+        );
+
+        Assert.Equal(
+            "Cannot change the shelter of a pet with adoption history.",
+            exception.Message
+        );
+
+        Assert.Equal(5, pet.ShelterId);
+
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenReservedStatusIsUnchanged_AllowsProfileEdit()
+    {
+        var (service, pets, shelters, _) = CreateService();
+
+        var pet = CreatePet(status: PetStatus.Reserved);
+
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
+            .ReturnsAsync(pet);
+
+        shelters
+            .Setup(repository => repository.GetByIdAsync(10))
+            .ReturnsAsync(CreateShelter());
+
+        await service.UpdateAsync(
+            pet.Id,
+            "  Luna Updated  ",
+            Species.Dog,
+            null,
+            3,
+            null,
+            null,
+            10,
+            PetStatus.Reserved
+        );
+
+        Assert.Equal("Luna Updated", pet.Name);
+        Assert.Equal(PetStatus.Reserved, pet.Status);
+
+        pets.Verify(
+            repository => repository.UpdateAsync(pet),
+            Times.Once
         );
     }
 
     [Fact]
     public async Task DeleteAsync_WhenValid_DeletesPetAndSavesChanges()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna"
-        };
+        var (service, pets, _, _) = CreateService();
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
+        var pet = CreatePet();
 
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(pet.Id))
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
             .ReturnsAsync(pet);
 
-        petRepository
-            .Setup(repository =>
-                repository.DeleteAsync(pet))
+        pets
+            .Setup(repository => repository.DeleteAsync(pet))
             .Returns(Task.CompletedTask);
 
-        petRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
+        pets
+            .Setup(repository => repository.SaveChangesAsync())
             .ReturnsAsync(1);
-
-        var service = new PetService(
-            petRepository.Object,
-            Mock.Of<IRepository<Shelter>>()
-        );
 
         await service.DeleteAsync(pet.Id);
 
-        petRepository.Verify(
-            repository =>
-                repository.DeleteAsync(pet),
+        pets.Verify(
+            repository => repository.DeleteAsync(pet),
             Times.Once
         );
 
-        petRepository.Verify(
-            repository =>
-                repository.SaveChangesAsync(),
+        pets.Verify(
+            repository => repository.SaveChangesAsync(),
             Times.Once
         );
     }
@@ -547,27 +634,191 @@ public class PetServiceTests
     [Fact]
     public async Task DeleteAsync_WhenPetDoesNotExist_ThrowsArgumentException()
     {
-        var petRepository =
-            new Mock<IRepository<Pet>>();
+        var (service, pets, _, _) = CreateService();
 
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(999))
-            .ReturnsAsync((Pet?)null);
-
-        var service = new PetService(
-            petRepository.Object,
-            Mock.Of<IRepository<Shelter>>()
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.DeleteAsync(999)
         );
 
-        var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.DeleteAsync(999)
-            );
+        Assert.Equal("Pet not found.", exception.Message);
+
+        pets.Verify(
+            repository => repository.DeleteAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenAdoptionHistoryExists_ThrowsInvalidOperationException()
+    {
+        var (service, pets, _, requests) = CreateService();
+
+        var pet = CreatePet();
+
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
+            .ReturnsAsync(pet);
+
+        ConfigureAdoptionHistory(requests, pet.Id);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.DeleteAsync(pet.Id)
+        );
 
         Assert.Equal(
-            "Pet not found.",
+            "Cannot delete a pet with existing adoption requests.",
             exception.Message
         );
+
+        pets.Verify(
+            repository => repository.DeleteAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Theory]
+    [InlineData(PetStatus.Reserved)]
+    [InlineData(PetStatus.Adopted)]
+    public async Task DeleteAsync_WhenPetHasProtectedStatus_ThrowsInvalidOperationException(
+        PetStatus status
+    )
+    {
+        var (service, pets, _, _) = CreateService();
+
+        var pet = CreatePet(status: status);
+
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
+            .ReturnsAsync(pet);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.DeleteAsync(pet.Id)
+        );
+
+        Assert.Equal(
+            "Cannot delete a reserved or adopted pet.",
+            exception.Message
+        );
+
+        pets.Verify(
+            repository => repository.DeleteAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task GetAsync_WhenPetExists_ReturnsMappedDto()
+    {
+        var (service, pets, _, _) = CreateService();
+
+        var pet = CreatePet();
+        pet.Shelter = CreateShelter();
+
+        pets
+            .Setup(repository => repository.ListAsync(
+                It.IsAny<Expression<Func<Pet, bool>>>(),
+                It.IsAny<Expression<Func<Pet, object>>[]>()
+            ))
+            .ReturnsAsync(new[] { pet });
+
+        var result = await service.GetAsync(pet.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal(pet.Id, result.Id);
+        Assert.Equal("Luna", result.Name);
+        Assert.Equal("Happy Tails", result.ShelterName);
+        Assert.Equal(PetStatus.Available, result.Status);
+    }
+
+    [Fact]
+    public async Task GetAsync_WhenPetDoesNotExist_ReturnsNull()
+    {
+        var (service, pets, _, _) = CreateService();
+
+        pets
+            .Setup(repository => repository.ListAsync(
+                It.IsAny<Expression<Func<Pet, bool>>>(),
+                It.IsAny<Expression<Func<Pet, object>>[]>()
+            ))
+            .ReturnsAsync(Array.Empty<Pet>());
+
+        var result = await service.GetAsync(999);
+
+        Assert.Null(result);
+    }
+
+    private static (
+        PetService Service,
+        Mock<IRepository<Pet>> Pets,
+        Mock<IRepository<Shelter>> Shelters,
+        Mock<IRepository<AdoptionRequest>> Requests
+    ) CreateService()
+    {
+        var pets = new Mock<IRepository<Pet>>();
+        var shelters = new Mock<IRepository<Shelter>>();
+        var requests = new Mock<IRepository<AdoptionRequest>>();
+
+        requests
+            .Setup(repository => repository.ListAsync(
+                It.IsAny<Expression<Func<AdoptionRequest, bool>>>(),
+                It.IsAny<Expression<Func<AdoptionRequest, object>>[]>()
+            ))
+            .ReturnsAsync(Array.Empty<AdoptionRequest>());
+
+        var service = new PetService(
+            pets.Object,
+            shelters.Object,
+            requests.Object
+        );
+
+        return (service, pets, shelters, requests);
+    }
+
+    private static Pet CreatePet(
+        PetStatus status = PetStatus.Available,
+        int shelterId = 10
+    )
+    {
+        return new Pet
+        {
+            Id = 1,
+            Name = "Luna",
+            Species = Species.Dog,
+            AgeYears = 3,
+            ShelterId = shelterId,
+            Status = status
+        };
+    }
+
+    private static Shelter CreateShelter()
+    {
+        return new Shelter
+        {
+            Id = 10,
+            Name = "Happy Tails",
+            Address = "Test Address",
+            City = "Skopje"
+        };
+    }
+
+    private static void ConfigureAdoptionHistory(
+        Mock<IRepository<AdoptionRequest>> requests,
+        int petId
+    )
+    {
+        var existingRequest = new AdoptionRequest
+        {
+            Id = 5,
+            PetId = petId,
+            AdopterId = 2,
+            Status = AdoptionRequestStatus.Rejected
+        };
+
+        requests
+            .Setup(repository => repository.ListAsync(
+                It.IsAny<Expression<Func<AdoptionRequest, bool>>>(),
+                It.IsAny<Expression<Func<AdoptionRequest, object>>[]>()
+            ))
+            .ReturnsAsync(new[] { existingRequest });
     }
 }

@@ -1,185 +1,1119 @@
 ﻿@model PetAdoption.Web.Models.Account.LoginVm
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Sign In";
+    ViewData["Description"] = "Sign in to PetAdoption to manage your adoption journey, explore pets, and connect with shelters.";
 }
 
-<div class="row justify-content-center">
-    <div class="col-xl-10">
-        <div class="card overflow-hidden border-0">
-            <div class="row g-0">
-                <div class="col-lg-5 d-none d-lg-flex">
-                    <div class="w-100 p-5 text-white d-flex flex-column justify-content-between"
-                         style="background: linear-gradient(145deg, #172554 0%, #1d4ed8 55%, #16a34a 130%); min-height: 620px;">
+<section class="pa-login" aria-labelledby="loginTitle">
 
-                        <div>
-                            <div class="d-inline-flex align-items-center gap-2 mb-5">
-                                <span class="fs-3">🐾</span>
-                                <span class="fw-bold fs-5">
-                                    Pet Adoption
-                                </span>
-                            </div>
+    <div class="pa-login__shell">
 
-                            <h1 class="display-6 fw-bold text-white mb-4">
-                                Welcome back.
-                            </h1>
+        <div class="pa-login__form-panel">
 
-                            <p class="fs-5 text-white-50">
-                                Continue your journey of connecting
-                                wonderful pets with loving homes.
-                            </p>
-                        </div>
+            <div class="pa-login__form-inner">
 
-                        <div>
-                            <div class="d-flex gap-3 mb-4">
-                                <div class="fs-4">✓</div>
-                                <div>
-                                    <div class="fw-semibold">
-                                        Secure accounts
-                                    </div>
+                <a asp-controller="Home"
+                   asp-action="Welcome"
+                   class="pa-login__brand"
+                   aria-label="PetAdoption home">
 
-                                    <div class="small text-white-50">
-                                        Protected with ASP.NET Core Identity.
-                                    </div>
-                                </div>
-                            </div>
+                    <img src="~/images/logo.png"
+                         asp-append-version="true"
+                         alt="PetAdoption"
+                         class="pa-login__logo" />
+                </a>
 
-                            <div class="d-flex gap-3">
-                                <div class="fs-4">✓</div>
-                                <div>
-                                    <div class="fw-semibold">
-                                        Role-based experience
-                                    </div>
+                <div class="pa-login__heading">
 
-                                    <div class="small text-white-50">
-                                        Dedicated workflows for adopters,
-                                        shelters and administrators.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="pa-login__eyebrow">
+                        <span class="pa-login__eyebrow-line"></span>
+                        YOUR JOURNEY CONTINUES
                     </div>
+
+                    <h1 id="loginTitle" class="pa-login__title">
+                        Welcome
+                        <span>back.</span>
+                    </h1>
+
+                    <p class="pa-login__subtitle">
+                        Sign in to continue connecting with pets,
+                        shelters, and the community that brings
+                        them together.
+                    </p>
                 </div>
 
-                <div class="col-lg-7">
-                    <div class="p-4 p-md-5 p-xl-5">
-                        <div class="mb-5">
-                            <div class="text-primary fw-semibold text-uppercase small mb-2">
-                                Account Access
-                            </div>
+                <form asp-controller="Account"
+                      asp-action="Login"
+                      method="post"
+                      asp-antiforgery="true"
+                      class="pa-login__form">
 
-                            <h2 class="section-title mb-2">
-                                Sign in
-                            </h2>
+                    <input asp-for="ReturnUrl"
+                           type="hidden" />
 
-                            <p class="text-muted mb-0">
-                                Enter your credentials to access your account.
-                            </p>
+                    <div asp-validation-summary="ModelOnly"
+                         class="pa-login__validation"
+                         role="alert">
+                    </div>
+
+                    <div class="pa-login__field">
+
+                        <label asp-for="Email"
+                               class="pa-login__label">
+                        </label>
+
+                        <div class="pa-login__input-wrap">
+
+                            <span class="pa-login__input-icon"
+                                  aria-hidden="true">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+
+                                    <rect x="3"
+                                          y="5"
+                                          width="18"
+                                          height="14"
+                                          rx="3" />
+
+                                    <path d="m4 7 8 6 8-6" />
+                                </svg>
+                            </span>
+
+                            <input asp-for="Email"
+                                   type="email"
+                                   class="form-control pa-login__input"
+                                   autocomplete="email"
+                                   inputmode="email"
+                                   placeholder="you@example.com" />
                         </div>
 
-                        <form asp-action="Login"
-                              method="post"
-                              novalidate>
-
-                            <input type="hidden"
-                                   asp-for="ReturnUrl" />
-
-                            <div asp-validation-summary="All"
-                                 class="text-danger mb-3">
-                            </div>
-
-                            <div class="mb-4">
-                                <label asp-for="Email"
-                                       class="form-label">
-                                </label>
-
-                                <input asp-for="Email"
-                                       class="form-control form-control-lg"
-                                       autocomplete="email"
-                                       placeholder="you@example.com" />
-
-                                <span asp-validation-for="Email"
-                                      class="text-danger">
-                                </span>
-                            </div>
-
-                            <div class="mb-3">
-                                <label asp-for="Password"
-                                       class="form-label">
-                                </label>
-
-                                <div class="input-group">
-                                    <input asp-for="Password"
-                                           id="loginPassword"
-                                           class="form-control form-control-lg"
-                                           autocomplete="current-password"
-                                           placeholder="Enter your password" />
-
-                                    <button class="btn btn-outline-secondary"
-                                            type="button"
-                                            id="toggleLoginPassword">
-                                        Show
-                                    </button>
-                                </div>
-
-                                <span asp-validation-for="Password"
-                                      class="text-danger">
-                                </span>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <div class="form-check">
-                                    <input asp-for="RememberMe"
-                                           class="form-check-input" />
-
-                                    <label asp-for="RememberMe"
-                                           class="form-check-label">
-                                    </label>
-                                </div>
-                            </div>
-
-                            <button type="submit"
-                                    class="btn btn-primary btn-lg w-100 mb-4">
-                                Sign In
-                            </button>
-
-                            <div class="text-center text-muted">
-                                Don't have an account?
-
-                                <a asp-controller="Account"
-                                   asp-action="Register"
-                                   asp-route-returnUrl="@Model.ReturnUrl"
-                                   class="fw-semibold text-decoration-none">
-                                    Create one
-                                </a>
-                            </div>
-                        </form>
+                        <span asp-validation-for="Email"
+                              class="pa-login__field-error">
+                        </span>
                     </div>
+
+                    <div class="pa-login__field">
+
+                        <label asp-for="Password"
+                               class="pa-login__label">
+                        </label>
+
+                        <div class="pa-login__input-wrap">
+
+                            <span class="pa-login__input-icon"
+                                  aria-hidden="true">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+
+                                    <rect x="5"
+                                          y="10"
+                                          width="14"
+                                          height="11"
+                                          rx="2" />
+
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
+                                    <path d="M12 15v2" />
+                                </svg>
+                            </span>
+
+                            <input asp-for="Password"
+                                   id="loginPassword"
+                                   type="password"
+                                   class="form-control pa-login__input pa-login__input--password"
+                                   autocomplete="current-password"
+                                   placeholder="Enter your password" />
+
+                            <button type="button"
+                                    id="toggleLoginPassword"
+                                    class="pa-login__password-toggle"
+                                    aria-label="Show password"
+                                    aria-controls="loginPassword"
+                                    aria-pressed="false">
+
+                                <span id="passwordToggleText">
+                                    Show
+                                </span>
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="Password"
+                              class="pa-login__field-error">
+                        </span>
+                    </div>
+
+                    <div class="pa-login__options">
+
+                        <label class="pa-login__remember">
+
+                            <input asp-for="RememberMe"
+                                   class="form-check-input pa-login__checkbox" />
+
+                            <span>Remember me</span>
+                        </label>
+
+                        <span class="pa-login__security-note">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6Z" />
+
+                                <path d="m9 12 2 2 4-4" />
+                            </svg>
+
+                            Secure sign-in
+                        </span>
+                    </div>
+
+                    <button type="submit"
+                            class="pa-btn pa-btn--primary pa-login__submit">
+
+                        <span>Sign In</span>
+
+                        <svg class="pa-icon"
+                             aria-hidden="true">
+                            <use href="#pa-icon-arrow"></use>
+                        </svg>
+                    </button>
+
+                    <div class="pa-login__divider">
+                        <span></span>
+                        <span>NEW TO PETADOPTION?</span>
+                        <span></span>
+                    </div>
+
+                    <div class="pa-login__register">
+
+                        <p>
+                            Every great story begins somewhere.
+                        </p>
+
+                        <a asp-controller="Account"
+                           asp-action="Register"
+                           asp-route-returnUrl="@Model.ReturnUrl"
+                           class="pa-login__register-link">
+
+                            Create your free account
+
+                            <svg class="pa-icon"
+                                 aria-hidden="true">
+                                <use href="#pa-icon-arrow"></use>
+                            </svg>
+                        </a>
+                    </div>
+                </form>
+
+                <div class="pa-login__form-footer">
+
+                    <span class="pa-login__footer-dot"></span>
+
+                    Built for adopters and shelters.
+
+                    <a asp-controller="Home"
+                       asp-action="Welcome">
+                        Back to home
+                    </a>
                 </div>
             </div>
         </div>
+
+        <aside class="pa-login__visual"
+               aria-label="PetAdoption community">
+
+            <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=85&amp;w=1400&amp;auto=format&amp;fit=crop"
+                 alt=""
+                 class="pa-login__photo"
+                 decoding="async" />
+
+            <div class="pa-login__visual-overlay"></div>
+
+            <div class="pa-login__visual-grain"
+                 aria-hidden="true">
+            </div>
+
+            <div class="pa-login__visual-top">
+
+                <span class="pa-login__visual-badge">
+
+                    <svg class="pa-icon"
+                         aria-hidden="true">
+                        <use href="#pa-icon-heart"></use>
+                    </svg>
+
+                    A SECOND CHANCE
+                </span>
+            </div>
+
+            <div class="pa-login__visual-content">
+
+                <div class="pa-login__visual-mark"
+                     aria-hidden="true">
+
+                    <svg class="pa-icon">
+                        <use href="#pa-icon-paw"></use>
+                    </svg>
+                </div>
+
+                <h2>
+                    Every connection
+                    <em>changes a life.</em>
+                </h2>
+
+                <p>
+                    Behind every adoption is a new beginning.
+                    We're here to make finding that connection
+                    simpler and more meaningful.
+                </p>
+
+                <div class="pa-login__visual-bottom">
+
+                    <span class="pa-login__visual-line"></span>
+
+                    ADOPT · LOVE · BELONG
+                </div>
+            </div>
+
+            <div class="pa-login__visual-glow"
+                 aria-hidden="true">
+            </div>
+        </aside>
     </div>
-</div>
+
+    <div class="pa-login__bottom-note">
+        <span></span>
+        A thoughtful place to begin something wonderful.
+        <span></span>
+    </div>
+
+</section>
+
+@section Styles {
+    <style>
+        .pa-login {
+            width: 100%;
+            max-width: 1160px;
+            margin: clamp(18px, 3vw, 52px) auto;
+        }
+
+        .pa-login__shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+            min-height: 710px;
+            overflow: hidden;
+            isolation: isolate;
+            border: 1px solid rgba(23, 61, 50, 0.08);
+            border-radius: 32px;
+            background: #fffefa;
+            box-shadow: 0 36px 100px rgba(23, 61, 50, 0.09), 0 8px 28px rgba(23, 61, 50, 0.04);
+        }
+
+        .pa-login__form-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: clamp(30px, 4.8vw, 72px);
+            background: radial-gradient( circle at 0% 100%, rgba(200, 145, 78, 0.055), transparent 42% ), #fffefa;
+        }
+
+        .pa-login__form-inner {
+            width: 100%;
+            max-width: 425px;
+            animation: pa-login-enter 650ms ease both;
+        }
+
+        .pa-login__brand {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            margin-bottom: 51px;
+            text-decoration: none;
+        }
+
+        .pa-login__logo {
+            display: block;
+            width: min(100%, 240px);
+            max-height: 85px;
+            object-fit: contain;
+            object-position: left center;
+        }
+
+        .pa-login__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 17px;
+            color: #9b7742;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            line-height: 1.5;
+        }
+
+        .pa-login__eyebrow-line {
+            width: 25px;
+            height: 2px;
+            flex-shrink: 0;
+            border-radius: 999px;
+            background: #c8914e;
+        }
+
+        .pa-login__title {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(3.2rem, 5vw, 4.6rem);
+            font-weight: 600;
+            letter-spacing: -0.07em;
+            line-height: 1.06;
+        }
+
+            .pa-login__title span {
+                color: #c8914e;
+            }
+
+        .pa-login__subtitle {
+            max-width: 395px;
+            margin: 19px 0 0;
+            color: #69766e;
+            font-size: 0.94rem;
+            line-height: 1.85;
+        }
+
+        .pa-login__form {
+            margin-top: 34px;
+        }
+
+        .pa-login__validation {
+            margin-bottom: 20px;
+            padding: 14px 17px;
+            border: 1px solid #f2c7be;
+            border-radius: 12px;
+            background: #fff3f0;
+            color: #a8392e;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+            .pa-login__validation.validation-summary-valid {
+                display: none;
+            }
+
+            .pa-login__validation ul {
+                margin: 0;
+                padding-left: 18px;
+            }
+
+        .pa-login__field {
+            margin-bottom: 21px;
+        }
+
+        .pa-login__label {
+            display: inline-block;
+            margin-bottom: 9px;
+            color: #283e34;
+            font-size: 0.87rem;
+            font-weight: 700;
+        }
+
+        .pa-login__input-wrap {
+            position: relative;
+        }
+
+        .pa-login__input-icon {
+            position: absolute;
+            top: 50%;
+            left: 17px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            color: #89998e;
+            transform: translateY(-50%);
+            pointer-events: none;
+            transition: color 200ms ease;
+        }
+
+            .pa-login__input-icon svg {
+                display: block;
+                width: 20px;
+                height: 20px;
+            }
+
+        .pa-login__input {
+            width: 100%;
+            min-height: 57px;
+            padding: 13px 17px 13px 48px;
+            border: 1px solid #e0e8df;
+            border-radius: 14px;
+            background: #fbfcf9;
+            color: #173d32;
+            font-family: "DM Sans", sans-serif;
+            font-size: 0.91rem;
+            box-shadow: none;
+            transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+        }
+
+            .pa-login__input::placeholder {
+                color: #9aa69d;
+            }
+
+            .pa-login__input:hover {
+                border-color: #bccfc0;
+            }
+
+            .pa-login__input:focus {
+                border-color: #42755b;
+                background: #ffffff;
+                box-shadow: 0 0 0 4px rgba(36, 88, 71, 0.11);
+                color: #173d32;
+                outline: none;
+            }
+
+        .pa-login__input-wrap:focus-within .pa-login__input-icon {
+            color: #245847;
+        }
+
+        .pa-login__input--password {
+            padding-right: 82px;
+        }
+
+        .pa-login__password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            z-index: 2;
+            min-width: 54px;
+            min-height: 37px;
+            padding: 7px 10px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #245847;
+            font-size: 0.81rem;
+            font-weight: 800;
+            transform: translateY(-50%);
+            transition: background-color 200ms ease;
+        }
+
+            .pa-login__password-toggle:hover {
+                background: #eaf1e9;
+            }
+
+            .pa-login__password-toggle:focus-visible {
+                outline: 3px solid #c8914e;
+                outline-offset: 2px;
+            }
+
+        .pa-login__field-error {
+            display: block;
+            margin-top: 7px;
+            color: #b33e35;
+            font-size: 0.79rem;
+            line-height: 1.5;
+        }
+
+            .pa-login__field-error:empty {
+                display: none;
+            }
+
+        .pa-login__input.input-validation-error {
+            border-color: #dc8176;
+            background: #fffafa;
+        }
+
+        .pa-login__options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 4px;
+            margin-bottom: 29px;
+        }
+
+        .pa-login__remember {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #4d5e52;
+            font-size: 0.84rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .pa-login__checkbox {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            border: 1px solid #b7c9bb;
+            border-radius: 5px;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+            .pa-login__checkbox:checked {
+                border-color: #245847;
+                background-color: #245847;
+            }
+
+            .pa-login__checkbox:focus {
+                border-color: #245847;
+                box-shadow: 0 0 0 4px rgba(36, 88, 71, 0.12);
+            }
+
+        .pa-login__security-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #7a8b7f;
+            font-size: 0.77rem;
+            font-weight: 600;
+        }
+
+            .pa-login__security-note svg {
+                width: 16px;
+                height: 16px;
+                color: #578269;
+            }
+
+        .pa-login__submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            width: 100%;
+            min-height: 57px;
+            padding: 14px 24px;
+            border: 1px solid #173d32;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #245847 0%, #173d32 100%);
+            color: #ffffff;
+            font-size: 0.94rem;
+            font-weight: 800;
+            text-align: center;
+            box-shadow: 0 12px 25px rgba(23, 61, 50, 0.18);
+            transition: transform 250ms ease, box-shadow 250ms ease, background-color 250ms ease;
+        }
+
+            .pa-login__submit:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 17px 32px rgba(23, 61, 50, 0.23);
+                background: #173d32;
+                color: #ffffff;
+            }
+
+            .pa-login__submit:focus-visible {
+                outline: 3px solid #c8914e;
+                outline-offset: 3px;
+            }
+
+            .pa-login__submit .pa-icon {
+                width: 19px;
+                height: 19px;
+                transition: transform 200ms ease;
+            }
+
+            .pa-login__submit:hover .pa-icon {
+                transform: translateX(4px);
+            }
+
+        .pa-login__divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 30px 0 24px;
+        }
+
+            .pa-login__divider span:first-child,
+            .pa-login__divider span:last-child {
+                height: 1px;
+                flex: 1;
+                background: #e7ece5;
+            }
+
+            .pa-login__divider span:nth-child(2) {
+                flex-shrink: 0;
+                color: #99a49a;
+                font-size: 0.65rem;
+                font-weight: 800;
+                letter-spacing: 0.12em;
+            }
+
+        .pa-login__register {
+            text-align: center;
+        }
+
+            .pa-login__register p {
+                margin: 0 0 7px;
+                color: #748077;
+                font-size: 0.86rem;
+            }
+
+        .pa-login__register-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 6px 2px;
+            color: #245847;
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: color 200ms ease;
+        }
+
+            .pa-login__register-link:hover {
+                color: #b37a3e;
+            }
+
+            .pa-login__register-link .pa-icon {
+                width: 17px;
+                height: 17px;
+                transition: transform 200ms ease;
+            }
+
+            .pa-login__register-link:hover .pa-icon {
+                transform: translateX(4px);
+            }
+
+        .pa-login__form-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 44px;
+            color: #96a198;
+            font-size: 0.76rem;
+            line-height: 1.6;
+        }
+
+        .pa-login__footer-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #c8914e;
+        }
+
+        .pa-login__form-footer a {
+            color: #245847;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+            .pa-login__form-footer a:hover {
+                text-decoration: underline;
+            }
+
+        .pa-login__visual {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            min-height: 710px;
+            padding: clamp(30px, 3.7vw, 58px);
+            overflow: hidden;
+            isolation: isolate;
+            background: #173d32;
+            color: #ffffff;
+        }
+
+        .pa-login__photo {
+            position: absolute;
+            inset: 0;
+            z-index: -3;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: 49% center;
+            filter: saturate(0.83);
+            transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .pa-login__visual:hover .pa-login__photo {
+            transform: scale(1.045);
+        }
+
+        .pa-login__visual-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            background: linear-gradient( 180deg, rgba(8, 38, 25, 0.48) 0%, rgba(10, 35, 27, 0.05) 32%, rgba(10, 35, 27, 0.45) 59%, rgba(9, 31, 24, 0.96) 100% ), linear-gradient( 90deg, rgba(23, 61, 50, 0.28), rgba(23, 61, 50, 0.03) );
+        }
+
+        .pa-login__visual-grain {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.18;
+            background-image: radial-gradient( rgba(255, 255, 255, 0.25) 0.7px, transparent 0.7px );
+            background-size: 18px 18px;
+            pointer-events: none;
+        }
+
+        .pa-login__visual-top {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pa-login__visual-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 11px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.29);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            font-size: 0.67rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+            .pa-login__visual-badge .pa-icon {
+                width: 16px;
+                height: 16px;
+                color: #f4c57a;
+            }
+
+        .pa-login__visual-content {
+            position: relative;
+            z-index: 1;
+            max-width: 400px;
+            margin-top: auto;
+            animation: pa-login-enter 900ms 120ms ease both;
+        }
+
+        .pa-login__visual-mark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 53px;
+            height: 53px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(244, 197, 122, 0.34);
+            border-radius: 17px;
+            background: rgba(244, 197, 122, 0.13);
+            color: #f4c57a;
+            backdrop-filter: blur(10px);
+        }
+
+            .pa-login__visual-mark .pa-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+        .pa-login__visual-content h2 {
+            margin: 0;
+            color: #ffffff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.6rem, 4vw, 4rem);
+            font-weight: 500;
+            line-height: 1.12;
+            letter-spacing: -0.055em;
+        }
+
+            .pa-login__visual-content h2 em {
+                display: block;
+                margin-top: 3px;
+                color: #f4c57a;
+                font-style: normal;
+            }
+
+        .pa-login__visual-content p {
+            max-width: 360px;
+            margin: 19px 0 0;
+            color: rgba(255, 255, 255, 0.81);
+            font-size: 0.92rem;
+            line-height: 1.9;
+        }
+
+        .pa-login__visual-bottom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 36px;
+            color: rgba(255, 255, 255, 0.79);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-login__visual-line {
+            width: 29px;
+            height: 2px;
+            border-radius: 999px;
+            background: #f4c57a;
+        }
+
+        .pa-login__visual-glow {
+            position: absolute;
+            right: -150px;
+            bottom: -180px;
+            z-index: -1;
+            width: 440px;
+            height: 440px;
+            border-radius: 50%;
+            background: rgba(200, 145, 78, 0.13);
+            filter: blur(85px);
+            pointer-events: none;
+        }
+
+        .pa-login__bottom-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 24px;
+            color: #89968b;
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
+            .pa-login__bottom-note span {
+                width: 24px;
+                height: 1px;
+                flex-shrink: 0;
+                background: #cfbc9c;
+            }
+
+        @@keyframes pa-login-enter {
+            from {
+                opacity: 0;
+                transform: translateY(17px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-login__shell {
+                grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+                min-height: 670px;
+            }
+
+            .pa-login__form-panel {
+                padding: 36px;
+            }
+
+            .pa-login__brand {
+                margin-bottom: 38px;
+            }
+
+            .pa-login__visual {
+                min-height: 670px;
+                padding: 32px;
+            }
+
+            .pa-login__title {
+                font-size: clamp(3rem, 5.3vw, 3.8rem);
+            }
+
+            .pa-login__visual-content h2 {
+                font-size: clamp(2.3rem, 4vw, 3.25rem);
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-login {
+                max-width: 560px;
+                margin: 12px auto 28px;
+            }
+
+            .pa-login__shell {
+                grid-template-columns: 1fr;
+                border-radius: 25px;
+            }
+
+            .pa-login__form-panel {
+                padding: clamp(26px, 6vw, 47px);
+            }
+
+            .pa-login__brand {
+                margin-bottom: 35px;
+            }
+
+            .pa-login__logo {
+                width: 205px;
+                max-height: 73px;
+            }
+
+            .pa-login__title {
+                font-size: clamp(3.15rem, 9vw, 4rem);
+            }
+
+            .pa-login__visual {
+                min-height: 280px;
+                padding: 27px;
+            }
+
+            .pa-login__photo {
+                object-position: 50% 37%;
+            }
+
+            .pa-login__visual-content {
+                max-width: 350px;
+            }
+
+            .pa-login__visual-mark {
+                display: none;
+            }
+
+            .pa-login__visual-content h2 {
+                font-size: clamp(2rem, 6vw, 2.8rem);
+            }
+
+            .pa-login__visual-content p {
+                margin-top: 12px;
+                font-size: 0.83rem;
+                line-height: 1.65;
+            }
+
+            .pa-login__visual-bottom {
+                display: none;
+            }
+
+            .pa-login__visual-badge {
+                padding: 8px 12px;
+                font-size: 0.58rem;
+            }
+
+            .pa-login__bottom-note {
+                font-size: 0.73rem;
+            }
+        }
+
+        @@media (max-width: 420px) {
+            .pa-login__shell {
+                border-radius: 20px;
+            }
+
+            .pa-login__form-panel {
+                padding: 26px 22px 32px;
+            }
+
+            .pa-login__title {
+                font-size: 3rem;
+            }
+
+            .pa-login__subtitle {
+                font-size: 0.88rem;
+            }
+
+            .pa-login__options {
+                align-items: flex-start;
+            }
+
+            .pa-login__security-note {
+                font-size: 0.73rem;
+            }
+
+            .pa-login__visual {
+                min-height: 245px;
+                padding: 22px;
+            }
+
+            .pa-login__visual-content h2 {
+                font-size: 2rem;
+            }
+
+            .pa-login__visual-content p {
+                font-size: 0.78rem;
+            }
+
+            .pa-login__bottom-note {
+                gap: 8px;
+                font-size: 0.67rem;
+            }
+
+                .pa-login__bottom-note span {
+                    width: 13px;
+                }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-login__form-inner,
+            .pa-login__visual-content {
+                animation: none;
+            }
+
+            .pa-login__photo,
+            .pa-login__submit,
+            .pa-login__submit .pa-icon,
+            .pa-login__register-link .pa-icon {
+                transition: none;
+            }
+
+                .pa-login__visual:hover .pa-login__photo,
+                .pa-login__submit:hover,
+                .pa-login__submit:hover .pa-icon,
+                .pa-login__register-link:hover .pa-icon {
+                    transform: none;
+                }
+        }
+    </style>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        const passwordInput =
-            document.getElementById('loginPassword');
+        (() => {
+            const passwordInput =
+                document.getElementById("loginPassword");
 
-        const togglePassword =
-            document.getElementById('toggleLoginPassword');
+            const toggleButton =
+                document.getElementById("toggleLoginPassword");
 
-        togglePassword.addEventListener('click', function () {
-            const hidden =
-                passwordInput.type === 'password';
+            const toggleText =
+                document.getElementById("passwordToggleText");
 
-            passwordInput.type =
-                hidden ? 'text' : 'password';
+            if (!passwordInput || !toggleButton || !toggleText) {
+                return;
+            }
 
-            togglePassword.textContent =
-                hidden ? 'Hide' : 'Show';
-        });
+            toggleButton.addEventListener("click", () => {
+                const isHidden = passwordInput.type === "password";
+
+                passwordInput.type = isHidden ? "text" : "password";
+
+                toggleText.textContent = isHidden ? "Hide" : "Show";
+
+                toggleButton.setAttribute(
+                    "aria-label",
+                    isHidden ? "Hide password" : "Show password"
+                );
+
+                toggleButton.setAttribute(
+                    "aria-pressed",
+                    String(isHidden)
+                );
+            });
+        })();
     </script>
 }

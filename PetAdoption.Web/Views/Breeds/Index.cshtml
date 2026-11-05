@@ -1,16 +1,22 @@
-﻿@model IReadOnlyList<PetAdoption.Application.DTOs.BreedDto>
+﻿@using System.Linq
+@model IReadOnlyList<PetAdoption.Application.DTOs.BreedDto>
 
 @{
-    ViewData["Title"] = "Dog Breeds";
+    ViewData["Title"] = "Explore Dog Breeds";
+    ViewData["Description"] = "Discover dog breeds, their temperaments, lifespan, and average weight.";
 
-    int page = ViewBag.Page ?? 1;
+    int page = Math.Max(1, ViewBag.Page ?? 1);
     int pageSize = ViewBag.PageSize ?? 12;
-    int total = ViewBag.Total ?? 0;
-    int totalPages = ViewBag.TotalPages ?? 1;
+    int total = Math.Max(0, ViewBag.Total ?? Model.Count);
+    int totalPages = Math.Max(1, ViewBag.TotalPages ?? 1);
 
-    string query =
-        ViewBag.Query as string
-        ?? string.Empty;
+    string query = ViewBag.Query as string ?? string.Empty;
+
+    bool apiUnavailable = ViewBag.ApiUnavailable == true;
+    bool hasQuery = !string.IsNullOrWhiteSpace(query);
+
+    int firstPage = Math.Max(1, page - 2);
+    int lastPage = Math.Min(totalPages, page + 2);
 
     string BuildUrl(int targetPage)
     {
@@ -23,276 +29,2127 @@
                 page = targetPage,
                 pageSize
             }
-        )!;
+        ) ?? "#";
     }
 }
 
-<section class="hero-panel p-4 p-md-5 mb-5">
-    <div class="row align-items-center g-4">
-        <div class="col-lg-7">
-            <div class="text-primary fw-semibold text-uppercase small mb-2">
-                Breed Explorer
+<div class="pa-breeds">
+
+    <nav class="pa-breeds__breadcrumb"
+         aria-label="Breadcrumb">
+
+        <a asp-controller="Home"
+           asp-action="Welcome">
+            Home
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Breed Explorer
+        </span>
+    </nav>
+
+    <header class="pa-breeds__hero">
+
+        <div class="pa-breeds__hero-glow"
+             aria-hidden="true"></div>
+
+        <div class="pa-breeds__hero-content">
+
+            <div class="pa-breeds__eyebrow">
+
+                <span class="pa-breeds__eyebrow-icon">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <circle cx="7" cy="8" r="1" />
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="17" cy="8" r="1" />
+                        <circle cx="20" cy="12" r="1" />
+
+                        <path d="M12 12c-2.2 0-3.4 2-5 3.5-1.4 1.4-.8 4.5 1.8 4.5 1.4 0 2.2-.8 3.2-.8s1.8.8 3.2.8c2.6 0 3.2-3.1 1.8-4.5C15.4 14 14.2 12 12Z" />
+                    </svg>
+                </span>
+
+                THE BREED EXPLORER
             </div>
 
-            <h1 class="section-title mb-3">
-                Discover Dog Breeds
+            <h1>
+                Every breed has
+                <span>a story.</span>
             </h1>
 
-            <p class="section-subtitle mb-0">
-                Explore breed characteristics, temperament,
-                lifespan and average weight through live data
-                provided by The Dog API.
+            <p class="pa-breeds__hero-description">
+                Explore the wonderful diversity of dogs.
+                Learn about different breeds, their
+                temperaments, typical lifespan, and
+                average weight—all in one place.
             </p>
+
+            <div class="pa-breeds__hero-meta">
+
+                <span class="pa-breeds__hero-pill">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M8 4h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" />
+                        <path d="M8 4v4H4" />
+                        <path d="M8 13h8" />
+                        <path d="M8 17h6" />
+                    </svg>
+
+                    Breed characteristics
+                </span>
+
+                <span class="pa-breeds__hero-pill">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="m8 12 3 3 5-6" />
+                    </svg>
+
+                    Data from The Dog API
+                </span>
+            </div>
         </div>
 
-        <div class="col-lg-5 text-lg-end">
-            <div class="d-inline-flex align-items-center gap-3 bg-white rounded-4 shadow-sm px-4 py-3">
-                <div class="display-6">🐶</div>
+        <div class="pa-breeds__hero-art"
+             aria-hidden="true">
 
-                <div class="text-start">
-                    <div class="fw-bold fs-5">
-                        @total
-                    </div>
+            <div class="pa-breeds__art-orbit
+                        pa-breeds__art-orbit--outer"></div>
 
-                    <div class="small text-muted">
-                        breeds found
-                    </div>
+            <div class="pa-breeds__art-orbit
+                        pa-breeds__art-orbit--inner"></div>
+
+            <div class="pa-breeds__art-center">
+
+                <svg viewBox="0 0 96 96"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.3"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M28 35 16 25l-7 18 12 13" />
+                    <path d="m68 35 12-10 7 18-12 13" />
+
+                    <path d="M23 43c0-19 10-30 25-30s25 11 25 30v14c0 17-11 28-25 28S23 74 23 57V43Z" />
+
+                    <path d="M33 49h3" />
+                    <path d="M60 49h3" />
+
+                    <path d="m42 63 6 5 6-5-6-4Z" />
+                    <path d="M48 68v5" />
+                    <path d="M48 73c-4 4-8 4-11 0" />
+                    <path d="M48 73c4 4 8 4 11 0" />
+                </svg>
+            </div>
+
+            <span class="pa-breeds__art-spark
+                         pa-breeds__art-spark--one"></span>
+
+            <span class="pa-breeds__art-spark
+                         pa-breeds__art-spark--two"></span>
+        </div>
+    </header>
+
+    <section class="pa-breeds__search-panel"
+             aria-labelledby="breedSearchTitle">
+
+        <div class="pa-breeds__search-heading">
+
+            <div>
+                <span class="pa-breeds__section-eyebrow">
+                    FIND YOUR BREED
+                </span>
+
+                <h2 id="breedSearchTitle">
+                    Discover something new.
+                </h2>
+
+                <p>
+                    Search by breed name or explore
+                    the complete directory.
+                </p>
+            </div>
+
+            <div class="pa-breeds__search-decoration"
+                 aria-hidden="true">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m16 16 5 5" />
+                </svg>
+            </div>
+        </div>
+
+        <form asp-controller="Breeds"
+              asp-action="Index"
+              method="get"
+              id="breedSearchForm"
+              class="pa-breeds__search-form">
+
+            <div class="pa-breeds__search-field">
+
+                <label for="q">
+                    Search breeds
+                </label>
+
+                <div class="pa-breeds__input-wrap">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m16 16 5 5" />
+                    </svg>
+
+                    <input id="q"
+                           type="search"
+                           name="q"
+                           value="@query"
+                           class="pa-breeds__search-input"
+                           placeholder="Labrador, Husky, Poodle..."
+                           autocomplete="off" />
                 </div>
             </div>
-        </div>
-    </div>
-</section>
 
-<section class="card p-3 p-md-4 mb-5">
-    <form method="get" class="row g-3 align-items-end">
-        <div class="col-md-7">
-            <label for="q" class="form-label">
-                Search breeds
-            </label>
+            <div class="pa-breeds__size-field">
 
-            <input id="q"
-                   type="text"
-                   name="q"
-                   value="@query"
-                   class="form-control"
-                   placeholder="Try Labrador, Husky, Poodle..." />
-        </div>
+                <label for="pageSize">
+                    Results per page
+                </label>
 
-        <div class="col-md-3">
-            <label for="pageSize" class="form-label">
-                Results per page
-            </label>
+                <div class="pa-breeds__select-wrap">
 
-            <select id="pageSize"
-                    name="pageSize"
-                    class="form-select"
-                    onchange="this.form.submit()">
+                    <select id="pageSize"
+                            name="pageSize"
+                            class="pa-breeds__select">
 
-                @foreach (var size in new[] { 6, 12, 18, 24, 36 })
-                {
-                    if (pageSize == size)
-                    {
-                        <option value="@size" selected>
-                            @size
-                        </option>
-                    }
-                    else
-                    {
-                        <option value="@size">
-                            @size
-                        </option>
-                    }
-                }
-            </select>
-        </div>
-
-        <div class="col-md-2 d-grid">
-            <button type="submit"
-                    class="btn btn-primary">
-                Search
-            </button>
-        </div>
-
-        @if (!string.IsNullOrWhiteSpace(query))
-        {
-            <div class="col-12">
-                <a asp-controller="Breeds"
-                   asp-action="Index"
-                   class="btn btn-sm btn-outline-secondary">
-                    Clear Search
-                </a>
-            </div>
-        }
-    </form>
-</section>
-
-@if (total == 0)
-{
-    <div class="empty-state">
-        <div class="display-5 mb-3">🐕</div>
-
-        <h4>No breeds found</h4>
-
-        <p class="mb-3">
-            Try another breed name or clear the current search.
-        </p>
-
-        <a asp-controller="Breeds"
-           asp-action="Index"
-           class="btn btn-primary">
-            Show All Breeds
-        </a>
-    </div>
-}
-else
-{
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-        @foreach (var breed in Model)
-        {
-            var imageUrl =
-            string.IsNullOrWhiteSpace(breed.ImageUrl)
-            ? "https://placehold.co/800x600?text="
-            + Uri.EscapeDataString(breed.Name)
-            : breed.ImageUrl;
-
-            var lifeSpan =
-            breed.LifeSpanMinYears is null
-            && breed.LifeSpanMaxYears is null
-            ? "Unknown"
-            : $"{breed.LifeSpanMinYears}-{breed.LifeSpanMaxYears} years";
-
-            var weight =
-            breed.WeightKgAverage.HasValue
-            ? $"{breed.WeightKgAverage.Value:0.0} kg"
-            : "Unknown";
-
-            <div class="col">
-                <article class="card h-100">
-                    <div class="position-relative">
-                        <img src="@imageUrl"
-                             alt="@breed.Name"
-                             class="card-img-top"
-                             loading="lazy" />
-
-                        <div class="position-absolute top-0 start-0 m-3">
-                            <span class="badge bg-dark bg-opacity-75">
-                                Dog Breed
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="card-body p-4">
-                        <h4 class="card-title mb-3">
-                            @breed.Name
-                        </h4>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-6">
-                                <div class="bg-light rounded-4 p-3 h-100">
-                                    <div class="small text-muted mb-1">
-                                        Lifespan
-                                    </div>
-
-                                    <div class="fw-semibold">
-                                        @lifeSpan
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-6">
-                                <div class="bg-light rounded-4 p-3 h-100">
-                                    <div class="small text-muted mb-1">
-                                        Avg. weight
-                                    </div>
-
-                                    <div class="fw-semibold">
-                                        @weight
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="small text-muted mb-2">
-                                Temperament
-                            </div>
-
-                            @if (breed.Temperaments.Length == 0)
+                        @foreach (var size in new[] { 6, 12, 18, 24, 36 })
+                        {
+                            if (pageSize == size)
                             {
-                                <span class="text-muted">
-                                    No temperament information available.
-                                </span>
+                                <option value="@size" selected>
+                                    @size
+                                </option>
                             }
                             else
                             {
-                                <div class="d-flex flex-wrap gap-2">
-                                    @foreach (var temperament in breed.Temperaments.Take(6))
-                                    {
-                                        <span class="badge bg-light text-dark">
-                                            @temperament
-                                        </span>
-                                    }
-                                </div>
+                                <option value="@size">
+                                    @size
+                                </option>
                             }
-                        </div>
-                    </div>
-                </article>
+                        }
+                    </select>
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="pa-breeds__search-button">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m16 16 5 5" />
+                </svg>
+
+                Search Breeds
+            </button>
+        </form>
+
+        @if (hasQuery)
+        {
+            <div class="pa-breeds__active-search">
+
+                <span>
+                    Searching for:
+                    <strong>@query</strong>
+                </span>
+
+                <a asp-controller="Breeds"
+                   asp-action="Index"
+                   asp-route-pageSize="@pageSize">
+
+                    Clear Search
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M6 6l12 12" />
+                        <path d="M18 6 6 18" />
+                    </svg>
+                </a>
             </div>
         }
-    </div>
+    </section>
 
-    <nav class="mt-5"
-         aria-label="Breed pagination">
-        <ul class="pagination justify-content-center">
-            <li class="page-item @(page <= 1 ? "disabled" : "")">
-                @if (page <= 1)
+    @if (apiUnavailable)
+    {
+        <section class="pa-breeds__empty"
+                 aria-labelledby="breedUnavailableTitle"
+                 role="alert">
+
+            <div class="pa-breeds__empty-icon
+                        pa-breeds__empty-icon--warning"
+                 aria-hidden="true">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M10.3 3.9 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+                    <path d="M12 9v5" />
+                    <path d="M12 18h.01" />
+                </svg>
+            </div>
+
+            <span class="pa-breeds__empty-eyebrow">
+                TEMPORARILY UNAVAILABLE
+            </span>
+
+            <h2 id="breedUnavailableTitle">
+                We couldn't load the breeds.
+            </h2>
+
+            <p>
+                Breed information could not be retrieved
+                from The Dog API. This doesn't necessarily
+                mean that your search has no results.
+                Please try again.
+            </p>
+
+            <a href="@BuildUrl(page)"
+               class="pa-breeds__empty-action">
+
+                Try Again
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+
+                    <path d="M20 11a8 8 0 1 0-2 6" />
+                    <path d="M20 4v7h-7" />
+                </svg>
+            </a>
+        </section>
+    }
+    else if (Model.Count == 0)
+    {
+        <section class="pa-breeds__empty"
+                 aria-labelledby="breedEmptyTitle">
+
+            <div class="pa-breeds__empty-icon"
+                 aria-hidden="true">
+
+                <svg viewBox="0 0 64 64"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <circle cx="27" cy="27" r="15" />
+                    <path d="m39 39 16 16" />
+                    <path d="M21 27h12" />
+                </svg>
+            </div>
+
+            <span class="pa-breeds__empty-eyebrow">
+                NO RESULTS FOUND
+            </span>
+
+            <h2 id="breedEmptyTitle">
+                @(hasQuery
+                    ? "No matching breeds found."
+                    : "No breeds to display.")
+            </h2>
+
+            <p>
+                @if (hasQuery)
                 {
-                    <span class="page-link">
-                        ‹
-                    </span>
+                    <text>
+                        We couldn't find any breeds matching
+                        your search. Try another name or
+                        explore the full directory.
+                    </text>
                 }
                 else
                 {
-                    <a class="page-link"
-                       href="@BuildUrl(page - 1)">
-                        ‹
-                    </a>
+                    <text>
+                        There are no breed records available
+                        to display right now.
+                    </text>
                 }
-            </li>
+            </p>
 
-            @for (
-                    int i = Math.Max(1, page - 2);
-                    i <= Math.Min(totalPages, page + 2);
-                    i++
-                    )
+            <a asp-controller="Breeds"
+               asp-action="Index"
+               asp-route-pageSize="@pageSize"
+               class="pa-breeds__empty-action">
+
+                Show All Breeds
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                </svg>
+            </a>
+        </section>
+    }
+    else
+    {
+        <section class="pa-breeds__catalog"
+                 aria-labelledby="breedCatalogTitle">
+
+            <div class="pa-breeds__catalog-heading">
+
+                <div>
+                    <span class="pa-breeds__section-eyebrow">
+                        EXPLORE THE DIRECTORY
+                    </span>
+
+                    <h2 id="breedCatalogTitle">
+                        @(hasQuery ? "Search Results" : "Meet the Breeds")
+                    </h2>
+
+                    <p>
+                        @if (hasQuery)
+                        {
+                            <text>
+                                Breeds matching your search.
+                            </text>
+                        }
+                        else
+                        {
+                            <text>
+                                Discover the characteristics
+                                that make each breed unique.
+                            </text>
+                        }
+                    </p>
+                </div>
+
+                <div class="pa-breeds__catalog-count">
+
+                    <strong>@total</strong>
+
+                    <span>
+                        @(total == 1 ? "breed found" : "breeds found")
+                    </span>
+                </div>
+            </div>
+
+            <div class="pa-breeds__grid">
+
+                @foreach (var breed in Model)
+                {
+                    var hasImage =
+                        Uri.TryCreate(
+                            breed.ImageUrl,
+                            UriKind.Absolute,
+                            out var imageUri
+                        )
+                        && (imageUri.Scheme == Uri.UriSchemeHttps
+                            || imageUri.Scheme == Uri.UriSchemeHttp);
+
+                    string lifeSpan;
+
+                    if (breed.LifeSpanMinYears.HasValue &&
+                        breed.LifeSpanMaxYears.HasValue)
+                    {
+                        lifeSpan =
+                            $"{breed.LifeSpanMinYears.Value}–{breed.LifeSpanMaxYears.Value} years";
+                    }
+                    else if (breed.LifeSpanMinYears.HasValue)
+                    {
+                        lifeSpan =
+                            $"From {breed.LifeSpanMinYears.Value} years";
+                    }
+                    else if (breed.LifeSpanMaxYears.HasValue)
+                    {
+                        lifeSpan =
+                            $"Up to {breed.LifeSpanMaxYears.Value} years";
+                    }
+                    else
+                    {
+                        lifeSpan = "Not available";
+                    }
+
+                    var weight = breed.WeightKgAverage.HasValue
+                        ? $"{breed.WeightKgAverage.Value:0.#} kg"
+                        : "Not available";
+
+                    var temperaments =
+                        (breed.Temperaments ?? Array.Empty<string>())
+                        .Where(t => !string.IsNullOrWhiteSpace(t))
+                        .ToArray();
+
+                    <article class="pa-breeds__card">
+
+                        <div class="pa-breeds__media">
+
+                            @if (hasImage)
+                            {
+                                <img src="@breed.ImageUrl"
+                                     alt="@breed.Name dog"
+                                     class="pa-breeds__image"
+                                     data-pa-breed-image
+                                     loading="lazy"
+                                     decoding="async" />
+                            }
+
+                            <div class="pa-breeds__image-fallback"
+                                 hidden="@hasImage"
+                                 aria-hidden="true">
+
+                                <svg viewBox="0 0 96 96"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2.2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+
+                                    <path d="M26 35 14 25l-7 18 12 13" />
+                                    <path d="m70 35 12-10 7 18-12 13" />
+
+                                    <path d="M21 43c0-19 11-30 27-30s27 11 27 30v14c0 17-11 28-27 28S21 74 21 57V43Z" />
+
+                                    <path d="M34 49h3M59 49h3" />
+                                    <path d="m42 62 6 5 6-5-6-4Z" />
+                                    <path d="M48 67v6" />
+                                </svg>
+                            </div>
+
+                            <span class="pa-breeds__media-badge">
+                                DOG BREED
+                            </span>
+                        </div>
+
+                        <div class="pa-breeds__card-body">
+
+                            <div class="pa-breeds__card-heading">
+
+                                <span class="pa-breeds__card-eyebrow">
+                                    BREED PROFILE
+                                </span>
+
+                                <h3>@breed.Name</h3>
+                            </div>
+
+                            <div class="pa-breeds__attributes">
+
+                                <div class="pa-breeds__attribute">
+
+                                    <div class="pa-breeds__attribute-top">
+
+                                        <span class="pa-breeds__attribute-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="1.8"
+                                                 stroke-linecap="round"
+                                                 stroke-linejoin="round"
+                                                 aria-hidden="true">
+
+                                                <circle cx="12" cy="12" r="9" />
+                                                <path d="M12 7v5l3 2" />
+                                            </svg>
+                                        </span>
+
+                                        <span>Lifespan</span>
+                                    </div>
+
+                                    <strong>@lifeSpan</strong>
+                                </div>
+
+                                <div class="pa-breeds__attribute">
+
+                                    <div class="pa-breeds__attribute-top">
+
+                                        <span class="pa-breeds__attribute-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="1.8"
+                                                 stroke-linecap="round"
+                                                 stroke-linejoin="round"
+                                                 aria-hidden="true">
+
+                                                <path d="M4 20h16" />
+                                                <path d="m6 20 3-12h6l3 12" />
+                                                <path d="M9 8a3 3 0 0 1 6 0" />
+                                            </svg>
+                                        </span>
+
+                                        <span>Average weight</span>
+                                    </div>
+
+                                    <strong>@weight</strong>
+                                </div>
+                            </div>
+
+                            <div class="pa-breeds__temperament">
+
+                                <div class="pa-breeds__temperament-heading">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         aria-hidden="true">
+
+                                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                                    </svg>
+
+                                    Temperament
+                                </div>
+
+                                @if (temperaments.Length == 0)
+                                {
+                                    <p class="pa-breeds__temperament-empty">
+                                        No temperament information available.
+                                    </p>
+                                }
+                                else
+                                {
+                                    <div class="pa-breeds__tags">
+
+                                        @foreach (var temperament in temperaments.Take(5))
+                                        {
+                                            <span class="pa-breeds__tag">
+                                                @temperament
+                                            </span>
+                                        }
+
+                                        @if (temperaments.Length > 5)
+                                        {
+                                            <span class="pa-breeds__tag
+                                                         pa-breeds__tag--more"
+                                                  title="@string.Join(", ", temperaments.Skip(5))">
+
+                                                +@(temperaments.Length - 5) more
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="pa-breeds__card-footer">
+
+                            <span class="pa-breeds__footer-icon"
+                                  aria-hidden="true">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 11v5" />
+                                    <path d="M12 8h.01" />
+                                </svg>
+                            </span>
+
+                            Breed information from The Dog API
+                        </div>
+                    </article>
+                }
+            </div>
+
+            @if (totalPages > 1)
             {
-                <li class="page-item @(i == page ? "active" : "")">
-                    <a class="page-link"
-                       href="@BuildUrl(i)">
-                        @i
-                    </a>
-                </li>
+                <nav class="pa-breeds__pagination"
+                     aria-label="Breed pagination">
+
+                    <div class="pa-breeds__pagination-controls">
+
+                        @if (page > 1)
+                        {
+                            <a href="@BuildUrl(page - 1)"
+                               class="pa-breeds__page-arrow"
+                               aria-label="Previous page">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M19 12H5" />
+                                    <path d="m11 18-6-6 6-6" />
+                                </svg>
+
+                                <span>Previous</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="pa-breeds__page-arrow
+                                         is-disabled"
+                                  aria-disabled="true">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M19 12H5" />
+                                    <path d="m11 18-6-6 6-6" />
+                                </svg>
+
+                                <span>Previous</span>
+                            </span>
+                        }
+
+                        <div class="pa-breeds__page-numbers">
+
+                            @if (firstPage > 1)
+                            {
+                                <a href="@BuildUrl(1)"
+                                   class="pa-breeds__page-number">
+                                    1
+                                </a>
+
+                                @if (firstPage > 2)
+                                {
+                                    <span class="pa-breeds__page-ellipsis"
+                                          aria-hidden="true">…</span>
+                                }
+                            }
+
+                            @for (int i = firstPage; i <= lastPage; i++)
+                            {
+                                if (i == page)
+                                {
+                                    <span class="pa-breeds__page-number
+                                                 is-current"
+                                          aria-current="page">
+                                        @i
+                                    </span>
+                                }
+                                else
+                                {
+                                    <a href="@BuildUrl(i)"
+                                       class="pa-breeds__page-number">
+                                        @i
+                                    </a>
+                                }
+                            }
+
+                            @if (lastPage < totalPages)
+                            {
+                                @if (lastPage < totalPages - 1)
+                                {
+                                    <span class="pa-breeds__page-ellipsis"
+                                          aria-hidden="true">…</span>
+                                }
+
+                                <a href="@BuildUrl(totalPages)"
+                                   class="pa-breeds__page-number">
+                                    @totalPages
+                                </a>
+                            }
+                        </div>
+
+                        @if (page < totalPages)
+                        {
+                            <a href="@BuildUrl(page + 1)"
+                               class="pa-breeds__page-arrow"
+                               aria-label="Next page">
+
+                                <span>Next</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="pa-breeds__page-arrow
+                                         is-disabled"
+                                  aria-disabled="true">
+
+                                <span>Next</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>
+                            </span>
+                        }
+                    </div>
+
+                    <p class="pa-breeds__page-description">
+                        Page @(page) of @totalPages
+                    </p>
+                </nav>
+            }
+        </section>
+    }
+
+    <section class="pa-breeds__bottom-cta">
+
+        <div class="pa-breeds__bottom-icon"
+             aria-hidden="true">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+            </svg>
+        </div>
+
+        <div>
+            <h2>Looking for a companion?</h2>
+
+            <p>
+                Explore pets currently listed for adoption
+                on PetAdoption.
+            </p>
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="Index">
+
+            Explore Pets
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+            </svg>
+        </a>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .pa-breeds {
+            width: 100%;
+            max-width: 1350px;
+            margin: 0 auto 55px;
+            color: #173d32;
+        }
+
+        .pa-breeds [hidden] {
+            display: none !important;
+        }
+
+        .pa-breeds__breadcrumb {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            color: #89968b;
+            font-size: 0.82rem;
+        }
+
+        .pa-breeds__breadcrumb a {
+            color: #637a69;
+            text-decoration: none;
+        }
+
+        .pa-breeds__breadcrumb a:hover {
+            color: #c8914e;
+        }
+
+        .pa-breeds__breadcrumb [aria-current="page"] {
+            color: #173d32;
+            font-weight: 700;
+        }
+
+        .pa-breeds__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            min-height: 355px;
+            margin-bottom: 30px;
+            padding: clamp(32px, 4.5vw, 60px);
+            overflow: hidden;
+            isolation: isolate;
+            border-radius: 28px;
+            background:
+                radial-gradient(
+                    circle at 85% 45%,
+                    rgba(244, 197, 122, 0.16),
+                    transparent 36%
+                ),
+                linear-gradient(125deg, #173d32, #245847);
+            box-shadow: 0 22px 48px rgba(23, 61, 50, 0.15);
+        }
+
+        .pa-breeds__hero-glow {
+            position: absolute;
+            right: -100px;
+            bottom: -190px;
+            z-index: -1;
+            width: 460px;
+            height: 460px;
+            border-radius: 50%;
+            background: rgba(244, 197, 122, 0.13);
+            filter: blur(65px);
+            pointer-events: none;
+        }
+
+        .pa-breeds__hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 715px;
+            animation: pa-breeds-enter 650ms ease both;
+        }
+
+        .pa-breeds__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 23px;
+            color: #f4c57a;
+            font-size: 0.71rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-breeds__eyebrow-icon {
+            display: grid;
+            width: 31px;
+            height: 31px;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.33);
+            border-radius: 10px;
+            background: rgba(244, 197, 122, 0.12);
+        }
+
+        .pa-breeds__eyebrow-icon svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .pa-breeds__hero h1 {
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.7rem, 4.9vw, 4.55rem);
+            font-weight: 600;
+            letter-spacing: -0.06em;
+            line-height: 1.1;
+        }
+
+        .pa-breeds__hero h1 span {
+            display: block;
+            color: #f4c57a;
+        }
+
+        .pa-breeds__hero-description {
+            max-width: 560px;
+            margin: 23px 0 26px;
+            color: rgba(255, 255, 255, 0.83);
+            font-size: 0.96rem;
+            line-height: 1.85;
+        }
+
+        .pa-breeds__hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pa-breeds__hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.91);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .pa-breeds__hero-pill svg {
+            width: 17px;
+            height: 17px;
+            color: #f4c57a;
+        }
+
+        .pa-breeds__hero-art {
+            position: relative;
+            display: grid;
+            width: 260px;
+            height: 260px;
+            flex-shrink: 0;
+            place-items: center;
+            margin-right: 15px;
+            animation: pa-breeds-float 6s ease-in-out infinite;
+        }
+
+        .pa-breeds__art-orbit {
+            position: absolute;
+            border: 1px solid rgba(244, 197, 122, 0.24);
+            border-radius: 50%;
+        }
+
+        .pa-breeds__art-orbit--outer {
+            inset: 0;
+        }
+
+        .pa-breeds__art-orbit--inner {
+            inset: 36px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .pa-breeds__art-center {
+            display: grid;
+            width: 144px;
+            height: 144px;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.34);
+            border-radius: 41px;
+            background: rgba(244, 197, 122, 0.14);
+            color: #f4c57a;
+            transform: rotate(-7deg);
+        }
+
+        .pa-breeds__art-center svg {
+            width: 94px;
+            height: 94px;
+            transform: rotate(7deg);
+        }
+
+        .pa-breeds__art-spark {
+            position: absolute;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 20px rgba(244, 197, 122, 0.55);
+        }
+
+        .pa-breeds__art-spark--one {
+            top: 23px;
+            right: 52px;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pa-breeds__art-spark--two {
+            bottom: 39px;
+            left: 24px;
+            width: 5px;
+            height: 5px;
+        }
+
+        .pa-breeds__search-panel {
+            margin-bottom: 39px;
+            padding: clamp(23px, 3.3vw, 35px);
+            border: 1px solid #e2eae0;
+            border-radius: 24px;
+            background: #fffefa;
+            box-shadow: 0 12px 32px rgba(23, 61, 50, 0.045);
+        }
+
+        .pa-breeds__search-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .pa-breeds__section-eyebrow {
+            display: block;
+            margin-bottom: 11px;
+            color: #a97843;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-breeds__search-heading h2,
+        .pa-breeds__catalog-heading h2 {
+            margin: 0 0 8px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.75rem, 2.8vw, 2.4rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-breeds__search-heading p,
+        .pa-breeds__catalog-heading p {
+            margin: 0;
+            color: #7e8b80;
+            font-size: 0.87rem;
+            line-height: 1.75;
+        }
+
+        .pa-breeds__search-decoration {
+            display: grid;
+            width: 49px;
+            height: 49px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #dce9dc;
+            border-radius: 15px;
+            background: #edf5ec;
+            color: #245847;
+        }
+
+        .pa-breeds__search-decoration svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .pa-breeds__search-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 175px auto;
+            align-items: end;
+            gap: 14px;
+        }
+
+        .pa-breeds__search-field,
+        .pa-breeds__size-field {
+            min-width: 0;
+        }
+
+        .pa-breeds__search-field label,
+        .pa-breeds__size-field label {
+            display: block;
+            margin-bottom: 10px;
+            color: #375243;
+            font-size: 0.84rem;
+            font-weight: 800;
+        }
+
+        .pa-breeds__input-wrap,
+        .pa-breeds__select-wrap {
+            position: relative;
+        }
+
+        .pa-breeds__input-wrap > svg {
+            position: absolute;
+            top: 50%;
+            left: 17px;
+            width: 21px;
+            height: 21px;
+            color: #819686;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .pa-breeds__search-input,
+        .pa-breeds__select {
+            width: 100%;
+            min-height: 54px;
+            border: 1px solid #dfe8df;
+            border-radius: 13px;
+            background: #fbfcf9;
+            color: #173d32;
+            font-family: "DM Sans", sans-serif;
+            font-size: 0.88rem;
+            outline: none;
+            transition:
+                border-color 200ms ease,
+                box-shadow 200ms ease,
+                background-color 200ms ease;
+        }
+
+        .pa-breeds__search-input {
+            padding: 13px 18px 13px 49px;
+        }
+
+        .pa-breeds__search-input::placeholder {
+            color: #9aa89c;
+        }
+
+        .pa-breeds__select {
+            padding: 13px 35px 13px 15px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .pa-breeds__select-wrap > svg {
+            position: absolute;
+            top: 50%;
+            right: 13px;
+            width: 18px;
+            height: 18px;
+            color: #61806a;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .pa-breeds__search-input:focus,
+        .pa-breeds__select:focus {
+            border-color: #42755b;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(36, 88, 71, 0.11);
+        }
+
+        .pa-breeds__search-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 54px;
+            padding: 13px 22px;
+            border: 1px solid #173d32;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            font-size: 0.84rem;
+            font-weight: 800;
+            white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(23, 61, 50, 0.13);
+            cursor: pointer;
+            transition:
+                transform 220ms ease,
+                box-shadow 220ms ease;
+        }
+
+        .pa-breeds__search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 28px rgba(23, 61, 50, 0.19);
+        }
+
+        .pa-breeds__search-button svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .pa-breeds__active-search {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 22px;
+            padding-top: 19px;
+            border-top: 1px solid #e7ede5;
+        }
+
+        .pa-breeds__active-search > span {
+            color: #829085;
+            font-size: 0.8rem;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-breeds__active-search strong {
+            color: #315842;
+            font-weight: 800;
+        }
+
+        .pa-breeds__active-search a {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #9d7041;
+            font-size: 0.79rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-breeds__active-search a:hover {
+            color: #173d32;
+        }
+
+        .pa-breeds__active-search a svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .pa-breeds__catalog-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .pa-breeds__catalog-count {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+            padding: 13px 20px;
+            border: 1px solid #dce8db;
+            border-radius: 15px;
+            background: #eff5ed;
+        }
+
+        .pa-breeds__catalog-count strong {
+            color: #245847;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.9rem;
+            font-weight: 600;
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pa-breeds__catalog-count span {
+            margin-top: 4px;
+            color: #69806d;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .pa-breeds__grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .pa-breeds__card {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid #e2eae0;
+            border-radius: 22px;
+            background: #fffefa;
+            box-shadow: 0 12px 32px rgba(23, 61, 50, 0.045);
+            transition:
+                transform 260ms ease,
+                border-color 260ms ease,
+                box-shadow 260ms ease;
+        }
+
+        .pa-breeds__card:hover {
+            transform: translateY(-5px);
+            border-color: #c7d9c8;
+            box-shadow: 0 23px 43px rgba(23, 61, 50, 0.1);
+        }
+
+        .pa-breeds__media {
+            position: relative;
+            height: 245px;
+            overflow: hidden;
+            background: #e6eee3;
+        }
+
+        .pa-breeds__image {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 650ms ease;
+        }
+
+        .pa-breeds__card:hover .pa-breeds__image {
+            transform: scale(1.06);
+        }
+
+        .pa-breeds__image-fallback {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            background:
+                radial-gradient(
+                    circle at 65% 40%,
+                    rgba(244, 197, 122, 0.22),
+                    transparent 45%
+                ),
+                linear-gradient(140deg, #e4eee0, #f4f2e8);
+            color: #5d866d;
+        }
+
+        .pa-breeds__image-fallback svg {
+            width: 112px;
+            height: 112px;
+            opacity: 0.8;
+        }
+
+        .pa-breeds__media-badge {
+            position: absolute;
+            top: 17px;
+            left: 17px;
+            z-index: 1;
+            padding: 9px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 999px;
+            background: rgba(18, 53, 39, 0.83);
+            color: #fff;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.11em;
+            backdrop-filter: blur(10px);
+        }
+
+        .pa-breeds__card-body {
+            flex: 1;
+            padding: 26px 24px 24px;
+        }
+
+        .pa-breeds__card-eyebrow {
+            display: block;
+            margin-bottom: 8px;
+            color: #a17c49;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+        }
+
+        .pa-breeds__card-heading h3 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.45rem, 2vw, 1.9rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+            line-height: 1.23;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-breeds__attributes {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .pa-breeds__attribute {
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid #e5ece2;
+            border-radius: 14px;
+            background: #f7faf5;
+        }
+
+        .pa-breeds__attribute-top {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 12px;
+            color: #7a8a7c;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .pa-breeds__attribute-icon {
+            display: flex;
+            flex-shrink: 0;
+            color: #5c8265;
+        }
+
+        .pa-breeds__attribute-icon svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .pa-breeds__attribute strong {
+            display: block;
+            color: #2c5139;
+            font-size: 0.86rem;
+            font-weight: 800;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-breeds__temperament {
+            margin-top: 25px;
+            padding-top: 22px;
+            border-top: 1px solid #e9eee6;
+        }
+
+        .pa-breeds__temperament-heading {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 14px;
+            color: #426a4d;
+            font-size: 0.83rem;
+            font-weight: 800;
+        }
+
+        .pa-breeds__temperament-heading svg {
+            width: 18px;
+            height: 18px;
+            color: #c8914e;
+        }
+
+        .pa-breeds__tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pa-breeds__tag {
+            display: inline-flex;
+            align-items: center;
+            min-height: 29px;
+            padding: 6px 10px;
+            border: 1px solid #dce8d9;
+            border-radius: 8px;
+            background: #edf4ea;
+            color: #4a7253;
+            font-size: 0.73rem;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .pa-breeds__tag--more {
+            border-color: #eddfc4;
+            background: #fcf4e7;
+            color: #9c7644;
+        }
+
+        .pa-breeds__temperament-empty {
+            margin: 0;
+            color: #98a39a;
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }
+
+        .pa-breeds__card-footer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 24px;
+            border-top: 1px solid #edf0e9;
+            background: #fbfcf9;
+            color: #96a299;
+            font-size: 0.71rem;
+            line-height: 1.5;
+        }
+
+        .pa-breeds__footer-icon {
+            display: flex;
+            flex-shrink: 0;
+            color: #86a08a;
+        }
+
+        .pa-breeds__footer-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .pa-breeds__pagination {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 44px;
+        }
+
+        .pa-breeds__pagination-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pa-breeds__page-numbers {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .pa-breeds__page-number,
+        .pa-breeds__page-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 43px;
+            min-height: 43px;
+            padding: 10px 13px;
+            border: 1px solid #e0e9df;
+            border-radius: 11px;
+            background: #fffefa;
+            color: #587260;
+            font-size: 0.82rem;
+            font-weight: 800;
+            line-height: 1.3;
+            text-decoration: none;
+            transition:
+                border-color 200ms ease,
+                background-color 200ms ease,
+                color 200ms ease;
+        }
+
+        .pa-breeds__page-arrow {
+            gap: 9px;
+            padding-inline: 15px;
+        }
+
+        .pa-breeds__page-arrow svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        a.pa-breeds__page-number:hover,
+        a.pa-breeds__page-arrow:hover {
+            border-color: #aac6ad;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+        .pa-breeds__page-number.is-current {
+            border-color: #245847;
+            background: #245847;
+            color: #fff;
+            box-shadow: 0 6px 15px rgba(23, 61, 50, 0.15);
+        }
+
+        .pa-breeds__page-arrow.is-disabled {
+            background: #f4f6f2;
+            color: #a9b3a9;
+            cursor: default;
+        }
+
+        .pa-breeds__page-ellipsis {
+            padding-inline: 5px;
+            color: #8e9d90;
+            font-weight: 800;
+        }
+
+        .pa-breeds__page-description {
+            margin: 0;
+            color: #819085;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pa-breeds__empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: clamp(48px, 6vw, 85px) 24px;
+            border: 1px solid #e2eae0;
+            border-radius: 24px;
+            background: #fffefa;
+            text-align: center;
+            box-shadow: 0 12px 32px rgba(23, 61, 50, 0.045);
+        }
+
+        .pa-breeds__empty-icon {
+            display: grid;
+            width: 104px;
+            height: 104px;
+            margin-bottom: 26px;
+            place-items: center;
+            border: 1px solid #dce9db;
+            border-radius: 30px;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+        .pa-breeds__empty-icon svg {
+            width: 59px;
+            height: 59px;
+        }
+
+        .pa-breeds__empty-icon--warning {
+            border-color: #f1e0c3;
+            background: #fcf4e6;
+            color: #aa7740;
+        }
+
+        .pa-breeds__empty-eyebrow {
+            margin-bottom: 12px;
+            color: #a97843;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+        }
+
+        .pa-breeds__empty h2 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-breeds__empty p {
+            max-width: 480px;
+            margin: 17px 0 25px;
+            color: #7f8e82;
+            font-size: 0.89rem;
+            line-height: 1.85;
+        }
+
+        .pa-breeds__empty-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 51px;
+            padding: 13px 23px;
+            border: 1px solid #173d32;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-breeds__empty-action:hover {
+            color: #fff;
+            box-shadow: 0 12px 25px rgba(23, 61, 50, 0.18);
+        }
+
+        .pa-breeds__empty-action svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pa-breeds__bottom-cta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 19px;
+            margin-top: 40px;
+            padding: 28px 32px;
+            border: 1px solid #dfe9dd;
+            border-radius: 21px;
+            background: #eff5ed;
+        }
+
+        .pa-breeds__bottom-icon {
+            display: grid;
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 16px;
+            background: #dcebd9;
+            color: #245847;
+        }
+
+        .pa-breeds__bottom-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .pa-breeds__bottom-cta > div:nth-child(2) {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .pa-breeds__bottom-cta h2 {
+            margin: 0 0 6px;
+            color: #244d35;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.45rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+        }
+
+        .pa-breeds__bottom-cta p {
+            margin: 0;
+            color: #718473;
+            font-size: 0.83rem;
+            line-height: 1.6;
+        }
+
+        .pa-breeds__bottom-cta > a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 46px;
+            padding: 12px 18px;
+            border: 1px solid #245847;
+            border-radius: 11px;
+            background: #245847;
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-breeds__bottom-cta > a:hover {
+            background: #173d32;
+            color: #fff;
+        }
+
+        .pa-breeds__bottom-cta > a svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pa-breeds a:focus-visible,
+        .pa-breeds button:focus-visible {
+            outline: 3px solid #c8914e;
+            outline-offset: 3px;
+        }
+
+        @@keyframes pa-breeds-enter {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
             }
 
-            <li class="page-item @(page >= totalPages ? "disabled" : "")">
-                @if (page >= totalPages)
-                {
-                    <span class="page-link">
-                        ›
-                    </span>
-                }
-                else
-                {
-                    <a class="page-link"
-                       href="@BuildUrl(page + 1)">
-                        ›
-                    </a>
-                }
-            </li>
-        </ul>
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-        <div class="text-center text-muted small">
-            Page @(page) of @totalPages
-        </div>
-    </nav>
+        @@keyframes pa-breeds-float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .pa-breeds__grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .pa-breeds__hero-art {
+                width: 220px;
+                height: 220px;
+                margin-right: 0;
+            }
+
+            .pa-breeds__art-center {
+                width: 120px;
+                height: 120px;
+                border-radius: 34px;
+            }
+
+            .pa-breeds__art-center svg {
+                width: 77px;
+                height: 77px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-breeds__hero-art {
+                position: absolute;
+                right: -45px;
+                opacity: 0.2;
+                pointer-events: none;
+            }
+
+            .pa-breeds__hero-content {
+                max-width: 650px;
+            }
+
+            .pa-breeds__search-form {
+                grid-template-columns: minmax(0, 1fr) 170px;
+            }
+
+            .pa-breeds__search-button {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-breeds {
+                margin-bottom: 30px;
+            }
+
+            .pa-breeds__hero {
+                min-height: auto;
+                padding: 33px;
+                border-radius: 22px;
+            }
+
+            .pa-breeds__hero-art {
+                right: -85px;
+                opacity: 0.13;
+            }
+
+            .pa-breeds__search-panel {
+                border-radius: 21px;
+            }
+
+            .pa-breeds__grid {
+                gap: 17px;
+            }
+
+            .pa-breeds__media {
+                height: 215px;
+            }
+
+            .pa-breeds__card-body {
+                padding: 22px 19px;
+            }
+
+            .pa-breeds__attribute {
+                padding: 11px;
+            }
+
+            .pa-breeds__attribute-top {
+                flex-wrap: wrap;
+            }
+
+            .pa-breeds__card-footer {
+                padding: 14px 19px;
+            }
+        }
+
+        @@media (max-width: 620px) {
+            .pa-breeds__grid {
+                grid-template-columns: 1fr;
+                max-width: 460px;
+                margin-inline: auto;
+            }
+
+            .pa-breeds__media {
+                height: 255px;
+            }
+
+            .pa-breeds__search-form {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-breeds__search-button {
+                grid-column: auto;
+            }
+
+            .pa-breeds__page-arrow span {
+                display: none;
+            }
+
+            .pa-breeds__page-arrow {
+                min-width: 43px;
+                padding: 10px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .pa-breeds__breadcrumb {
+                font-size: 0.75rem;
+            }
+
+            .pa-breeds__hero {
+                padding: 29px 23px;
+            }
+
+            .pa-breeds__hero h1 {
+                font-size: clamp(2.35rem, 9vw, 3.1rem);
+            }
+
+            .pa-breeds__hero-description {
+                font-size: 0.87rem;
+            }
+
+            .pa-breeds__hero-meta {
+                gap: 8px;
+            }
+
+            .pa-breeds__hero-pill {
+                font-size: 0.69rem;
+            }
+
+            .pa-breeds__search-panel {
+                padding: 23px 19px;
+            }
+
+            .pa-breeds__search-decoration {
+                display: none;
+            }
+
+            .pa-breeds__media {
+                height: 220px;
+            }
+
+            .pa-breeds__page-numbers {
+                gap: 4px;
+            }
+
+            .pa-breeds__page-number {
+                min-width: 35px;
+                min-height: 40px;
+                padding: 8px;
+            }
+
+            .pa-breeds__pagination-controls {
+                gap: 6px;
+            }
+
+            .pa-breeds__bottom-cta {
+                padding: 22px;
+            }
+
+            .pa-breeds__bottom-cta > a {
+                width: 100%;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-breeds__hero-content,
+            .pa-breeds__hero-art {
+                animation: none;
+            }
+
+            .pa-breeds__card,
+            .pa-breeds__image,
+            .pa-breeds__search-button,
+            .pa-breeds__page-number,
+            .pa-breeds__page-arrow {
+                transition: none;
+            }
+
+            .pa-breeds__card:hover,
+            .pa-breeds__card:hover .pa-breeds__image,
+            .pa-breeds__search-button:hover {
+                transform: none;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById("breedSearchForm");
+            const pageSize = document.getElementById("pageSize");
+
+            if (form && pageSize) {
+                pageSize.addEventListener("change", () => {
+                    form.requestSubmit();
+                });
+            }
+
+            document.querySelectorAll(
+                "[data-pa-breed-image]"
+            ).forEach(image => {
+                const media = image.closest(".pa-breeds__media");
+                const fallback = media?.querySelector(
+                    ".pa-breeds__image-fallback"
+                );
+
+                const showFallback = () => {
+                    image.hidden = true;
+
+                    if (fallback) {
+                        fallback.hidden = false;
+                    }
+                };
+
+                image.addEventListener("error", showFallback, {
+                    once: true
+                });
+
+                if (image.complete && image.naturalWidth === 0) {
+                    showFallback();
+                }
+            });
+        })();
+    </script>
 }

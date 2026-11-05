@@ -11,6 +11,7 @@ namespace PetAdoption.Web.Models.Account
         [Required]
         [EmailAddress]
         [MaxLength(256)]
+        [Display(Name = "Email address")]
         public string? Email { get; set; }
 
         [Required]
@@ -27,11 +28,12 @@ namespace PetAdoption.Web.Models.Account
             nameof(Password),
             ErrorMessage = "Passwords do not match."
         )]
+        [Display(Name = "Confirm password")]
         public string? ConfirmPassword { get; set; }
 
         public string? ReturnUrl { get; set; }
 
-        [Display(Name = "Register as a Shelter")]
+        [Display(Name = "Register as a shelter")]
         public bool IsShelter { get; set; }
 
         [Display(Name = "Shelter name")]

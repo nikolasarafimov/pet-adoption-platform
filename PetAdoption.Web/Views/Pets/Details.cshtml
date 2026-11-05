@@ -1,177 +1,451 @@
-﻿@using PetAdoption.Domain.Enums
+﻿@using Microsoft.AspNetCore.Identity
+@using PetAdoption.Domain.Enums
+@using PetAdoption.Infrastructure.Data
+@inject UserManager<ApplicationUser> UserManager
 @model PetAdoption.Application.DTOs.PetDto
 
 @{
-    ViewData["Title"] = Model.Name;
+    var petName = string.IsNullOrWhiteSpace(Model.Name)
+        ? "Unnamed pet"
+        : Model.Name.Trim();
 
-    var imageUrl =
-        string.IsNullOrWhiteSpace(Model.ImageUrl)
-            ? "https://placehold.co/1000x800?text="
-              + Uri.EscapeDataString(Model.Name)
-            : Model.ImageUrl;
+    var breedName = string.IsNullOrWhiteSpace(Model.Breed)
+        ? "Not specified"
+        : Model.Breed.Trim();
 
-    var badgeClass =
-        Model.Status switch
-        {
-            PetStatus.Available => "success",
-            PetStatus.Reserved => "warning text-dark",
-            PetStatus.Adopted => "secondary",
-            _ => "dark"
-        };
+    var shelterName = string.IsNullOrWhiteSpace(Model.ShelterName)
+        ? "Shelter not specified"
+        : Model.ShelterName.Trim();
+
+    var description = string.IsNullOrWhiteSpace(Model.Description)
+        ? "No description has been shared for this pet yet."
+        : Model.Description.Trim();
+
+    var ageText = Model.AgeYears == 0
+        ? "Under 1 year"
+        : Model.AgeYears == 1
+            ? "1 year"
+            : $"{Model.AgeYears} years";
+
+    var validImage = Uri.TryCreate(Model.ImageUrl, UriKind.Absolute, out var imageUri)
+        && (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps);
+
+    var statusClass = Model.Status switch
+    {
+        PetStatus.Available => "available",
+        PetStatus.Reserved => "reserved",
+        PetStatus.Adopted => "adopted",
+        _ => "unavailable"
+    };
+
+    var statusHeading = Model.Status switch
+    {
+        PetStatus.Available => "Currently available for adoption",
+        PetStatus.Reserved => "An adoption is being arranged",
+        PetStatus.Adopted => "Already found a home",
+        _ => "Not available for adoption"
+    };
+
+    var statusMessage = Model.Status switch
+    {
+        PetStatus.Available => "This pet is currently accepting adoption requests from registered adopters.",
+        PetStatus.Reserved => "This pet is currently reserved while an adoption is being processed.",
+        PetStatus.Adopted => "This pet has already been adopted and is no longer accepting requests.",
+        _ => "Adoption requests are not being accepted for this pet at the moment."
+    };
+
+    var isAdmin = User.IsInRole("Admin");
+    var isShelter = User.IsInRole("Shelter");
+    var isAdopter = User.IsInRole("Adopter");
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+
+    // Keep the existing PetsController access rules without changing the controller.
+    // Only a shelter assigned to this pet can see its management actions.
+    int? currentShelterId = null;
+    if (!isAdmin && isShelter)
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+        currentShelterId = currentUser?.ShelterId;
+    }
+
+    var canManagePet = isAdmin || (isShelter && currentShelterId == Model.ShelterId);
+
+    var returnUrl = Url.Action("Details", "Pets", new { id = Model.Id });
+
+    ViewData["Title"] = petName;
+    ViewData["Description"] = $"Meet {petName}, a {Model.Species.ToString().ToLowerInvariant()} listed by {shelterName} on PetAdoption.";
 }
 
-<div class="mb-4">
-    <a asp-controller="Pets"
-       asp-action="Index"
-       class="btn btn-sm btn-outline-secondary">
-        ← Back to Pets
-    </a>
-</div>
+<div class="pa-pet-details">
+    <nav class="pa-pet-details__breadcrumb" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Welcome">Home</a>
+        <span aria-hidden="true">/</span>
+        <a asp-controller="Pets" asp-action="Index">Pet Directory</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">@petName</span>
+    </nav>
 
-<section class="card overflow-hidden mb-5">
-    <div class="row g-0">
-        <div class="col-lg-6">
-            <div class="position-relative h-100">
-                <img src="@imageUrl"
-                     alt="@Model.Name"
-                     class="w-100 h-100 object-fit-cover"
-                     style="min-height: 520px;"
-                     loading="lazy" />
+    <header class="pa-pet-details__hero">
+        <div class="pa-pet-details__hero-copy">
+            <span class="pa-pet-details__eyebrow">
+                <i aria-hidden="true"></i>
+                EVERY PET HAS A STORY
+            </span>
+            <h1>Meet <em>@petName.</em></h1>
+            <p>Discover the little details that make @petName unique, and learn more about this adoption profile.</p>
+            <a asp-controller="Pets" asp-action="Index" class="pa-pet-details__hero-back">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 12H5m6-6-6 6 6 6" />
+                </svg>
+                Back to pet directory
+            </a>
+        </div>
+        <div class="pa-pet-details__hero-decoration" aria-hidden="true">
+            <span class="pa-pet-details__hero-ring pa-pet-details__hero-ring--outer"></span>
+            <span class="pa-pet-details__hero-ring pa-pet-details__hero-ring--inner"></span>
+            <svg class="pa-icon"><use href="#pa-icon-paw"></use></svg>
+        </div>
+    </header>
 
-                <span class="badge bg-@badgeClass position-absolute top-0 start-0 m-4 fs-6 shadow">
+    <section class="pa-pet-details__profile" aria-labelledby="petProfileHeading">
+        <div class="pa-pet-details__media">
+            @if (validImage)
+            {
+                <img src="@Model.ImageUrl"
+                     alt="Photo of @petName"
+                     class="pa-pet-details__image"
+                     decoding="async"
+                     fetchpriority="high"
+                     data-pa-details-image />
+            }
+            <div class="pa-pet-details__fallback"
+                 hidden="@validImage"
+                 aria-hidden="true">
+                <span class="pa-pet-details__fallback-symbol">
+                    <svg class="pa-icon"><use href="#pa-icon-paw"></use></svg>
+                </span>
+                <strong>Photo coming soon</strong>
+                <small>@petName's profile is still worth exploring.</small>
+            </div>
+            <span class="pa-pet-details__status pa-pet-details__status--@statusClass">
+                <i aria-hidden="true"></i>
+                @Model.Status
+            </span>
+            <div class="pa-pet-details__image-footer" aria-hidden="true">
+                <svg class="pa-icon"><use href="#pa-icon-heart"></use></svg>
+                A story worth knowing
+            </div>
+        </div>
+
+        <div class="pa-pet-details__profile-copy">
+            <span class="pa-pet-details__kicker">GET TO KNOW @petName.ToUpperInvariant()</span>
+            <h2 id="petProfileHeading">Hello, I'm <span>@petName.</span></h2>
+            <p class="pa-pet-details__intro">
+                @Model.Species
+                @if (!string.IsNullOrWhiteSpace(Model.Breed))
+                {
+                    <span class="pa-pet-details__inline-dot" aria-hidden="true"></span>
+                    @breedName
+                }
+            </p>
+
+            <div class="pa-pet-details__facts" aria-label="Pet information">
+                <div class="pa-pet-details__fact">
+                    <span class="pa-pet-details__fact-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3.5 2" /></svg>
+                    </span>
+                    <div><small>Age</small><strong>@ageText</strong></div>
+                </div>
+                <div class="pa-pet-details__fact">
+                    <span class="pa-pet-details__fact-icon" aria-hidden="true">
+                        <svg class="pa-icon"><use href="#pa-icon-paw"></use></svg>
+                    </span>
+                    <div><small>Species</small><strong>@Model.Species</strong></div>
+                </div>
+                <div class="pa-pet-details__fact">
+                    <span class="pa-pet-details__fact-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 20V8l8-5 8 5v12H4Z" /><path d="M9 20v-7h6v7" /></svg>
+                    </span>
+                    <div><small>Breed</small><strong>@breedName</strong></div>
+                </div>
+            </div>
+
+            <div class="pa-pet-details__story">
+                <span class="pa-pet-details__section-label">THEIR STORY</span>
+                <h3>A little about @petName</h3>
+                <p>@description</p>
+            </div>
+
+            <div class="pa-pet-details__shelter">
+                <span class="pa-pet-details__shelter-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-7h6v7" /></svg>
+                </span>
+                <div><small>Listed by</small><strong>@shelterName</strong></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="pa-pet-details__information">
+        <section class="pa-pet-details__adoption pa-pet-details__adoption--@statusClass"
+                 aria-labelledby="petAdoptionHeading">
+            <div class="pa-pet-details__adoption-top">
+                <span class="pa-pet-details__adoption-symbol" aria-hidden="true">
+                    <svg class="pa-icon"><use href="#pa-icon-heart"></use></svg>
+                </span>
+                <span class="pa-pet-details__status pa-pet-details__status--@statusClass">
+                    <i aria-hidden="true"></i>
                     @Model.Status
                 </span>
             </div>
-        </div>
+            <span class="pa-pet-details__section-label">ADOPTION INFORMATION</span>
+            <h2 id="petAdoptionHeading">@statusHeading</h2>
+            <p>@statusMessage</p>
 
-        <div class="col-lg-6">
-            <div class="p-4 p-md-5 h-100 d-flex flex-column">
-                <div class="mb-4">
-                    <div class="text-primary fw-semibold small text-uppercase mb-2">
-                        Meet @Model.Name
-                    </div>
-
-                    <h1 class="display-5 fw-bold mb-2">
-                        @Model.Name
-                    </h1>
-
-                    <div class="fs-5 text-muted">
-                        @Model.Species
-
-                        @if (!string.IsNullOrWhiteSpace(Model.Breed))
-                        {
-                            <span>• @Model.Breed</span>
-                        }
-                    </div>
+            @if (Model.Status == PetStatus.Available && isAdopter)
+            {
+                <a asp-controller="AdoptionRequests"
+                   asp-action="Create"
+                   asp-route-petId="@Model.Id"
+                   class="pa-pet-details__adoption-button">
+                    <svg class="pa-icon" aria-hidden="true"><use href="#pa-icon-heart"></use></svg>
+                    Request adoption
+                    <svg class="pa-icon" aria-hidden="true"><use href="#pa-icon-arrow"></use></svg>
+                </a>
+                <small class="pa-pet-details__adoption-note">Your request will be reviewed by the shelter.</small>
+            }
+            else if (Model.Status == PetStatus.Available && !isSignedIn)
+            {
+                <a asp-controller="Account"
+                   asp-action="Login"
+                   asp-route-returnUrl="@returnUrl"
+                   class="pa-pet-details__adoption-button">
+                    Sign in to request adoption
+                    <svg class="pa-icon" aria-hidden="true"><use href="#pa-icon-arrow"></use></svg>
+                </a>
+                <small class="pa-pet-details__adoption-note">You need an adopter account to submit a request.</small>
+            }
+            else if (Model.Status == PetStatus.Available && !isAdopter)
+            {
+                <div class="pa-pet-details__adoption-message">
+                    Adoption requests can be submitted from adopter accounts.
                 </div>
-
-                <p class="lead mb-4">
-                    @(string.IsNullOrWhiteSpace(Model.Description)
-                                        ? "No description has been provided for this pet yet."
-                                        : Model.Description)
-                </p>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-6">
-                        <div class="bg-light rounded-4 p-3 h-100">
-                            <div class="small text-muted mb-1">
-                                Age
-                            </div>
-
-                            <div class="fw-bold fs-5">
-                                @Model.AgeYears
-                                @(Model.AgeYears == 1 ? "year" : "years")
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-sm-6">
-                        <div class="bg-light rounded-4 p-3 h-100">
-                            <div class="small text-muted mb-1">
-                                Status
-                            </div>
-
-                            <div class="fw-bold fs-5">
-                                @Model.Status
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="bg-light rounded-4 p-3">
-                            <div class="small text-muted mb-1">
-                                Shelter
-                            </div>
-
-                            <div class="fw-bold">
-                                🏠 @Model.ShelterName
-                            </div>
-                        </div>
-                    </div>
+            }
+            else
+            {
+                <div class="pa-pet-details__adoption-message">
+                    You can still explore other pet profiles in the directory.
                 </div>
+            }
+        </section>
 
-                <div class="mt-auto">
-                    @if (Model.Status == PetStatus.Available
-                                        && User.IsInRole("Adopter"))
-                    {
-                        <div class="p-4 rounded-4 bg-success bg-opacity-10 mb-3">
-                            <h5 class="mb-2">
-                                Interested in @Model.Name?
-                            </h5>
+        <aside class="pa-pet-details__side" aria-labelledby="petQuickFactsHeading">
+            <span class="pa-pet-details__section-label">AT A GLANCE</span>
+            <h2 id="petQuickFactsHeading">Profile details</h2>
+            <dl class="pa-pet-details__details-list">
+                <div><dt>Name</dt><dd>@petName</dd></div>
+                <div><dt>Age</dt><dd>@ageText</dd></div>
+                <div><dt>Species</dt><dd>@Model.Species</dd></div>
+                <div><dt>Breed</dt><dd>@breedName</dd></div>
+                <div><dt>Shelter</dt><dd>@shelterName</dd></div>
+            </dl>
 
-                            <p class="mb-3">
-                                Submit an adoption request and the shelter
-                                will review your application.
-                            </p>
-
-                            <a asp-controller="AdoptionRequests"
-                               asp-action="Create"
-                               asp-route-petId="@Model.Id"
-                               class="btn btn-success px-4">
-                                Request Adoption
-                            </a>
-                        </div>
-                    }
-                    else if (Model.Status != PetStatus.Available)
-                    {
-                        <div class="alert alert-light border mb-3">
-                            This pet is currently marked as
-                            <strong>@Model.Status</strong>.
-                        </div>
-                    }
-
-                    @if (User.IsInRole("Admin"))
-                    {
+            @if (canManagePet)
+            {
+                <div class="pa-pet-details__management">
+                    <span class="pa-pet-details__section-label">PET MANAGEMENT</span>
+                    <p>You can update or manage this listing.</p>
+                    <div class="pa-pet-details__management-actions">
                         <a asp-controller="Pets"
                            asp-action="Edit"
                            asp-route-id="@Model.Id"
-                           class="btn btn-outline-primary">
-                            Edit Pet
+                           class="pa-pet-details__manage-button pa-pet-details__manage-button--edit">
+                            Edit pet
+                            <svg class="pa-icon" aria-hidden="true"><use href="#pa-icon-arrow"></use></svg>
                         </a>
-                    }
+                        <a asp-controller="Pets"
+                           asp-action="Delete"
+                           asp-route-id="@Model.Id"
+                           class="pa-pet-details__manage-button pa-pet-details__manage-button--delete">
+                            Delete
+                        </a>
+                    </div>
                 </div>
-            </div>
+            }
+        </aside>
+    </div>
+
+    <section class="pa-pet-details__closing" aria-labelledby="petClosingHeading">
+        <div class="pa-pet-details__closing-icon" aria-hidden="true">
+            <svg class="pa-icon"><use href="#pa-icon-paw"></use></svg>
         </div>
-    </div>
-</section>
-
-<section class="hero-panel p-4 p-md-5 text-center">
-    <div class="mx-auto" style="max-width: 680px;">
-        <div class="fs-1 mb-3">❤️</div>
-
-        <h2 class="section-title mb-3">
-            Adoption changes two lives
-        </h2>
-
-        <p class="section-subtitle mb-4">
-            Every successful adoption gives an animal a loving home
-            and creates space for another pet in need.
-        </p>
-
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-primary">
-            Discover More Pets
+        <div class="pa-pet-details__closing-copy">
+            <span class="pa-pet-details__section-label">THERE'S MORE TO DISCOVER</span>
+            <h2 id="petClosingHeading">Every adoption makes a difference.</h2>
+            <p>Explore more pets, read their stories, and discover another companion waiting to be known.</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="pa-pet-details__closing-link">
+            Discover more pets
+            <svg class="pa-icon" aria-hidden="true"><use href="#pa-icon-arrow"></use></svg>
         </a>
-    </div>
-</section>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .pa-pet-details { --pd-line: #dce5d9; }
+        .pa-pet-details__breadcrumb { display:flex; align-items:center; flex-wrap:wrap; gap:11px; margin:0 0 24px; color:#7a887d; font-size:.84rem; font-weight:700; }
+        .pa-pet-details__breadcrumb a { color:var(--pa-forest-soft); text-decoration:none; }
+        .pa-pet-details__breadcrumb a:hover { text-decoration:underline; }
+        .pa-pet-details__breadcrumb [aria-current="page"] { overflow-wrap:anywhere; }
+        .pa-pet-details__hero { isolation:isolate; position:relative; display:flex; align-items:center; min-height:290px; overflow:hidden; padding:clamp(32px,5.1vw,67px); border-radius:32px; background:radial-gradient(circle at 81% 7%,rgba(244,197,122,.19),transparent 33%),linear-gradient(115deg,#12362b 0%,#1a4c3b 66%,#2d614a 100%); box-shadow:var(--pa-shadow-md); }
+        .pa-pet-details__hero-copy { position:relative; z-index:2; width:min(700px,80%); }
+        .pa-pet-details__eyebrow { display:inline-flex; align-items:center; gap:11px; margin-bottom:15px; color:#f3cb8b; font-size:.72rem; font-weight:800; letter-spacing:.15em; }
+        .pa-pet-details__eyebrow i { width:8px; height:8px; border-radius:50%; background:#f3cb8b; box-shadow:0 0 0 5px rgba(243,203,139,.14); }
+        .pa-pet-details__hero h1 { margin:0 0 15px; color:#fff; font:600 clamp(2.45rem,5vw,4.5rem)/1.08 "Fraunces",Georgia,serif; letter-spacing:-.055em; overflow-wrap:anywhere; }
+        .pa-pet-details__hero h1 em { color:#f2c886; font-style:normal; }
+        .pa-pet-details__hero p { max-width:560px; margin:0; color:#d4e2d8; font-size:1rem; line-height:1.8; }
+        .pa-pet-details__hero-back { display:inline-flex; align-items:center; gap:11px; margin-top:24px; padding:11px 17px; border:1px solid rgba(255,255,255,.4); border-radius:999px; color:#fff; background:rgba(255,255,255,.06); font-size:.84rem; font-weight:800; text-decoration:none; transition:transform .2s ease,background .2s ease,border-color .2s ease; }
+        .pa-pet-details__hero-back:hover { color:#fff; background:rgba(255,255,255,.15); border-color:#fff; transform:translateY(-2px); }
+        .pa-pet-details__hero-back svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+        .pa-pet-details__hero-decoration { position:absolute; top:50%; right:3%; display:grid; place-items:center; width:290px; height:290px; transform:translateY(-50%); color:rgba(246,217,164,.67); }
+        .pa-pet-details__hero-ring { position:absolute; display:block; border:1px solid rgba(243,206,148,.25); border-radius:50%; }
+        .pa-pet-details__hero-ring--outer { inset:0; }
+        .pa-pet-details__hero-ring--inner { inset:34px; background:rgba(255,255,255,.035); }
+        .pa-pet-details__hero-decoration .pa-icon { width:115px; height:115px; stroke-width:1.1; }
+        .pa-pet-details__profile { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.05fr); overflow:hidden; margin-top:28px; border:1px solid #e2e9de; border-radius:28px; background:#fff; box-shadow:var(--pa-shadow-sm); }
+        .pa-pet-details__media { position:relative; min-height:610px; overflow:hidden; background:linear-gradient(145deg,#e7efe1,#cbdcc9); }
+        .pa-pet-details__image { display:block; width:100%; height:100%; min-height:610px; object-fit:cover; object-position:center; }
+        .pa-pet-details__image[hidden], .pa-pet-details__fallback[hidden] { display:none !important; }
+        .pa-pet-details__fallback { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px; padding:28px; text-align:center; color:#3b644b; background:radial-gradient(circle at 45% 35%,#f4f7ec 0%,#d6e6d4 58%,#b6d1b7 100%); }
+        .pa-pet-details__fallback-symbol { display:grid; place-items:center; width:122px; height:122px; margin-bottom:6px; border:1px solid rgba(69,111,80,.16); border-radius:36px; background:rgba(255,255,255,.48); }
+        .pa-pet-details__fallback-symbol .pa-icon { width:67px; height:67px; stroke-width:1.2; }
+        .pa-pet-details__fallback strong { font:600 1.5rem/1.3 "Fraunces",Georgia,serif; }
+        .pa-pet-details__fallback small { max-width:260px; color:#56735e; font-size:.9rem; }
+        .pa-pet-details__status { display:inline-flex; align-items:center; gap:8px; width:max-content; padding:8px 13px; border-radius:999px; background:#fff; box-shadow:0 6px 22px rgba(11,35,24,.13); font-size:.76rem; font-weight:800; }
+        .pa-pet-details__status i { width:8px; height:8px; flex:0 0 8px; border-radius:50%; background:currentColor; }
+        .pa-pet-details__media>.pa-pet-details__status { position:absolute; z-index:2; top:19px; left:19px; }
+        .pa-pet-details__status--available { color:#267247; }
+        .pa-pet-details__status--reserved { color:#98681d; }
+        .pa-pet-details__status--adopted { color:#54645b; }
+        .pa-pet-details__status--unavailable { color:#a44747; }
+        .pa-pet-details__image-footer { position:absolute; z-index:2; bottom:20px; left:20px; display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid rgba(255,255,255,.35); border-radius:999px; color:#fff; background:rgba(20,48,34,.69); font-size:.78rem; font-weight:700; backdrop-filter:blur(8px); }
+        .pa-pet-details__image-footer .pa-icon { width:17px; height:17px; }
+        .pa-pet-details__profile-copy { display:flex; flex-direction:column; align-items:stretch; padding:clamp(26px,4vw,56px); min-width:0; }
+        .pa-pet-details__kicker,.pa-pet-details__section-label { display:block; color:#94703a; font-size:.7rem; font-weight:800; letter-spacing:.14em; }
+        .pa-pet-details__kicker { margin-bottom:11px; overflow-wrap:anywhere; }
+        .pa-pet-details__profile-copy h2 { margin:0 0 10px; font:600 clamp(2rem,3.3vw,3rem)/1.18 "Fraunces",Georgia,serif; letter-spacing:-.05em; overflow-wrap:anywhere; }
+        .pa-pet-details__profile-copy h2 span { color:var(--pa-forest-soft); }
+        .pa-pet-details__intro { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:25px; color:#6c7a6d; font-size:.98rem; font-weight:600; }
+        .pa-pet-details__inline-dot { width:5px; height:5px; border-radius:50%; background:#b7c4b1; }
+        .pa-pet-details__facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:30px; }
+        .pa-pet-details__fact { display:flex; flex-direction:column; gap:12px; min-width:0; padding:16px 12px; border:1px solid #e5ede3; border-radius:15px; background:#f6f9f3; }
+        .pa-pet-details__fact-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; color:#56795a; background:#e7f0e3; }
+        .pa-pet-details__fact-icon svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+        .pa-pet-details__fact small { display:block; margin-bottom:3px; color:#869386; font-size:.72rem; font-weight:600; }
+        .pa-pet-details__fact strong { display:block; color:#2a4432; font-size:.85rem; font-weight:800; line-height:1.35; overflow-wrap:anywhere; }
+        .pa-pet-details__story { padding-top:24px; border-top:1px solid #e9eee6; }
+        .pa-pet-details__story h3 { margin:10px 0 12px; font:600 clamp(1.45rem,2vw,1.9rem)/1.3 "Fraunces",Georgia,serif; }
+        .pa-pet-details__story p { margin:0; color:#607066; font-size:.95rem; line-height:1.85; white-space:pre-line; overflow-wrap:anywhere; }
+        .pa-pet-details__shelter { display:flex; align-items:center; gap:13px; margin-top:auto; padding:27px 0 0; }
+        .pa-pet-details__shelter-icon { display:grid; place-items:center; width:46px; height:46px; flex:0 0 46px; border:1px solid #e3ebe0; border-radius:13px; color:#527a5c; background:#f0f5ed; }
+        .pa-pet-details__shelter-icon svg { width:23px; height:23px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }
+        .pa-pet-details__shelter small { display:block; color:#819084; font-size:.72rem; }
+        .pa-pet-details__shelter strong { display:block; color:#324c38; font-size:.92rem; font-weight:800; overflow-wrap:anywhere; }
+        .pa-pet-details__information { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr); gap:22px; align-items:start; margin-top:25px; }
+        .pa-pet-details__adoption,.pa-pet-details__side { min-width:0; height:100%; padding:clamp(24px,3.6vw,42px); border:1px solid #dce9d8; border-radius:25px; background:#fff; box-shadow:var(--pa-shadow-sm); }
+        .pa-pet-details__adoption { background:linear-gradient(140deg,#f0f7eb,#fafcf7); }
+        .pa-pet-details__adoption--reserved { background:linear-gradient(140deg,#fff8e9,#fffcf7); border-color:#f0e3c7; }
+        .pa-pet-details__adoption--adopted { background:linear-gradient(140deg,#f1f4f0,#fff); border-color:#e1e7df; }
+        .pa-pet-details__adoption--unavailable { background:linear-gradient(140deg,#faf3f0,#fff); border-color:#f1e1dc; }
+        .pa-pet-details__adoption-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:25px; }
+        .pa-pet-details__adoption-symbol { display:grid; place-items:center; width:56px; height:56px; border-radius:18px; color:#356c4b; background:#dfedda; }
+        .pa-pet-details__adoption-symbol .pa-icon { width:29px; height:29px; }
+        .pa-pet-details__adoption h2,.pa-pet-details__side h2 { margin:12px 0 11px; font:600 clamp(1.55rem,2.45vw,2.15rem)/1.2 "Fraunces",Georgia,serif; letter-spacing:-.035em; }
+        .pa-pet-details__adoption p { max-width:560px; margin:0 0 25px; color:#5f7062; line-height:1.75; }
+        .pa-pet-details__adoption-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:48px; padding:12px 21px; border-radius:999px; color:white; background:var(--pa-forest); font-size:.87rem; font-weight:800; text-decoration:none; transition:background .2s ease,transform .2s ease; }
+        .pa-pet-details__adoption-button:hover { color:white; background:var(--pa-forest-soft); transform:translateY(-2px); }
+        .pa-pet-details__adoption-button .pa-icon { width:18px; height:18px; }
+        .pa-pet-details__adoption-note { display:block; margin-top:11px; color:#728274; font-size:.76rem; }
+        .pa-pet-details__adoption-message { max-width:510px; padding:14px 16px; border:1px solid #dce7d7; border-radius:13px; color:#536e59; background:rgba(255,255,255,.7); font-size:.87rem; line-height:1.6; }
+        .pa-pet-details__side { border-color:#e4ebe0; }
+        .pa-pet-details__details-list { margin:24px 0 0; }
+        .pa-pet-details__details-list>div { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid #edf1e9; }
+        .pa-pet-details__details-list>div:last-child { border-bottom:none; }
+        .pa-pet-details__details-list dt { color:#7a897b; font-size:.84rem; font-weight:600; }
+        .pa-pet-details__details-list dd { max-width:68%; margin:0; color:#2d4937; font-size:.86rem; font-weight:800; text-align:right; overflow-wrap:anywhere; }
+        .pa-pet-details__management { margin-top:21px; padding-top:22px; border-top:1px solid #e7eee4; }
+        .pa-pet-details__management p { margin:8px 0 14px; color:#728174; font-size:.83rem; }
+        .pa-pet-details__management-actions { display:flex; flex-wrap:wrap; gap:9px; }
+        .pa-pet-details__manage-button { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:43px; padding:9px 17px; border:1px solid transparent; border-radius:11px; font-size:.82rem; font-weight:800; text-decoration:none; transition:background .2s ease,transform .2s ease; }
+        .pa-pet-details__manage-button:hover { transform:translateY(-2px); }
+        .pa-pet-details__manage-button .pa-icon { width:16px; height:16px; }
+        .pa-pet-details__manage-button--edit { color:#fff; background:var(--pa-forest); }
+        .pa-pet-details__manage-button--edit:hover { color:#fff; background:var(--pa-forest-soft); }
+        .pa-pet-details__manage-button--delete { color:#a24646; border-color:#efdddd; background:#fff8f7; }
+        .pa-pet-details__manage-button--delete:hover { color:#8d3232; background:#fceceb; }
+        .pa-pet-details__closing { display:flex; align-items:center; gap:22px; margin-top:27px; padding:28px clamp(21px,4vw,38px); border:1px solid #e2e9de; border-radius:23px; background:#fff; }
+        .pa-pet-details__closing-icon { display:grid; place-items:center; width:63px; height:63px; flex:0 0 63px; border-radius:19px; color:var(--pa-forest-soft); background:#eaf2e6; }
+        .pa-pet-details__closing-icon .pa-icon { width:34px; height:34px; }
+        .pa-pet-details__closing-copy { flex:1; min-width:0; }
+        .pa-pet-details__closing h2 { margin:6px 0 5px; font:600 clamp(1.25rem,2vw,1.75rem)/1.25 "Fraunces",Georgia,serif; }
+        .pa-pet-details__closing p { margin:0; color:#718075; font-size:.86rem; }
+        .pa-pet-details__closing-link { display:inline-flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; min-height:46px; padding:10px 19px; border-radius:999px; color:#163e31; background:#f4c57a; font-size:.82rem; font-weight:800; white-space:nowrap; text-decoration:none; transition:background .2s ease,transform .2s ease; }
+        .pa-pet-details__closing-link:hover { color:#163e31; background:#ffdaa0; transform:translateY(-2px); }
+        .pa-pet-details__closing-link .pa-icon { width:17px; height:17px; }
+        @@media (max-width:1199.98px) {
+            .pa-pet-details__hero-decoration { right:-25px; opacity:.45; }
+            .pa-pet-details__profile { grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); }
+            .pa-pet-details__facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            .pa-pet-details__facts .pa-pet-details__fact:last-child { grid-column:1 / -1; }
+        }
+        @@media (max-width:991.98px) {
+            .pa-pet-details__profile { grid-template-columns:1fr; }
+            .pa-pet-details__media,.pa-pet-details__image { min-height:410px; max-height:520px; }
+            .pa-pet-details__facts { grid-template-columns:repeat(3,minmax(0,1fr)); }
+            .pa-pet-details__facts .pa-pet-details__fact:last-child { grid-column:auto; }
+            .pa-pet-details__information { grid-template-columns:1fr; }
+        }
+        @@media (max-width:767.98px) {
+            .pa-pet-details__hero { min-height:0; padding:34px 25px; border-radius:25px; }
+            .pa-pet-details__hero-copy { width:100%; }
+            .pa-pet-details__hero h1 { font-size:clamp(2.1rem,8vw,3.1rem); }
+            .pa-pet-details__hero-decoration { right:-100px; opacity:.15; }
+            .pa-pet-details__profile { border-radius:23px; }
+            .pa-pet-details__profile-copy { padding:27px 22px; }
+            .pa-pet-details__media,.pa-pet-details__image { min-height:350px; max-height:460px; }
+            .pa-pet-details__closing { flex-wrap:wrap; gap:15px; }
+            .pa-pet-details__closing-link { width:100%; }
+        }
+        @@media (max-width:479.98px) {
+            .pa-pet-details__breadcrumb { gap:8px; font-size:.78rem; }
+            .pa-pet-details__hero-back { width:100%; justify-content:center; }
+            .pa-pet-details__facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            .pa-pet-details__facts .pa-pet-details__fact:last-child { grid-column:1 / -1; }
+            .pa-pet-details__adoption,.pa-pet-details__side { padding:23px 19px; border-radius:20px; }
+            .pa-pet-details__adoption-button { width:100%; }
+            .pa-pet-details__image-footer { bottom:14px; left:14px; font-size:.7rem; }
+        }
+        @@media (prefers-reduced-motion:reduce) {
+            .pa-pet-details *, .pa-pet-details *::before, .pa-pet-details *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            "use strict";
+            const image = document.querySelector("[data-pa-details-image]");
+            if (!image) return;
+
+            const fallback = image.parentElement?.querySelector(".pa-pet-details__fallback");
+            const showFallback = () => {
+                image.hidden = true;
+                if (fallback) fallback.hidden = false;
+            };
+
+            image.addEventListener("error", showFallback, { once: true });
+            if (image.complete && image.naturalWidth === 0) showFallback();
+        })();
+    </script>
+}

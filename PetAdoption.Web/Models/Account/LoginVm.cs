@@ -4,12 +4,17 @@ namespace PetAdoption.Web.Models.Account
 {
     public class LoginVm
     {
-        [Required, EmailAddress]
+        [Required]
+        [EmailAddress]
+        [MaxLength(256)]
+        [Display(Name = "Email address")]
         public string? Email { get; set; }
 
-        [Required, DataType(DataType.Password)]
+        [Required]
+        [DataType(DataType.Password)]
         public string? Password { get; set; }
 
+        [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }
 
         public string? ReturnUrl { get; set; }

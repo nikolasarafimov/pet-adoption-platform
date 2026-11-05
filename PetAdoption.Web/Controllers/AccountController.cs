@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PetAdoption.Application.Interfaces;
 using PetAdoption.Infrastructure.Data;
 using PetAdoption.Web.Models.Account;
@@ -15,6 +16,7 @@ namespace PetAdoption.Web.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IShelterService _shelterService;
         private readonly IAdopterService _adopterService;
+        private readonly AppDbContext _db;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
@@ -23,6 +25,7 @@ namespace PetAdoption.Web.Controllers
             RoleManager<IdentityRole> roleManager,
             IShelterService shelterService,
             IAdopterService adopterService,
+            AppDbContext db,
             ILogger<AccountController> logger
         )
         {
@@ -31,6 +34,7 @@ namespace PetAdoption.Web.Controllers
             _roleManager = roleManager;
             _shelterService = shelterService;
             _adopterService = adopterService;
+            _db = db;
             _logger = logger;
         }
 
@@ -38,12 +42,10 @@ namespace PetAdoption.Web.Controllers
         [HttpGet]
         public IActionResult Register(string? returnUrl = null)
         {
-            return View(
-                new RegisterVm
-                {
-                    ReturnUrl = returnUrl
-                }
-            );
+            return View(new RegisterVm
+            {
+                ReturnUrl = GetSafeReturnUrl(returnUrl)
+            });
         }
 
         [AllowAnonymous]
@@ -59,9 +61,9 @@ namespace PetAdoption.Web.Controllers
             }
 
             var email = vm.Email!.Trim();
-            var roleName = vm.IsShelter
-                ? "Shelter"
-                : "Adopter";
+            var roleName = vm.IsShelter ? "Shelter" : "Adopter";
+            var displayName = GetDisplayName(vm);
+            var returnUrl = GetSafeReturnUrl(vm.ReturnUrl);
 
             try
             {
@@ -83,8 +85,6 @@ namespace PetAdoption.Web.Controllers
                 return View(vm);
             }
 
-            var displayName = GetDisplayName(vm);
-
             var user = new ApplicationUser
             {
                 UserName = email,
@@ -93,31 +93,29 @@ namespace PetAdoption.Web.Controllers
                 FullName = displayName
             };
 
-            var createResult =
-                await _userManager.CreateAsync(
+            try
+            {
+                await using var transaction =
+                    await _db.Database.BeginTransactionAsync();
+
+                var createResult = await _userManager.CreateAsync(
                     user,
                     vm.Password!
                 );
 
-            if (!createResult.Succeeded)
-            {
-                AddIdentityErrors(createResult);
-                return View(vm);
-            }
+                if (!createResult.Succeeded)
+                {
+                    AddIdentityErrors(createResult);
 
-            int? createdShelterId = null;
-            int? createdAdopterId = null;
+                    await transaction.RollbackAsync();
 
-            try
-            {
-                var claimResult =
-                    await _userManager.AddClaimAsync(
-                        user,
-                        new Claim(
-                            "display_name",
-                            displayName
-                        )
-                    );
+                    return View(vm);
+                }
+
+                var claimResult = await _userManager.AddClaimAsync(
+                    user,
+                    new Claim("display_name", displayName)
+                );
 
                 EnsureSucceeded(
                     claimResult,
@@ -126,73 +124,63 @@ namespace PetAdoption.Web.Controllers
 
                 if (vm.IsShelter)
                 {
-                    createdShelterId =
-                        await _shelterService.CreateAsync(
-                            vm.ShelterName!.Trim(),
-                            vm.ShelterAddress!.Trim(),
-                            vm.ShelterCity!.Trim(),
-                            vm.ShelterPhone,
-                            vm.ShelterEmail
-                        );
+                    var shelterId = await _shelterService.CreateAsync(
+                        vm.ShelterName!.Trim(),
+                        vm.ShelterAddress!.Trim(),
+                        vm.ShelterCity!.Trim(),
+                        vm.ShelterPhone,
+                        vm.ShelterEmail
+                    );
 
-                    user.ShelterId =
-                        createdShelterId;
+                    user.ShelterId = shelterId;
                 }
                 else
                 {
-                    createdAdopterId =
-                        await _adopterService.CreateAsync(
-                            vm.FullName!.Trim(),
-                            email,
-                            null,
-                            null,
-                            null
+                    var adopterId = await _adopterService.CreateAsync(
+                        vm.FullName!.Trim(),
+                        email,
+                        null,
+                        null,
+                        null
+                    );
+
+                    var adopter = await _db.Adopters.FindAsync(adopterId)
+                        ?? throw new InvalidOperationException(
+                            "The newly created adopter profile was not found."
                         );
 
-                    user.AdopterId =
-                        createdAdopterId;
+                    adopter.UserId = user.Id;
+                    user.AdopterId = adopterId;
                 }
 
-                var updateResult =
-                    await _userManager.UpdateAsync(user);
+                var updateResult = await _userManager.UpdateAsync(user);
 
                 EnsureSucceeded(
                     updateResult,
                     "Unable to link the account to its profile."
                 );
 
-                var roleResult =
-                    await _userManager.AddToRoleAsync(
-                        user,
-                        roleName
-                    );
+                var roleResult = await _userManager.AddToRoleAsync(
+                    user,
+                    roleName
+                );
 
                 EnsureSucceeded(
                     roleResult,
                     "Unable to assign the account role."
                 );
 
-                await _signInManager.SignInAsync(
-                    user,
-                    isPersistent: false
-                );
+                await _db.SaveChangesAsync();
 
-                return LocalRedirect(
-                    vm.ReturnUrl ?? "/"
-                );
+                await transaction.CommitAsync();
             }
             catch (Exception exception)
             {
                 _logger.LogError(
                     exception,
-                    "Registration failed for {Email}.",
-                    email
-                );
-
-                await CleanupFailedRegistrationAsync(
-                    user,
-                    createdShelterId,
-                    createdAdopterId
+                    "Registration failed for user {UserId} with role {RoleName}.",
+                    user.Id,
+                    roleName
                 );
 
                 ModelState.AddModelError(
@@ -202,20 +190,39 @@ namespace PetAdoption.Web.Controllers
 
                 return View(vm);
             }
+
+            try
+            {
+                await _signInManager.SignInAsync(
+                    user,
+                    isPersistent: false
+                );
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Automatic sign-in failed for user {UserId}.",
+                    user.Id
+                );
+
+                return RedirectToAction(
+                    nameof(Login),
+                    new { returnUrl }
+                );
+            }
+
+            return LocalRedirect(returnUrl);
         }
 
         [AllowAnonymous]
         [HttpGet]
-        public IActionResult Login(
-            string? returnUrl = null
-        )
+        public IActionResult Login(string? returnUrl = null)
         {
-            return View(
-                new LoginVm
-                {
-                    ReturnUrl = returnUrl
-                }
-            );
+            return View(new LoginVm
+            {
+                ReturnUrl = GetSafeReturnUrl(returnUrl)
+            });
         }
 
         [AllowAnonymous]
@@ -228,18 +235,17 @@ namespace PetAdoption.Web.Controllers
                 return View(vm);
             }
 
-            var result =
-                await _signInManager.PasswordSignInAsync(
-                    vm.Email!.Trim(),
-                    vm.Password!,
-                    vm.RememberMe,
-                    lockoutOnFailure: true
-                );
+            var result = await _signInManager.PasswordSignInAsync(
+                vm.Email!.Trim(),
+                vm.Password!,
+                vm.RememberMe,
+                lockoutOnFailure: true
+            );
 
             if (result.Succeeded)
             {
                 return LocalRedirect(
-                    vm.ReturnUrl ?? "/"
+                    GetSafeReturnUrl(vm.ReturnUrl)
                 );
             }
 
@@ -267,21 +273,14 @@ namespace PetAdoption.Web.Controllers
         {
             await _signInManager.SignOutAsync();
 
-            return RedirectToAction(
-                "Welcome",
-                "Home"
-            );
+            return RedirectToAction("Welcome", "Home");
         }
 
-        private void ValidateRegistrationModel(
-            RegisterVm vm
-        )
+        private void ValidateRegistrationModel(RegisterVm vm)
         {
             if (vm.IsShelter)
             {
-                if (string.IsNullOrWhiteSpace(
-                    vm.ShelterName
-                ))
+                if (string.IsNullOrWhiteSpace(vm.ShelterName))
                 {
                     ModelState.AddModelError(
                         nameof(vm.ShelterName),
@@ -289,9 +288,7 @@ namespace PetAdoption.Web.Controllers
                     );
                 }
 
-                if (string.IsNullOrWhiteSpace(
-                    vm.ShelterAddress
-                ))
+                if (string.IsNullOrWhiteSpace(vm.ShelterAddress))
                 {
                     ModelState.AddModelError(
                         nameof(vm.ShelterAddress),
@@ -299,9 +296,7 @@ namespace PetAdoption.Web.Controllers
                     );
                 }
 
-                if (string.IsNullOrWhiteSpace(
-                    vm.ShelterCity
-                ))
+                if (string.IsNullOrWhiteSpace(vm.ShelterCity))
                 {
                     ModelState.AddModelError(
                         nameof(vm.ShelterCity),
@@ -309,53 +304,60 @@ namespace PetAdoption.Web.Controllers
                     );
                 }
             }
-            else if (string.IsNullOrWhiteSpace(
-                vm.FullName
-            ))
+            else
             {
-                ModelState.AddModelError(
-                    nameof(vm.FullName),
-                    "Full name is required."
-                );
+                if (string.IsNullOrWhiteSpace(vm.FullName))
+                {
+                    ModelState.AddModelError(
+                        nameof(vm.FullName),
+                        "Full name is required."
+                    );
+                }
+
+                if (!string.IsNullOrWhiteSpace(vm.Email) &&
+                    vm.Email.Trim().Length > 128)
+                {
+                    ModelState.AddModelError(
+                        nameof(vm.Email),
+                        "Adopter email cannot exceed 128 characters."
+                    );
+                }
             }
         }
 
-        private static string GetDisplayName(
-            RegisterVm vm
-        )
+        private static string GetDisplayName(RegisterVm vm)
         {
             if (!vm.IsShelter)
             {
                 return vm.FullName!.Trim();
             }
 
-            return !string.IsNullOrWhiteSpace(
-                vm.FullName
-            )
+            return !string.IsNullOrWhiteSpace(vm.FullName)
                 ? vm.FullName.Trim()
                 : vm.ShelterName!.Trim();
         }
 
-        private async Task EnsureRoleExistsAsync(
-            string roleName
-        )
+        private string GetSafeReturnUrl(string? returnUrl)
         {
-            if (await _roleManager.RoleExistsAsync(
-                roleName
-            ))
+            return !string.IsNullOrWhiteSpace(returnUrl) &&
+                   Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : "/";
+        }
+
+        private async Task EnsureRoleExistsAsync(string roleName)
+        {
+            if (await _roleManager.RoleExistsAsync(roleName))
             {
                 return;
             }
 
-            var result =
-                await _roleManager.CreateAsync(
-                    new IdentityRole(roleName)
-                );
+            var result = await _roleManager.CreateAsync(
+                new IdentityRole(roleName)
+            );
 
-            if (!result.Succeeded
-                && !await _roleManager.RoleExistsAsync(
-                    roleName
-                ))
+            if (!result.Succeeded &&
+                !await _roleManager.RoleExistsAsync(roleName))
             {
                 EnsureSucceeded(
                     result,
@@ -364,9 +366,7 @@ namespace PetAdoption.Web.Controllers
             }
         }
 
-        private void AddIdentityErrors(
-            IdentityResult result
-        )
+        private void AddIdentityErrors(IdentityResult result)
         {
             foreach (var error in result.Errors)
             {
@@ -389,58 +389,12 @@ namespace PetAdoption.Web.Controllers
 
             var details = string.Join(
                 "; ",
-                result.Errors.Select(
-                    error => error.Description
-                )
+                result.Errors.Select(error => error.Description)
             );
 
             throw new InvalidOperationException(
                 $"{message} {details}"
             );
-        }
-
-        private async Task CleanupFailedRegistrationAsync(
-            ApplicationUser user,
-            int? shelterId,
-            int? adopterId
-        )
-        {
-            try
-            {
-                if (adopterId.HasValue)
-                {
-                    await _adopterService.DeleteAsync(
-                        adopterId.Value
-                    );
-                }
-
-                if (shelterId.HasValue)
-                {
-                    await _shelterService.DeleteAsync(
-                        shelterId.Value
-                    );
-                }
-
-                var existingUser =
-                    await _userManager.FindByIdAsync(
-                        user.Id
-                    );
-
-                if (existingUser != null)
-                {
-                    await _userManager.DeleteAsync(
-                        existingUser
-                    );
-                }
-            }
-            catch (Exception cleanupException)
-            {
-                _logger.LogError(
-                    cleanupException,
-                    "Failed to completely clean up registration for {UserId}.",
-                    user.Id
-                );
-            }
         }
     }
 }

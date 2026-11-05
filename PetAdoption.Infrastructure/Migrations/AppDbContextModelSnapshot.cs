@@ -15,7 +15,7 @@ namespace PetAdoption.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -156,7 +156,7 @@ namespace PetAdoption.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(120)
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FullName")
@@ -209,7 +209,9 @@ namespace PetAdoption.Infrastructure.Migrations
 
                     b.HasIndex("AdopterId");
 
-                    b.HasIndex("PetId");
+                    b.HasIndex("PetId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" = 0");
 
                     b.ToTable("AdoptionRequests");
                 });

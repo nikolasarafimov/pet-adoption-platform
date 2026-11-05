@@ -3,418 +3,2127 @@
 
 @{
     ViewData["Title"] = "Welcome";
+    ViewData["Description"] = "Discover pets, explore dog breeds, and connect with shelters through PetAdoption.";
 
-    bool isAuthenticated =
-        User.Identity?.IsAuthenticated == true;
+    bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+    bool isAdmin = User.IsInRole("Admin");
+    bool isShelter = User.IsInRole("Shelter");
+    bool isAdopter = User.IsInRole("Adopter");
 
-    bool isAdmin =
-        User.IsInRole("Admin");
-
-    bool isShelter =
-        User.IsInRole("Shelter");
-
-    bool isAdopter =
-        User.IsInRole("Adopter");
+    bool hasWorkspace =
+        isAuthenticated && (isAdopter || isShelter || isAdmin);
 }
 
-<section class="hero-panel overflow-hidden mb-5">
-    <div class="row align-items-center g-0">
-        <div class="col-lg-7">
-            <div class="p-4 p-md-5 p-xl-6">
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill bg-white shadow-sm mb-4">
-                    <span>🐾</span>
-                    <span class="small fw-semibold text-primary">
-                        Connecting pets with loving homes
+<div class="pa-welcome">
+    <section class="pa-welcome__hero"
+             aria-labelledby="welcomeTitle">
+
+        <div class="pa-welcome__hero-copy">
+
+            <div class="pa-welcome__hero-decoration"
+                 aria-hidden="true"></div>
+
+            <div class="pa-welcome__eyebrow">
+
+                <span class="pa-welcome__eyebrow-icon"
+                      aria-hidden="true">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <circle cx="7" cy="8" r="1" />
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="17" cy="8" r="1" />
+                        <circle cx="20" cy="12" r="1" />
+                        <path d="M12 12c-2.2 0-3.4 2-5 3.5-1.4 1.4-.8 4.5 1.8 4.5 1.4 0 2.2-.8 3.2-.8s1.8.8 3.2.8c2.6 0 3.2-3.1 1.8-4.5C15.4 14 14.2 12 12Z" />
+                    </svg>
+                </span>
+
+                CONNECTING HEARTS & HOMES
+            </div>
+
+            <h1 id="welcomeTitle">
+                Every pet deserves
+                <em>a place to belong.</em>
+            </h1>
+
+            <p class="pa-welcome__hero-description">
+                Behind every adoption is a new beginning.
+                Discover wonderful pets, connect with shelters,
+                and take the first step toward a lifelong
+                companionship.
+            </p>
+
+            <div class="pa-welcome__hero-actions">
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="pa-welcome__button
+                          pa-welcome__button--gold">
+
+                    Find Your Companion
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                    </svg>
+                </a>
+
+                <a asp-controller="Breeds"
+                   asp-action="Index"
+                   class="pa-welcome__button
+                          pa-welcome__button--outline-light">
+
+                    Explore Breeds
+                </a>
+            </div>
+
+            @if (!isAuthenticated)
+            {
+                <div class="pa-welcome__hero-register">
+
+                    <span>New to PetAdoption?</span>
+
+                    <a asp-controller="Account"
+                       asp-action="Register">
+
+                        Create your account
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+
+                            <path d="M5 12h14" />
+                            <path d="m13 6 6 6-6 6" />
+                        </svg>
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="pa-welcome__hero-visual">
+
+            <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=85&amp;w=1400&amp;auto=format&amp;fit=crop"
+                 alt="A dog looking toward the camera"
+                 class="pa-welcome__hero-photo"
+                 fetchpriority="high" />
+
+            <div class="pa-welcome__photo-overlay"
+                 aria-hidden="true"></div>
+
+            <div class="pa-welcome__photo-caption">
+
+                <span class="pa-welcome__photo-caption-icon"
+                      aria-hidden="true">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                    </svg>
+                </span>
+
+                <div>
+                    <span>MORE THAN A PET</span>
+                    <strong>A new member of the family.</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pa-welcome__journey"
+             aria-labelledby="journeyTitle">
+
+        <div class="pa-welcome__section-header
+                    pa-welcome__section-header--center">
+
+            <span class="pa-welcome__section-eyebrow">
+                THE ADOPTION JOURNEY
+            </span>
+
+            <h2 id="journeyTitle">
+                A little love.
+                <em>A big beginning.</em>
+            </h2>
+
+            <p>
+                Discover, connect, and take the next step
+                toward welcoming a companion into your life.
+            </p>
+        </div>
+
+        <div class="pa-welcome__steps">
+
+            <article class="pa-welcome__step">
+
+                <div class="pa-welcome__step-top">
+
+                    <span class="pa-welcome__step-icon"
+                          aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.7"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <circle cx="10.5" cy="10.5" r="6.5" />
+                            <path d="m16 16 5 5" />
+                        </svg>
+                    </span>
+
+                    <span class="pa-welcome__step-number">
+                        01
                     </span>
                 </div>
 
-                <h1 class="display-4 fw-bold mb-4">
-                    Every pet deserves
-                    <span class="text-primary">a second chance.</span>
-                </h1>
+                <h3>Discover</h3>
 
-                <p class="lead section-subtitle mb-4">
-                    Discover adoptable pets, connect with trusted shelters,
-                    and manage the complete adoption process through one
-                    simple and secure platform.
+                <p>
+                    Browse pet profiles, explore different
+                    breeds, and find an animal that could
+                    be the right match for you.
                 </p>
+            </article>
 
-                <div class="d-flex flex-wrap gap-3 mb-5">
-                    <a asp-controller="Home"
-                       asp-action="Index"
-                       class="btn btn-primary btn-lg px-4">
-                        Browse Pets
-                    </a>
+            <article class="pa-welcome__step">
 
-                    <a asp-controller="Breeds"
-                       asp-action="Index"
-                       class="btn btn-outline-primary btn-lg px-4">
-                        Explore Breeds
-                    </a>
+                <div class="pa-welcome__step-top">
 
-                    @if (!isAuthenticated)
-                    {
-                        <a asp-controller="Account"
-                           asp-action="Register"
-                           class="btn btn-success btn-lg px-4">
-                            Get Started
-                        </a>
-                    }
+                    <span class="pa-welcome__step-icon"
+                          aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.7"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-5 3V7a2 2 0 0 1 1-2Z" />
+                            <path d="M8 10h8" />
+                            <path d="M8 14h5" />
+                        </svg>
+                    </span>
+
+                    <span class="pa-welcome__step-number">
+                        02
+                    </span>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-sm-4">
-                        <div class="bg-white rounded-4 p-3 shadow-sm h-100">
-                            <div class="fs-4 mb-2">🔎</div>
-                            <div class="fw-bold">Discover</div>
-                            <div class="small text-muted">
-                                Find pets that match your lifestyle.
-                            </div>
-                        </div>
-                    </div>
+                <h3>Connect</h3>
 
-                    <div class="col-sm-4">
-                        <div class="bg-white rounded-4 p-3 shadow-sm h-100">
-                            <div class="fs-4 mb-2">💌</div>
-                            <div class="fw-bold">Request</div>
-                            <div class="small text-muted">
-                                Submit an adoption request securely.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-sm-4">
-                        <div class="bg-white rounded-4 p-3 shadow-sm h-100">
-                            <div class="fs-4 mb-2">🏡</div>
-                            <div class="fw-bold">Adopt</div>
-                            <div class="small text-muted">
-                                Give a pet the home it deserves.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-5">
-            <div class="position-relative h-100">
-                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=85&w=1400&auto=format&fit=crop"
-                     alt="Dog waiting for adoption"
-                     class="w-100 h-100 object-fit-cover"
-                     style="min-height: 560px;" />
-
-                <div class="position-absolute bottom-0 start-0 end-0 p-4">
-                    <div class="bg-dark bg-opacity-75 text-white rounded-4 p-3 shadow-lg">
-                        <div class="small text-white-50 mb-1">
-                            Simple. Secure. Compassionate.
-                        </div>
-                        <div class="fw-semibold">
-                            Helping shelters and adopters connect faster.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-@if (isAuthenticated)
-{
-    <section class="mb-5">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-            <div>
-                <div class="text-primary fw-semibold small text-uppercase">
-                    Your workspace
-                </div>
-
-                <h2 class="section-title mb-1">
-                    Quick Actions
-                </h2>
-
-                <p class="section-subtitle mb-0">
-                    Continue where you left off.
+                <p>
+                    Submit an adoption request for an
+                    available pet and share your interest
+                    with the shelter.
                 </p>
-            </div>
-        </div>
+            </article>
 
-        <div class="row g-4">
-            @if (isAdopter)
-            {
-                <div class="col-md-6">
-                    <a asp-controller="AdoptionRequests"
-                       asp-action="Index"
-                       class="text-decoration-none">
-                        <div class="card h-100 p-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="fs-2">📋</div>
+            <article class="pa-welcome__step">
 
-                                <div>
-                                    <h5 class="mb-1">
-                                        My Adoption Requests
-                                    </h5>
+                <div class="pa-welcome__step-top">
 
-                                    <p class="mb-0">
-                                        Track pending, approved and completed requests.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
+                    <span class="pa-welcome__step-icon"
+                          aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.7"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M3 10 12 3l9 7" />
+                            <path d="M5 9v11h14V9" />
+                            <path d="M9 20v-7h6v7" />
+                            <path d="M12 10c-2-3-6-.8-5 2 1 2.5 5 5 5 5s4-2.5 5-5c1-2.8-3-5-5-2Z" />
+                        </svg>
+                    </span>
+
+                    <span class="pa-welcome__step-number">
+                        03
+                    </span>
                 </div>
 
-                <div class="col-md-6">
-                    <a asp-controller="Home"
-                       asp-action="Index"
-                       class="text-decoration-none">
-                        <div class="card h-100 p-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="fs-2">🐶</div>
+                <h3>Take the Next Step</h3>
 
-                                <div>
-                                    <h5 class="mb-1">
-                                        Find Another Pet
-                                    </h5>
-
-                                    <p class="mb-0">
-                                        Explore pets currently available for adoption.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            }
-            else if (isShelter)
-            {
-                <div class="col-md-6">
-                    <a asp-controller="Pets"
-                       asp-action="Index"
-                       class="text-decoration-none">
-                        <div class="card h-100 p-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="fs-2">🐕</div>
-
-                                <div>
-                                    <h5 class="mb-1">
-                                        Manage Pets
-                                    </h5>
-
-                                    <p class="mb-0">
-                                        Add, edit and manage pets from your shelter.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="col-md-6">
-                    <a asp-controller="AdoptionRequests"
-                       asp-action="Manage"
-                       class="text-decoration-none">
-                        <div class="card h-100 p-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="fs-2">✅</div>
-
-                                <div>
-                                    <h5 class="mb-1">
-                                        Review Requests
-                                    </h5>
-
-                                    <p class="mb-0">
-                                        Review adoption requests for your pets.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            }
-            else if (isAdmin)
-            {
-                <div class="col-md-4">
-                    <a asp-controller="Pets"
-                       asp-action="Index"
-                       class="text-decoration-none">
-                        <div class="card h-100 p-4">
-                            <div class="fs-2 mb-3">🐕</div>
-                            <h5>Manage Pets</h5>
-                            <p class="mb-0">
-                                Oversee all registered pets.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="col-md-4">
-                    <a asp-controller="Shelters"
-                       asp-action="Index"
-                       class="text-decoration-none">
-                        <div class="card h-100 p-4">
-                            <div class="fs-2 mb-3">🏠</div>
-                            <h5>Manage Shelters</h5>
-                            <p class="mb-0">
-                                Review and maintain shelter data.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="col-md-4">
-                    <a asp-controller="AdoptersAdmin"
-                       asp-action="Index"
-                       class="text-decoration-none">
-                        <div class="card h-100 p-4">
-                            <div class="fs-2 mb-3">👥</div>
-                            <h5>Manage Adopters</h5>
-                            <p class="mb-0">
-                                View and manage adopter profiles.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-            }
+                <p>
+                    Follow your request status and
+                    continue the adoption process
+                    when the shelter makes a decision.
+                </p>
+            </article>
         </div>
     </section>
-}
 
-<section class="mb-5">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-        <div>
-            <div class="text-primary fw-semibold small text-uppercase">
-                Meet your new companion
+    @if (hasWorkspace)
+    {
+        <section class="pa-welcome__workspace"
+                 aria-labelledby="workspaceTitle">
+
+            <div class="pa-welcome__section-header">
+
+                <div>
+                    <span class="pa-welcome__section-eyebrow">
+                        YOUR WORKSPACE
+                    </span>
+
+                    <h2 id="workspaceTitle">
+                        Pick up where
+                        <em>you left off.</em>
+                    </h2>
+
+                    <p>
+                        Access the tools available
+                        for your account.
+                    </p>
+                </div>
             </div>
 
-            <h2 class="section-title mb-2">
-                Featured Pets
-            </h2>
+            <div class="pa-welcome__workspace-grid">
 
-            <p class="section-subtitle mb-0">
-                A few wonderful pets currently looking for a family.
-            </p>
-        </div>
-
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-outline-primary">
-            View All Pets
-        </a>
-    </div>
-
-    @if (!Model.Any())
-    {
-        <div class="empty-state">
-            <div class="fs-1 mb-3">🐾</div>
-            <h5>No pets available yet</h5>
-            <p class="mb-0">
-                Check back soon for new adoption opportunities.
-            </p>
-        </div>
-    }
-    else
-    {
-        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-            @foreach (var pet in Model)
-            {
-                var imageUrl =
-                string.IsNullOrWhiteSpace(pet.ImageUrl)
-                ? "https://placehold.co/800x600?text="
-                + Uri.EscapeDataString(pet.Name)
-                : pet.ImageUrl;
-
-                var badgeClass =
-                pet.Status switch
+                @if (isAdopter)
                 {
-                    PetStatus.Available => "success",
-                    PetStatus.Reserved => "warning text-dark",
-                    PetStatus.Adopted => "secondary",
-                    _ => "dark"
-                };
+                    <a asp-controller="AdoptionRequests"
+                       asp-action="Index"
+                       class="pa-welcome__workspace-card">
 
-                <div class="col">
-                    <div class="card h-100">
-                        <div class="position-relative">
-                            <img src="@imageUrl"
-                                 alt="@pet.Name"
-                                 class="card-img-top"
-                                 loading="lazy" />
+                        <span class="pa-welcome__workspace-icon">
 
-                            <span class="badge bg-@badgeClass position-absolute top-0 end-0 m-3">
-                                @pet.Status
-                            </span>
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <rect x="4" y="3" width="16" height="18" rx="3" />
+                                <path d="M8 8h8M8 12h8M8 16h5" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <h3>My Adoption Requests</h3>
+
+                            <p>
+                                Track your applications and
+                                review their latest statuses.
+                            </p>
                         </div>
 
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                                <div>
-                                    <h4 class="card-title mb-1">
-                                        @pet.Name
-                                    </h4>
+                        <span class="pa-welcome__workspace-arrow"
+                              aria-hidden="true">→</span>
+                    </a>
 
-                                    <div class="text-muted small">
-                                        @pet.Species
-                                        @if (!string.IsNullOrWhiteSpace(pet.Breed))
-                                        {
-                                            <span>• @pet.Breed</span>
-                                        }
-                                </div>
-                            </div>
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="pa-welcome__workspace-card">
 
-                            <span class="badge bg-light text-dark">
-                                @pet.AgeYears yrs
-                            </span>
+                        <span class="pa-welcome__workspace-icon">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <circle cx="11" cy="11" r="7" />
+                                <path d="m16 16 5 5" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <h3>Find Another Pet</h3>
+
+                            <p>
+                                Explore more pets and
+                                discover their stories.
+                            </p>
                         </div>
 
-                        <p class="card-text text-truncate-3 mb-4">
-                            @(string.IsNullOrWhiteSpace(pet.Description)
-                                                    ? "No description provided."
-                                                    : pet.Description)
-                    </p>
+                        <span class="pa-welcome__workspace-arrow"
+                              aria-hidden="true">→</span>
+                    </a>
+                }
+                else if (isShelter)
+                {
+                    <a asp-controller="Pets"
+                       asp-action="Index"
+                       class="pa-welcome__workspace-card">
 
-                            <div class="d-flex gap-2">
-                                <a asp-controller="Pets"
-                                   asp-action="Details"
-                                   asp-route-id="@pet.Id"
-                                   class="btn btn-outline-primary flex-grow-1">
-                                    View Details
-                                </a>
+                        <span class="pa-welcome__workspace-icon">
 
-                        @if (pet.Status == PetStatus.Available
-                                                && isAdopter)
-                                {
-                                    <a asp-controller="AdoptionRequests"
-                                       asp-action="Create"
-                                       asp-route-petId="@pet.Id"
-                                       class="btn btn-success">
-                                        Adopt
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M3 10 12 3l9 7" />
+                                <path d="M5 9v11h14V9" />
+                                <path d="M9 20v-7h6v7" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <h3>Manage Pets</h3>
+
+                            <p>
+                                Add, update, and manage
+                                your shelter's pet listings.
+                            </p>
+                        </div>
+
+                        <span class="pa-welcome__workspace-arrow"
+                              aria-hidden="true">→</span>
+                    </a>
+
+                    <a asp-controller="AdoptionRequests"
+                       asp-action="Manage"
+                       class="pa-welcome__workspace-card">
+
+                        <span class="pa-welcome__workspace-icon">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="m8 12 3 3 5-6" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <h3>Review Requests</h3>
+
+                            <p>
+                                Review adoption applications
+                                and manage pending decisions.
+                            </p>
+                        </div>
+
+                        <span class="pa-welcome__workspace-arrow"
+                              aria-hidden="true">→</span>
+                    </a>
+                }
+                else if (isAdmin)
+                {
+                    <a asp-controller="Pets"
+                       asp-action="Index"
+                       class="pa-welcome__workspace-card">
+
+                        <span class="pa-welcome__workspace-icon">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <circle cx="7" cy="8" r="1" />
+                                <circle cx="12" cy="5" r="1" />
+                                <circle cx="17" cy="8" r="1" />
+                                <path d="M12 12c-2 0-3 2-5 4-1 2 0 4 2 4 1 0 2-1 3-1s2 1 3 1c2 0 3-2 2-4-2-2-3-4-5-4Z" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <h3>Manage Pets</h3>
+
+                            <p>
+                                Oversee pet profiles and
+                                registered listings.
+                            </p>
+                        </div>
+
+                        <span class="pa-welcome__workspace-arrow"
+                              aria-hidden="true">→</span>
+                    </a>
+
+                    <a asp-controller="Shelters"
+                       asp-action="Index"
+                       class="pa-welcome__workspace-card">
+
+                        <span class="pa-welcome__workspace-icon">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M3 10 12 3l9 7" />
+                                <path d="M5 9v11h14V9" />
+                                <path d="M9 20v-7h6v7" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <h3>Manage Shelters</h3>
+
+                            <p>
+                                Review and maintain
+                                registered shelter information.
+                            </p>
+                        </div>
+
+                        <span class="pa-welcome__workspace-arrow"
+                              aria-hidden="true">→</span>
+                    </a>
+
+                    <a asp-controller="AdoptersAdmin"
+                       asp-action="Index"
+                       class="pa-welcome__workspace-card">
+
+                        <span class="pa-welcome__workspace-icon">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <circle cx="9" cy="8" r="4" />
+                                <path d="M2 21v-2a7 7 0 0 1 14 0v2" />
+                                <path d="M18 8h4M20 6v4" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <h3>Manage Adopters</h3>
+
+                            <p>
+                                View and manage
+                                adopter profiles.
+                            </p>
+                        </div>
+
+                        <span class="pa-welcome__workspace-arrow"
+                              aria-hidden="true">→</span>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="pa-welcome__featured"
+             aria-labelledby="featuredPetsTitle">
+
+        <div class="pa-welcome__featured-heading">
+
+            <div>
+                <span class="pa-welcome__section-eyebrow">
+                    MEET THE ANIMALS
+                </span>
+
+                <h2 id="featuredPetsTitle">
+                    Meet some
+                    <em>lovely companions.</em>
+                </h2>
+
+                <p>
+                    Explore a selection of pets
+                    featured on our platform.
+                </p>
+            </div>
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="pa-welcome__view-all">
+
+                View All Pets
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                </svg>
+            </a>
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <div class="pa-welcome__empty">
+
+                <span class="pa-welcome__empty-icon"
+                      aria-hidden="true">
+
+                    <svg viewBox="0 0 64 64"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <circle cx="18" cy="21" r="4" />
+                        <circle cx="31" cy="13" r="4" />
+                        <circle cx="44" cy="21" r="4" />
+                        <circle cx="52" cy="34" r="4" />
+                        <path d="M32 31c-8 0-11 8-17 15-4 5-1 12 5 12 5 0 7-3 12-3s7 3 12 3c6 0 9-7 5-12-6-7-9-15-17-15Z" />
+                    </svg>
+                </span>
+
+                <h3>No featured pets right now.</h3>
+
+                <p>
+                    There are no featured pet profiles
+                    to display at the moment.
+                    Explore the full directory for more listings.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="pa-welcome__empty-button">
+
+                    Explore All Pets
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="pa-welcome__pet-grid">
+
+                @foreach (var pet in Model)
+                {
+                    var petName =
+                    string.IsNullOrWhiteSpace(pet.Name)
+                    ? "Unnamed Pet"
+                    : pet.Name.Trim();
+
+                    var hasImage =
+                    Uri.TryCreate(
+                    pet.ImageUrl,
+                    UriKind.Absolute,
+                    out var imageUri
+                    )
+                    && imageUri is not null
+                    && (
+                    imageUri.Scheme == Uri.UriSchemeHttps ||
+                    imageUri.Scheme == Uri.UriSchemeHttp
+                    );
+
+                    var statusClass = pet.Status switch
+                    {
+                        PetStatus.Available => "available",
+                        PetStatus.Reserved => "reserved",
+                        PetStatus.Adopted => "adopted",
+                        _ => "unknown"
+                    };
+
+                    var petDescription =
+                    string.IsNullOrWhiteSpace(pet.Description)
+                    ? "No description has been provided for this pet yet."
+                    : pet.Description;
+
+                    <article class="pa-welcome__pet-card">
+
+                        <div class="pa-welcome__pet-media">
+
+                            @if (hasImage)
+                            {
+                                <img src="@pet.ImageUrl"
+                                     alt="Photo of @petName"
+                                     class="pa-welcome__pet-image"
+                                     loading="lazy"
+                                     decoding="async"
+                                     data-pa-welcome-image />
+                            }
+
+                        <div class="pa-welcome__pet-fallback"
+                             hidden="@hasImage"
+                             aria-hidden="true">
+
+                            <svg viewBox="0 0 80 80"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <circle cx="19" cy="22" r="4" />
+                                <circle cx="32" cy="14" r="4" />
+                                <circle cx="45" cy="22" r="4" />
+                                <circle cx="54" cy="35" r="4" />
+                                <path d="M35 32c-8 0-11 8-17 15-4 5-1 12 5 12 5 0 7-3 12-3s7 3 12 3c6 0 9-7 5-12-6-7-9-15-17-15Z" />
+                            </svg>
+                        </div>
+
+                        <span class="pa-welcome__pet-status
+                                             pa-welcome__pet-status--@statusClass">
+
+                            <span></span>
+                            @pet.Status
+                        </span>
+
+                        <span class="pa-welcome__pet-species">
+                            @pet.Species
+                        </span>
+                    </div>
+
+                    <div class="pa-welcome__pet-body">
+
+                        <div class="pa-welcome__pet-heading">
+
+                            <div>
+                                <span class="pa-welcome__pet-eyebrow">
+                                    MEET @petName.ToUpperInvariant()
+                                </span>
+
+                                <h3>
+                                    <a asp-controller="Pets"
+                                       asp-action="Details"
+                                       asp-route-id="@pet.Id">
+                                        @petName
                                     </a>
-                                }
-                            </div>
+                                </h3>
+
+                                <p class="pa-welcome__pet-breed">
+                                    @(string.IsNullOrWhiteSpace(pet.Breed)
+                                                                    ? "Breed not specified"
+                                                                    : pet.Breed)
+                                                                            </p>
+                                                                        </div>
+
+                            <span class="pa-welcome__pet-age">
+                                @pet.AgeYears
+                                @(pet.AgeYears == 1 ? "yr" : "yrs")
+                            </span>
                         </div>
+
+                        <p class="pa-welcome__pet-description">
+                            @petDescription
+                        </p>
+
+                        <div class="pa-welcome__pet-shelter">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.7"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M3 10 12 3l9 7" />
+                                <path d="M5 9v11h14V9" />
+                                <path d="M9 20v-7h6v7" />
+                            </svg>
+
+                            <span>
+                                @(string.IsNullOrWhiteSpace(pet.ShelterName)
+                                                            ? "Shelter not specified"
+                                                            : pet.ShelterName)
+                        </span>
                     </div>
                 </div>
-            }
+
+                        <div class="pa-welcome__pet-actions">
+
+                            <a asp-controller="Pets"
+                               asp-action="Details"
+                               asp-route-id="@pet.Id"
+                               class="pa-welcome__pet-details">
+
+                                View Details
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>
+                            </a>
+
+                    @if (pet.Status == PetStatus.Available && isAdopter)
+                            {
+                                <a asp-controller="AdoptionRequests"
+                                   asp-action="Create"
+                                   asp-route-petId="@pet.Id"
+                                   class="pa-welcome__pet-adopt">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         aria-hidden="true">
+
+                                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                                    </svg>
+
+                                    Adopt
+                                </a>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="pa-welcome__breed-cta"
+             aria-labelledby="breedCtaTitle">
+
+        <div class="pa-welcome__breed-decoration"
+             aria-hidden="true">
+
+            <svg viewBox="0 0 120 120"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2.2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+                <path d="M36 42 20 29 13 52l15 15" />
+                <path d="m84 42 16-13 7 23-15 15" />
+                <path d="M30 52c0-25 12-39 30-39s30 14 30 39v15c0 21-13 35-30 35S30 88 30 67Z" />
+                <path d="M45 60h3M72 60h3" />
+                <path d="m52 76 8 6 8-6-8-5Z" />
+                <path d="M60 82v6" />
+            </svg>
         </div>
-    }
-</section>
 
-<section class="hero-panel p-4 p-md-5 text-center">
-    <div class="mx-auto" style="max-width: 720px;">
-        <div class="fs-1 mb-3">🐕‍🦺</div>
+        <div class="pa-welcome__breed-copy">
 
-        <h2 class="section-title mb-3">
-            Curious about dog breeds?
-        </h2>
+            <span class="pa-welcome__section-eyebrow">
+                GET TO KNOW THE BREEDS
+            </span>
 
-        <p class="section-subtitle mb-4">
-            Explore breed characteristics, temperament, lifespan and average
-            weight using live data from The Dog API.
-        </p>
+            <h2 id="breedCtaTitle">
+                Curious minds.
+                <em>Wagging tails.</em>
+            </h2>
 
-        <a asp-controller="Breeds"
-           asp-action="Index"
-           class="btn btn-primary btn-lg px-4">
-            Explore Dog Breeds
-        </a>
-    </div>
-</section>
+            <p>
+                Learn about dog breeds, from temperament
+                and lifespan to average weight, using
+                information from The Dog API.
+            </p>
+
+            <a asp-controller="Breeds"
+               asp-action="Index"
+               class="pa-welcome__breed-button">
+
+                Explore Dog Breeds
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                </svg>
+            </a>
+        </div>
+    </section>
+
+</div>
+
+@section Styles {
+    <style>
+        .pa-welcome {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto 65px;
+        }
+
+            .pa-welcome [hidden] {
+                display: none !important;
+            }
+
+            .pa-welcome a:focus-visible {
+                outline: 3px solid #c8914e;
+                outline-offset: 4px;
+            }
+
+        .pa-welcome__hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.13fr) minmax(0, 0.87fr);
+            min-height: 625px;
+            overflow: hidden;
+            border-radius: 28px;
+            background: #173d32;
+            box-shadow: 0 25px 55px rgba(23, 61, 50, 0.14);
+        }
+
+        .pa-welcome__hero-copy {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            min-width: 0;
+            padding: clamp(40px, 5.5vw, 80px);
+            overflow: hidden;
+            isolation: isolate;
+            background: radial-gradient( circle at 0% 100%, rgba(153, 191, 143, 0.15), transparent 45% ), linear-gradient(145deg, #173d32, #245847);
+        }
+
+        .pa-welcome__hero-decoration {
+            position: absolute;
+            right: -160px;
+            bottom: -180px;
+            z-index: -1;
+            width: 440px;
+            height: 440px;
+            border: 1px solid rgba(244, 197, 122, 0.14);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+            .pa-welcome__hero-decoration::after {
+                position: absolute;
+                inset: 45px;
+                border: 1px solid rgba(244, 197, 122, 0.1);
+                border-radius: 50%;
+                content: "";
+            }
+
+        .pa-welcome__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 30px;
+            color: #f4c57a;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            line-height: 1.6;
+        }
+
+        .pa-welcome__eyebrow-icon {
+            display: grid;
+            width: 33px;
+            height: 33px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.32);
+            border-radius: 11px;
+            background: rgba(244, 197, 122, 0.11);
+        }
+
+            .pa-welcome__eyebrow-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+        .pa-welcome__hero h1 {
+            max-width: 680px;
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(3rem, 5vw, 5.15rem);
+            font-weight: 600;
+            letter-spacing: -0.065em;
+            line-height: 1.12;
+        }
+
+            .pa-welcome__hero h1 em {
+                display: block;
+                margin-top: 5px;
+                color: #f4c57a;
+                font-weight: 500;
+                font-style: italic;
+            }
+
+        .pa-welcome__hero-description {
+            max-width: 525px;
+            margin: 26px 0 31px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 1rem;
+            line-height: 1.9;
+        }
+
+        .pa-welcome__hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pa-welcome__button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
+            min-height: 53px;
+            padding: 13px 21px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease;
+        }
+
+            .pa-welcome__button svg {
+                width: 19px;
+                height: 19px;
+            }
+
+        .pa-welcome__button--gold {
+            border-color: #f4c57a;
+            background: #f4c57a;
+            color: #173d32;
+        }
+
+            .pa-welcome__button--gold:hover {
+                transform: translateY(-2px);
+                background: #ffda9a;
+                color: #173d32;
+                box-shadow: 0 12px 25px rgba(0, 0, 0, 0.14);
+            }
+
+        .pa-welcome__button--outline-light {
+            border-color: rgba(255, 255, 255, 0.34);
+            background: rgba(255, 255, 255, 0.065);
+            color: #fff;
+        }
+
+            .pa-welcome__button--outline-light:hover {
+                border-color: #f4c57a;
+                background: rgba(244, 197, 122, 0.12);
+                color: #f4c57a;
+            }
+
+        .pa-welcome__hero-register {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 7px 10px;
+            margin-top: 29px;
+            color: rgba(255, 255, 255, 0.68);
+            font-size: 0.83rem;
+        }
+
+            .pa-welcome__hero-register a {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                color: #f4c57a;
+                font-weight: 800;
+                text-decoration: none;
+            }
+
+                .pa-welcome__hero-register a:hover {
+                    text-decoration: underline;
+                    text-underline-offset: 4px;
+                }
+
+            .pa-welcome__hero-register svg {
+                width: 16px;
+                height: 16px;
+            }
+
+        .pa-welcome__hero-visual {
+            position: relative;
+            min-width: 0;
+            min-height: 625px;
+            overflow: hidden;
+            background: linear-gradient(145deg, #adc5a5, #527c61);
+        }
+
+        .pa-welcome__hero-photo {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-height: 625px;
+            object-fit: cover;
+            object-position: 50% center;
+            transition: transform 900ms ease;
+        }
+
+        .pa-welcome__hero:hover .pa-welcome__hero-photo {
+            transform: scale(1.025);
+        }
+
+        .pa-welcome__photo-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient( 180deg, rgba(15, 34, 25, 0.02) 40%, rgba(15, 34, 25, 0.7) 100% );
+            pointer-events: none;
+        }
+
+        .pa-welcome__photo-caption {
+            position: absolute;
+            right: 27px;
+            bottom: 27px;
+            left: 27px;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 19px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 18px;
+            background: rgba(23, 61, 50, 0.78);
+            color: #fff;
+            backdrop-filter: blur(15px);
+        }
+
+        .pa-welcome__photo-caption-icon {
+            display: grid;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 13px;
+            background: rgba(244, 197, 122, 0.16);
+            color: #f4c57a;
+        }
+
+            .pa-welcome__photo-caption-icon svg {
+                width: 24px;
+                height: 24px;
+            }
+
+        .pa-welcome__photo-caption > div {
+            min-width: 0;
+        }
+
+            .pa-welcome__photo-caption > div > span {
+                display: block;
+                margin-bottom: 6px;
+                color: #f4c57a;
+                font-size: 0.63rem;
+                font-weight: 800;
+                letter-spacing: 0.12em;
+            }
+
+        .pa-welcome__photo-caption strong {
+            font-size: 0.91rem;
+            line-height: 1.4;
+        }
+
+        .pa-welcome__section-header {
+            margin-bottom: 31px;
+        }
+
+        .pa-welcome__section-header--center {
+            text-align: center;
+        }
+
+        .pa-welcome__section-eyebrow {
+            display: block;
+            margin-bottom: 12px;
+            color: #aa7946;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+        }
+
+        .pa-welcome__section-header h2,
+        .pa-welcome__featured-heading h2 {
+            margin: 0 0 13px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2rem, 3.4vw, 3rem);
+            font-weight: 600;
+            letter-spacing: -0.055em;
+            line-height: 1.22;
+        }
+
+            .pa-welcome__section-header h2 em,
+            .pa-welcome__featured-heading h2 em {
+                color: #c8914e;
+                font-weight: 500;
+            }
+
+        .pa-welcome__section-header p,
+        .pa-welcome__featured-heading p {
+            max-width: 590px;
+            margin: 0;
+            color: #7b897d;
+            font-size: 0.93rem;
+            line-height: 1.8;
+        }
+
+        .pa-welcome__section-header--center p {
+            margin-inline: auto;
+        }
+
+        .pa-welcome__journey {
+            padding: 82px 0 69px;
+        }
+
+        .pa-welcome__steps {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .pa-welcome__step {
+            min-width: 0;
+            padding: 29px;
+            border: 1px solid #e2eae0;
+            border-radius: 22px;
+            background: #fffefa;
+            box-shadow: 0 10px 28px rgba(23, 61, 50, 0.04);
+            transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+        }
+
+            .pa-welcome__step:hover {
+                transform: translateY(-4px);
+                border-color: #c6d9c7;
+                box-shadow: 0 19px 35px rgba(23, 61, 50, 0.075);
+            }
+
+        .pa-welcome__step-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .pa-welcome__step-icon {
+            display: grid;
+            width: 59px;
+            height: 59px;
+            place-items: center;
+            border: 1px solid #d7e6d5;
+            border-radius: 18px;
+            background: #ecf4e9;
+            color: #245847;
+        }
+
+            .pa-welcome__step-icon svg {
+                width: 29px;
+                height: 29px;
+            }
+
+        .pa-welcome__step-number {
+            color: #d7e5d6;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .pa-welcome__step h3 {
+            margin: 0 0 12px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.65rem;
+            font-weight: 600;
+            letter-spacing: -0.035em;
+        }
+
+        .pa-welcome__step p {
+            margin: 0;
+            color: #7b897e;
+            font-size: 0.87rem;
+            line-height: 1.85;
+        }
+
+        .pa-welcome__workspace {
+            margin-bottom: 75px;
+            padding: 35px;
+            border: 1px solid #dfe9dc;
+            border-radius: 25px;
+            background: #f1f6ee;
+        }
+
+            .pa-welcome__workspace .pa-welcome__section-header {
+                margin-bottom: 23px;
+            }
+
+        .pa-welcome__workspace-grid {
+            display: grid;
+            grid-template-columns: repeat( auto-fit, minmax(min(100%, 260px), 1fr) );
+            gap: 15px;
+        }
+
+        .pa-welcome__workspace-card {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 0;
+            min-height: 208px;
+            padding: 25px;
+            border: 1px solid #e0e8dd;
+            border-radius: 17px;
+            background: #fffefa;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+        }
+
+            .pa-welcome__workspace-card:hover {
+                transform: translateY(-3px);
+                border-color: #bcd3bf;
+                box-shadow: 0 16px 30px rgba(23, 61, 50, 0.075);
+            }
+
+        .pa-welcome__workspace-icon {
+            display: grid;
+            width: 45px;
+            height: 45px;
+            margin-bottom: 17px;
+            place-items: center;
+            border-radius: 13px;
+            background: #e9f2e6;
+            color: #245847;
+        }
+
+            .pa-welcome__workspace-icon svg {
+                width: 23px;
+                height: 23px;
+            }
+
+        .pa-welcome__workspace-card > div {
+            flex: 1;
+        }
+
+        .pa-welcome__workspace-card h3 {
+            margin: 0 0 7px;
+            color: #244d35;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .pa-welcome__workspace-card p {
+            margin: 0;
+            color: #829084;
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }
+
+        .pa-welcome__workspace-arrow {
+            align-self: flex-end;
+            margin-top: 14px;
+            color: #c8914e;
+            font-size: 1.45rem;
+            line-height: 1;
+            transition: transform 220ms ease;
+        }
+
+        .pa-welcome__workspace-card:hover
+        .pa-welcome__workspace-arrow {
+            transform: translateX(4px);
+        }
+
+        .pa-welcome__featured {
+            margin-bottom: 80px;
+        }
+
+        .pa-welcome__featured-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .pa-welcome__view-all {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 45px;
+            padding: 11px 17px;
+            border: 1px solid #d8e7d7;
+            border-radius: 11px;
+            background: #eef5eb;
+            color: #245847;
+            font-size: 0.83rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: background-color 200ms ease, border-color 200ms ease;
+        }
+
+            .pa-welcome__view-all:hover {
+                border-color: #b8d0bb;
+                background: #e4f0e2;
+                color: #173d32;
+            }
+
+            .pa-welcome__view-all svg {
+                width: 18px;
+                height: 18px;
+            }
+
+        .pa-welcome__pet-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 23px;
+        }
+
+        .pa-welcome__pet-card {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid #e2eae0;
+            border-radius: 23px;
+            background: #fffefa;
+            box-shadow: 0 12px 32px rgba(23, 61, 50, 0.045);
+            transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
+        }
+
+            .pa-welcome__pet-card:hover {
+                transform: translateY(-5px);
+                border-color: #c7d9c8;
+                box-shadow: 0 23px 43px rgba(23, 61, 50, 0.1);
+            }
+
+        .pa-welcome__pet-media {
+            position: relative;
+            height: 255px;
+            overflow: hidden;
+            background: #e7eee4;
+        }
+
+        .pa-welcome__pet-image {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 650ms ease;
+        }
+
+        .pa-welcome__pet-card:hover
+        .pa-welcome__pet-image {
+            transform: scale(1.05);
+        }
+
+        .pa-welcome__pet-fallback {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            background: radial-gradient( circle at 60% 40%, rgba(244, 197, 122, 0.2), transparent 50% ), linear-gradient(140deg, #e3ede0, #f4f2e8);
+            color: #5d866a;
+        }
+
+            .pa-welcome__pet-fallback svg {
+                width: 105px;
+                height: 105px;
+                opacity: 0.8;
+            }
+
+        .pa-welcome__pet-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
+            backdrop-filter: blur(8px);
+        }
+
+            .pa-welcome__pet-status > span {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+
+        .pa-welcome__pet-status--available {
+            background: rgba(233, 247, 237, 0.96);
+            color: #2f7c4c;
+        }
+
+        .pa-welcome__pet-status--reserved {
+            background: rgba(255, 246, 225, 0.96);
+            color: #a57629;
+        }
+
+        .pa-welcome__pet-status--adopted {
+            background: rgba(241, 243, 241, 0.96);
+            color: #66776a;
+        }
+
+        .pa-welcome__pet-status--unknown {
+            background: rgba(255, 255, 255, 0.95);
+            color: #576c5a;
+        }
+
+        .pa-welcome__pet-species {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            z-index: 2;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(23, 61, 50, 0.87);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 800;
+            backdrop-filter: blur(8px);
+        }
+
+        .pa-welcome__pet-body {
+            flex: 1;
+            padding: 25px 24px 22px;
+        }
+
+        .pa-welcome__pet-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+            .pa-welcome__pet-heading > div {
+                min-width: 0;
+            }
+
+        .pa-welcome__pet-eyebrow {
+            display: block;
+            margin-bottom: 8px;
+            color: #a17c49;
+            font-size: 0.64rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-welcome__pet-heading h3 {
+            margin: 0 0 6px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.65rem, 2.2vw, 2rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+            line-height: 1.22;
+            overflow-wrap: anywhere;
+        }
+
+            .pa-welcome__pet-heading h3 a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+                .pa-welcome__pet-heading h3 a:hover {
+                    color: #b47d40;
+                }
+
+        .pa-welcome__pet-breed {
+            margin: 0;
+            color: #89978b;
+            font-size: 0.81rem;
+            line-height: 1.55;
+        }
+
+        .pa-welcome__pet-age {
+            flex-shrink: 0;
+            padding: 9px 11px;
+            border: 1px solid #dce8d9;
+            border-radius: 11px;
+            background: #f0f5ee;
+            color: #426a4b;
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .pa-welcome__pet-description {
+            display: -webkit-box;
+            min-height: 4.9em;
+            margin: 21px 0;
+            overflow: hidden;
+            color: #738277;
+            font-size: 0.86rem;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+        }
+
+        .pa-welcome__pet-shelter {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding-top: 17px;
+            border-top: 1px solid #e9eee6;
+            color: #627a68;
+            font-size: 0.8rem;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+            .pa-welcome__pet-shelter svg {
+                width: 18px;
+                height: 18px;
+                flex-shrink: 0;
+                color: #719379;
+            }
+
+        .pa-welcome__pet-actions {
+            display: flex;
+            gap: 10px;
+            padding: 19px 24px 24px;
+            border-top: 1px solid #edf0e9;
+        }
+
+        .pa-welcome__pet-details,
+        .pa-welcome__pet-adopt {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 47px;
+            padding: 11px 15px;
+            border: 1px solid transparent;
+            border-radius: 11px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 200ms ease, border-color 200ms ease, transform 200ms ease;
+        }
+
+        .pa-welcome__pet-details {
+            flex: 1;
+            border-color: #d7e7d7;
+            background: #eff5ed;
+            color: #326346;
+        }
+
+            .pa-welcome__pet-details:hover {
+                border-color: #bbd2bc;
+                background: #e4f0e2;
+                color: #245847;
+            }
+
+        .pa-welcome__pet-adopt {
+            border-color: #245847;
+            background: #245847;
+            color: #fff;
+        }
+
+            .pa-welcome__pet-adopt:hover {
+                transform: translateY(-2px);
+                background: #173d32;
+                color: #fff;
+            }
+
+            .pa-welcome__pet-details svg,
+            .pa-welcome__pet-adopt svg {
+                width: 18px;
+                height: 18px;
+            }
+
+        .pa-welcome__empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 65px 25px;
+            border: 1px solid #e2eae0;
+            border-radius: 23px;
+            background: #fffefa;
+            text-align: center;
+        }
+
+        .pa-welcome__empty-icon {
+            display: grid;
+            width: 92px;
+            height: 92px;
+            margin-bottom: 22px;
+            place-items: center;
+            border-radius: 26px;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+            .pa-welcome__empty-icon svg {
+                width: 56px;
+                height: 56px;
+            }
+
+        .pa-welcome__empty h3 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .pa-welcome__empty p {
+            max-width: 470px;
+            margin: 14px 0 23px;
+            color: #819085;
+            font-size: 0.88rem;
+            line-height: 1.8;
+        }
+
+        .pa-welcome__empty-button {
+            padding: 12px 21px;
+            border-radius: 11px;
+            background: #245847;
+            color: #fff;
+            font-size: 0.83rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+            .pa-welcome__empty-button:hover {
+                background: #173d32;
+                color: #fff;
+            }
+
+        .pa-welcome__breed-cta {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 330px;
+            padding: clamp(35px, 5vw, 65px);
+            overflow: hidden;
+            isolation: isolate;
+            border-radius: 27px;
+            background: radial-gradient( circle at 85% 45%, rgba(244, 197, 122, 0.2), transparent 38% ), linear-gradient(125deg, #173d32, #245847);
+            box-shadow: 0 20px 45px rgba(23, 61, 50, 0.13);
+        }
+
+        .pa-welcome__breed-copy {
+            position: relative;
+            z-index: 2;
+            max-width: 690px;
+        }
+
+        .pa-welcome__breed-cta
+        .pa-welcome__section-eyebrow {
+            color: #f4c57a;
+        }
+
+        .pa-welcome__breed-cta h2 {
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.3rem, 4vw, 3.6rem);
+            font-weight: 600;
+            letter-spacing: -0.055em;
+            line-height: 1.16;
+        }
+
+            .pa-welcome__breed-cta h2 em {
+                color: #f4c57a;
+                font-weight: 500;
+            }
+
+        .pa-welcome__breed-cta p {
+            max-width: 540px;
+            margin: 20px 0 27px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.92rem;
+            line-height: 1.85;
+        }
+
+        .pa-welcome__breed-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
+            min-height: 51px;
+            padding: 13px 22px;
+            border: 1px solid #f4c57a;
+            border-radius: 12px;
+            background: #f4c57a;
+            color: #173d32;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: transform 220ms ease, box-shadow 220ms ease;
+        }
+
+            .pa-welcome__breed-button:hover {
+                transform: translateY(-2px);
+                color: #173d32;
+                box-shadow: 0 12px 25px rgba(0, 0, 0, 0.16);
+            }
+
+            .pa-welcome__breed-button svg {
+                width: 18px;
+                height: 18px;
+            }
+
+        .pa-welcome__breed-decoration {
+            position: absolute;
+            top: 50%;
+            right: 8%;
+            display: grid;
+            width: 235px;
+            height: 235px;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.23);
+            border-radius: 50%;
+            color: #f4c57a;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+            .pa-welcome__breed-decoration::before {
+                position: absolute;
+                inset: 32px;
+                border: 1px solid rgba(244, 197, 122, 0.22);
+                border-radius: 50%;
+                content: "";
+            }
+
+            .pa-welcome__breed-decoration svg {
+                position: relative;
+                width: 130px;
+                height: 130px;
+                opacity: 0.8;
+            }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-welcome__hero-photo,
+            .pa-welcome__step,
+            .pa-welcome__pet-card,
+            .pa-welcome__pet-image,
+            .pa-welcome__workspace-card,
+            .pa-welcome__button,
+            .pa-welcome__pet-adopt,
+            .pa-welcome__breed-button {
+                transition: none;
+            }
+
+                .pa-welcome__hero:hover .pa-welcome__hero-photo,
+                .pa-welcome__step:hover,
+                .pa-welcome__pet-card:hover,
+                .pa-welcome__pet-card:hover .pa-welcome__pet-image,
+                .pa-welcome__workspace-card:hover,
+                .pa-welcome__button:hover,
+                .pa-welcome__pet-adopt:hover,
+                .pa-welcome__breed-button:hover {
+                    transform: none;
+                }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .pa-welcome__hero {
+                grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+                min-height: 570px;
+            }
+
+            .pa-welcome__hero-copy {
+                padding: 44px;
+            }
+
+            .pa-welcome__hero h1 {
+                font-size: clamp(2.8rem, 4.7vw, 4rem);
+            }
+
+            .pa-welcome__hero-visual,
+            .pa-welcome__hero-photo {
+                min-height: 570px;
+            }
+
+            .pa-welcome__pet-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .pa-welcome__breed-decoration {
+                right: 2%;
+                opacity: 0.45;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-welcome__hero {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-welcome__hero-copy {
+                padding: 55px;
+            }
+
+            .pa-welcome__hero h1 {
+                max-width: 650px;
+                font-size: clamp(3rem, 6vw, 4.5rem);
+            }
+
+            .pa-welcome__hero-visual,
+            .pa-welcome__hero-photo {
+                height: 440px;
+                min-height: 440px;
+            }
+
+            .pa-welcome__hero-photo {
+                object-position: center 45%;
+            }
+
+            .pa-welcome__steps {
+                gap: 13px;
+            }
+
+            .pa-welcome__step {
+                padding: 22px;
+            }
+
+            .pa-welcome__step-number {
+                font-size: 2rem;
+            }
+
+            .pa-welcome__breed-decoration {
+                right: -40px;
+                opacity: 0.18;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-welcome {
+                margin-bottom: 35px;
+            }
+
+            .pa-welcome__hero {
+                border-radius: 22px;
+            }
+
+            .pa-welcome__hero-copy {
+                padding: 43px 32px;
+            }
+
+            .pa-welcome__hero h1 {
+                font-size: clamp(2.65rem, 7vw, 3.8rem);
+            }
+
+            .pa-welcome__hero-description {
+                font-size: 0.91rem;
+            }
+
+            .pa-welcome__hero-visual,
+            .pa-welcome__hero-photo {
+                height: 375px;
+                min-height: 375px;
+            }
+
+            .pa-welcome__journey {
+                padding: 63px 0;
+            }
+
+            .pa-welcome__steps {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-welcome__step {
+                padding: 25px;
+            }
+
+            .pa-welcome__workspace {
+                padding: 25px;
+                margin-bottom: 60px;
+            }
+
+            .pa-welcome__featured {
+                margin-bottom: 65px;
+            }
+
+            .pa-welcome__pet-media {
+                height: 225px;
+            }
+
+            .pa-welcome__pet-body {
+                padding: 21px;
+            }
+
+            .pa-welcome__pet-actions {
+                padding: 18px 21px 21px;
+            }
+
+            .pa-welcome__breed-cta {
+                border-radius: 22px;
+            }
+        }
+
+        @@media (max-width: 620px) {
+            .pa-welcome__pet-grid {
+                grid-template-columns: 1fr;
+                max-width: 470px;
+                margin-inline: auto;
+            }
+
+            .pa-welcome__pet-media {
+                height: 270px;
+            }
+
+            .pa-welcome__workspace-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-welcome__workspace-card {
+                min-height: auto;
+            }
+
+            .pa-welcome__featured-heading {
+                align-items: flex-start;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .pa-welcome__hero-copy {
+                padding: 37px 24px;
+            }
+
+            .pa-welcome__eyebrow {
+                font-size: 0.62rem;
+                letter-spacing: 0.09em;
+            }
+
+            .pa-welcome__hero h1 {
+                font-size: clamp(2.45rem, 10vw, 3.1rem);
+            }
+
+            .pa-welcome__hero-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .pa-welcome__button {
+                width: 100%;
+            }
+
+            .pa-welcome__hero-visual,
+            .pa-welcome__hero-photo {
+                height: 320px;
+                min-height: 320px;
+            }
+
+            .pa-welcome__photo-caption {
+                right: 15px;
+                bottom: 15px;
+                left: 15px;
+                padding: 14px;
+            }
+
+                .pa-welcome__photo-caption strong {
+                    font-size: 0.81rem;
+                }
+
+            .pa-welcome__journey {
+                padding: 55px 0;
+            }
+
+            .pa-welcome__section-header h2,
+            .pa-welcome__featured-heading h2 {
+                font-size: 2.1rem;
+            }
+
+            .pa-welcome__workspace {
+                padding: 19px;
+            }
+
+            .pa-welcome__pet-media {
+                height: 235px;
+            }
+
+            .pa-welcome__breed-cta {
+                padding: 36px 24px;
+            }
+
+                .pa-welcome__breed-cta h2 {
+                    font-size: 2.25rem;
+                }
+
+            .pa-welcome__breed-button {
+                width: 100%;
+            }
+
+            .pa-welcome__breed-decoration {
+                right: -95px;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            "use strict";
+
+            const images = document.querySelectorAll(
+                "[data-pa-welcome-image]"
+            );
+
+            images.forEach(image => {
+                const media = image.closest(
+                    ".pa-welcome__pet-media"
+                );
+
+                const fallback = media?.querySelector(
+                    ".pa-welcome__pet-fallback"
+                );
+
+                const showFallback = () => {
+                    image.hidden = true;
+
+                    if (fallback) {
+                        fallback.hidden = false;
+                    }
+                };
+
+                image.addEventListener(
+                    "error",
+                    showFallback,
+                    { once: true }
+                );
+
+                if (image.complete && image.naturalWidth === 0) {
+                    showFallback();
+                }
+            });
+        })();
+    </script>
+}

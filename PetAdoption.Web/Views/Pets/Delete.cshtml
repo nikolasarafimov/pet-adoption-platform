@@ -1,117 +1,1433 @@
-﻿@model PetAdoption.Application.DTOs.PetDto
+﻿
+@model PetAdoption.Application.DTOs.PetDto
 
 @{
     ViewData["Title"] = "Delete Pet";
+    ViewData["Description"] = "Review the pet profile before confirming its deletion.";
 
-    var imageUrl =
-        string.IsNullOrWhiteSpace(Model.ImageUrl)
-            ? "https://placehold.co/800x600?text="
-              + Uri.EscapeDataString(Model.Name)
-            : Model.ImageUrl;
+    var petName = string.IsNullOrWhiteSpace(Model.Name)
+        ? "Unnamed Pet"
+        : Model.Name.Trim();
+
+    var breed = string.IsNullOrWhiteSpace(Model.Breed)
+        ? "Not specified"
+        : Model.Breed;
+
+    var shelterName = string.IsNullOrWhiteSpace(Model.ShelterName)
+        ? "Not specified"
+        : Model.ShelterName;
+
+    var hasImage = Uri.TryCreate(
+        Model.ImageUrl,
+        UriKind.Absolute,
+        out var imageUri
+    ) && (
+        imageUri.Scheme == Uri.UriSchemeHttps ||
+        imageUri.Scheme == Uri.UriSchemeHttp
+    );
+
+    var errorMessage = TempData["err"]?.ToString();
 }
 
-<div class="row justify-content-center">
-    <div class="col-xl-9">
-        <div class="card overflow-hidden">
-            <div class="row g-0">
-                <div class="col-lg-5">
-                    <img src="@imageUrl"
-                         alt="@Model.Name"
-                         class="w-100 h-100 object-fit-cover"
-                         style="min-height: 460px;" />
-                </div>
+<div class="pa-pet-delete">
 
-                <div class="col-lg-7">
-                    <div class="p-4 p-md-5">
-                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mb-4"
-                             style="width: 68px; height: 68px;">
-                            <span class="fs-3">
-                                🗑️
-                            </span>
-                        </div>
+    <nav class="pa-pet-delete__breadcrumb"
+         aria-label="Breadcrumb">
 
-                        <div class="text-danger fw-semibold text-uppercase small mb-2">
-                            Permanent Action
-                        </div>
+        <a asp-controller="Home"
+           asp-action="Welcome">
+            Home
+        </a>
 
-                        <h1 class="section-title mb-3">
-                            Delete @Model.Name?
-                        </h1>
+        <span aria-hidden="true">/</span>
 
-                        <p class="section-subtitle mb-4">
-                            This pet will be permanently removed from the platform.
-                        </p>
+        <a asp-controller="Pets"
+           asp-action="Index">
+            Pet Management
+        </a>
 
-                        <div class="bg-light rounded-4 p-4 mb-4">
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    <div class="small text-muted">
-                                        Species
-                                    </div>
+        <span aria-hidden="true">/</span>
 
-                                    <div class="fw-semibold">
-                                        @Model.Species
-                                    </div>
-                                </div>
+        <a asp-controller="Pets"
+           asp-action="Details"
+           asp-route-id="@Model.Id">
+            @petName
+        </a>
 
-                                <div class="col-6">
-                                    <div class="small text-muted">
-                                        Breed
-                                    </div>
+        <span aria-hidden="true">/</span>
 
-                                    <div class="fw-semibold">
-                                        @(Model.Breed ?? "-")
-                                    </div>
-                                </div>
+        <span aria-current="page">
+            Delete
+        </span>
+    </nav>
 
-                                <div class="col-6">
-                                    <div class="small text-muted">
-                                        Status
-                                    </div>
+    <header class="pa-pet-delete__hero">
 
-                                    <div class="fw-semibold">
-                                        @Model.Status
-                                    </div>
-                                </div>
+        <div class="pa-pet-delete__hero-content">
 
-                                <div class="col-6">
-                                    <div class="small text-muted">
-                                        Shelter
-                                    </div>
+            <div class="pa-pet-delete__eyebrow">
+                <span class="pa-pet-delete__eyebrow-dot"></span>
+                PET MANAGEMENT
+            </div>
 
-                                    <div class="fw-semibold">
-                                        @Model.ShelterName
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            <h1>
+                A decision that
+                <span>deserves a second look.</span>
+            </h1>
 
-                        <div class="alert alert-warning">
-                            This action cannot be undone.
-                        </div>
+            <p>
+                You're about to remove a pet profile.
+                Review the information carefully before
+                confirming this action.
+            </p>
 
-                        <form asp-action="Delete"
-                              method="post">
+            <a asp-controller="Pets"
+               asp-action="Index"
+               class="pa-pet-delete__hero-back">
 
-                            <input type="hidden"
-                                   name="id"
-                                   value="@Model.Id" />
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
 
-                            <div class="d-flex flex-column flex-sm-row gap-2">
-                                <button type="submit"
-                                        class="btn btn-danger flex-grow-1">
-                                    Delete Pet
-                                </button>
+                    <path d="M19 12H5" />
+                    <path d="m11 18-6-6 6-6" />
+                </svg>
 
-                                <a asp-action="Index"
-                                   class="btn btn-outline-secondary">
-                                    Keep Pet
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                Back to Pet Management
+            </a>
+        </div>
+
+        <div class="pa-pet-delete__hero-art"
+             aria-hidden="true">
+
+            <span class="pa-pet-delete__art-ring"></span>
+            <span class="pa-pet-delete__art-ring-inner"></span>
+
+            <div class="pa-pet-delete__art-icon">
+
+                <svg viewBox="0 0 64 64"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.4"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <circle cx="18" cy="20" r="4" />
+                    <circle cx="30" cy="13" r="4" />
+                    <circle cx="43" cy="20" r="4" />
+                    <circle cx="51" cy="31" r="4" />
+
+                    <path d="M32 31c-8 0-11 8-17 15-4 5-1 12 5 12 5 0 7-3 12-3s7 3 12 3c6 0 9-7 5-12-6-7-9-15-17-15Z" />
+                </svg>
             </div>
         </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="pa-pet-delete__error"
+             role="alert">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v6" />
+                <path d="M12 17h.01" />
+            </svg>
+
+            <div>
+                <strong>Unable to delete pet</strong>
+                <p>@errorMessage</p>
+            </div>
+        </div>
+    }
+
+    <div class="pa-pet-delete__layout">
+
+        <main class="pa-pet-delete__main">
+
+            <section class="pa-pet-delete__panel"
+                     aria-labelledby="deletePetTitle">
+
+                <div class="pa-pet-delete__panel-heading">
+
+                    <div class="pa-pet-delete__danger-icon"
+                         aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="M6 6l1 15h10l1-15" />
+                            <path d="M10 10v7" />
+                            <path d="M14 10v7" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <span class="pa-pet-delete__section-label">
+                            PERMANENT ACTION
+                        </span>
+
+                        <h2 id="deletePetTitle">
+                            Delete this pet?
+                        </h2>
+
+                        <p>
+                            Please confirm that you have
+                            selected the correct pet profile.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pa-pet-delete__profile">
+
+                    <div class="pa-pet-delete__profile-image">
+
+                        @if (hasImage)
+                        {
+                            <img src="@Model.ImageUrl"
+                                 alt="Photo of @petName"
+                                 id="deletePetImage"
+                                 decoding="async" />
+                        }
+
+                        <div id="deletePetFallback"
+                             class="pa-pet-delete__image-fallback"
+                             hidden="@hasImage"
+                             aria-hidden="true">
+
+                            <svg viewBox="0 0 80 80"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <circle cx="20" cy="24" r="5" />
+                                <circle cx="34" cy="15" r="5" />
+                                <circle cx="49" cy="22" r="5" />
+                                <circle cx="61" cy="36" r="5" />
+
+                                <path d="M37 35c-9 0-13 9-20 17-5 6-1 15 6 15 6 0 9-4 14-4s8 4 14 4c7 0 11-9 6-15-7-8-11-17-20-17Z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="pa-pet-delete__profile-info">
+
+                        <span class="pa-pet-delete__profile-eyebrow">
+                            SELECTED PET PROFILE
+                        </span>
+
+                        <h3>@petName</h3>
+
+                        <span class="pa-pet-delete__profile-id">
+                            Pet ID #@Model.Id
+                        </span>
+
+                        <div class="pa-pet-delete__profile-status">
+
+                            <span class="pa-pet-delete__status-dot"></span>
+
+                            @Model.Status
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pa-pet-delete__details-heading">
+
+                    <span class="pa-pet-delete__section-label">
+                        PROFILE INFORMATION
+                    </span>
+
+                    <h3>Review the details</h3>
+                </div>
+
+                <dl class="pa-pet-delete__details">
+
+                    <div class="pa-pet-delete__detail">
+
+                        <dt>Species</dt>
+
+                        <dd>@Model.Species</dd>
+                    </div>
+
+                    <div class="pa-pet-delete__detail">
+
+                        <dt>Breed</dt>
+
+                        <dd>@breed</dd>
+                    </div>
+
+                    <div class="pa-pet-delete__detail">
+
+                        <dt>Age</dt>
+
+                        <dd>
+                            @Model.AgeYears
+                            @(Model.AgeYears == 1 ? "year" : "years")
+                        </dd>
+                    </div>
+
+                    <div class="pa-pet-delete__detail">
+
+                        <dt>Status</dt>
+
+                        <dd>@Model.Status</dd>
+                    </div>
+
+                    <div class="pa-pet-delete__detail
+                                pa-pet-delete__detail--full">
+
+                        <dt>Registered Shelter</dt>
+
+                        <dd>@shelterName</dd>
+                    </div>
+                </dl>
+
+                <div class="pa-pet-delete__warning"
+                     role="note">
+
+                    <div class="pa-pet-delete__warning-icon"
+                         aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M10.3 3.9 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+                            <path d="M12 9v5" />
+                            <path d="M12 18h.01" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>
+                            Please review before continuing
+                        </strong>
+
+                        <p>
+                            If the deletion is completed,
+                            this pet profile will be removed
+                            from the platform. This action
+                            cannot be undone through this page.
+                        </p>
+                    </div>
+                </div>
+
+                <form asp-controller="Pets"
+                      asp-action="Delete"
+                      method="post"
+                      asp-antiforgery="true"
+                      class="pa-pet-delete__form">
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.Id" />
+
+                    <div class="pa-pet-delete__form-info">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 11v5" />
+                            <path d="M12 8h.01" />
+                        </svg>
+
+                        <span>
+                            Choose Keep Pet to return
+                            without making changes.
+                        </span>
+                    </div>
+
+                    <div class="pa-pet-delete__actions">
+
+                        <a asp-controller="Pets"
+                           asp-action="Index"
+                           class="pa-pet-delete__keep">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M19 12H5" />
+                                <path d="m11 18-6-6 6-6" />
+                            </svg>
+
+                            Keep Pet
+                        </a>
+
+                        <button type="submit"
+                                class="pa-pet-delete__submit">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4h8v2" />
+                                <path d="M6 6l1 15h10l1-15" />
+                                <path d="M10 10v7" />
+                                <path d="M14 10v7" />
+                            </svg>
+
+                            Delete Pet
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </main>
+
+        <aside class="pa-pet-delete__sidebar"
+               aria-label="Deletion guidance">
+
+            <section class="pa-pet-delete__guidance">
+
+                <div class="pa-pet-delete__guidance-icon"
+                     aria-hidden="true">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6Z" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                </div>
+
+                <span class="pa-pet-delete__section-label">
+                    BEFORE YOU CONTINUE
+                </span>
+
+                <h2>
+                    Make sure this
+                    <em>is the right decision.</em>
+                </h2>
+
+                <p>
+                    Pet profiles contain information
+                    that helps adopters learn about
+                    animals and their needs.
+                </p>
+
+                <div class="pa-pet-delete__guidance-divider"></div>
+
+                <div class="pa-pet-delete__guidance-item">
+
+                    <span class="pa-pet-delete__guidance-number">
+                        01
+                    </span>
+
+                    <div>
+                        <strong>Verify the profile</strong>
+
+                        <p>
+                            Check the pet's name,
+                            breed and shelter.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pa-pet-delete__guidance-item">
+
+                    <span class="pa-pet-delete__guidance-number">
+                        02
+                    </span>
+
+                    <div>
+                        <strong>Consider the status</strong>
+
+                        <p>
+                            Review whether the pet is
+                            available, reserved or adopted.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pa-pet-delete__guidance-item">
+
+                    <span class="pa-pet-delete__guidance-number">
+                        03
+                    </span>
+
+                    <div>
+                        <strong>Confirm your choice</strong>
+
+                        <p>
+                            Proceed only if you intend
+                            to request deletion.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pa-pet-delete__alternative">
+
+                <div class="pa-pet-delete__alternative-icon"
+                     aria-hidden="true">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="m15 5 4 4" />
+                        <path d="M4 20h4l12-12a2.8 2.8 0 0 0-4-4L4 16Z" />
+                    </svg>
+                </div>
+
+                <h3>Need to make changes instead?</h3>
+
+                <p>
+                    If the information is outdated
+                    or incorrect, editing the profile
+                    may be a better option.
+                </p>
+
+                <a asp-controller="Pets"
+                   asp-action="Edit"
+                   asp-route-id="@Model.Id">
+
+                    Edit Pet Profile
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                    </svg>
+                </a>
+            </section>
+        </aside>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .pa-pet-delete {
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto 60px;
+            color: #173d32;
+        }
+
+        .pa-pet-delete [hidden] {
+            display: none !important;
+        }
+
+        .pa-pet-delete__breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+            color: #89968b;
+            font-size: .82rem;
+        }
+
+        .pa-pet-delete__breadcrumb a {
+            color: #637a69;
+            text-decoration: none;
+        }
+
+        .pa-pet-delete__breadcrumb a:hover {
+            color: #c8914e;
+        }
+
+        .pa-pet-delete__breadcrumb [aria-current="page"] {
+            color: #173d32;
+            font-weight: 700;
+        }
+
+        .pa-pet-delete__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            min-height: 290px;
+            margin-bottom: 30px;
+            padding: clamp(30px, 4.5vw, 58px);
+            overflow: hidden;
+            border-radius: 28px;
+            background:
+                radial-gradient(
+                    circle at 85% 45%,
+                    rgba(244,197,122,.15),
+                    transparent 38%
+                ),
+                linear-gradient(125deg,#173d32,#245847);
+            box-shadow: 0 22px 48px rgba(23,61,50,.15);
+        }
+
+        .pa-pet-delete__hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 720px;
+        }
+
+        .pa-pet-delete__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 22px;
+            color: #f4c57a;
+            font-size: .71rem;
+            font-weight: 800;
+            letter-spacing: .14em;
+        }
+
+        .pa-pet-delete__eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 0 5px rgba(244,197,122,.13);
+        }
+
+        .pa-pet-delete__hero h1 {
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces",Georgia,serif;
+            font-size: clamp(2.5rem,4.5vw,4.15rem);
+            font-weight: 600;
+            letter-spacing: -.055em;
+            line-height: 1.12;
+        }
+
+        .pa-pet-delete__hero h1 span {
+            display: block;
+            color: #f4c57a;
+        }
+
+        .pa-pet-delete__hero p {
+            max-width: 550px;
+            margin: 22px 0;
+            color: rgba(255,255,255,.82);
+            font-size: .94rem;
+            line-height: 1.85;
+        }
+
+        .pa-pet-delete__hero-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #fff;
+            font-size: .84rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-pet-delete__hero-back:hover {
+            color: #f4c57a;
+        }
+
+        .pa-pet-delete__hero-back svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pa-pet-delete__hero-art {
+            position: relative;
+            display: grid;
+            width: 225px;
+            height: 225px;
+            flex-shrink: 0;
+            place-items: center;
+            margin-right: 15px;
+        }
+
+        .pa-pet-delete__art-ring,
+        .pa-pet-delete__art-ring-inner {
+            position: absolute;
+            border: 1px solid rgba(244,197,122,.23);
+            border-radius: 50%;
+        }
+
+        .pa-pet-delete__art-ring {
+            inset: 0;
+        }
+
+        .pa-pet-delete__art-ring-inner {
+            inset: 35px;
+            background: rgba(255,255,255,.04);
+        }
+
+        .pa-pet-delete__art-icon {
+            position: relative;
+            display: grid;
+            width: 118px;
+            height: 118px;
+            place-items: center;
+            border: 1px solid rgba(244,197,122,.3);
+            border-radius: 34px;
+            background: rgba(244,197,122,.12);
+            color: #f4c57a;
+            transform: rotate(-7deg);
+        }
+
+        .pa-pet-delete__art-icon svg {
+            width: 70px;
+            height: 70px;
+            transform: rotate(7deg);
+        }
+
+        .pa-pet-delete__error {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            margin-bottom: 25px;
+            padding: 17px 20px;
+            border: 1px solid #efcbc6;
+            border-radius: 14px;
+            background: #fff1ee;
+            color: #a9443a;
+        }
+
+        .pa-pet-delete__error svg {
+            width: 21px;
+            height: 21px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .pa-pet-delete__error strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: .88rem;
+        }
+
+        .pa-pet-delete__error p {
+            margin: 0;
+            font-size: .84rem;
+            line-height: 1.7;
+        }
+
+        .pa-pet-delete__layout {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) 320px;
+            align-items: start;
+            gap: 25px;
+        }
+
+        .pa-pet-delete__main,
+        .pa-pet-delete__sidebar {
+            min-width: 0;
+        }
+
+        .pa-pet-delete__panel {
+            padding: clamp(24px,3.4vw,42px);
+            border: 1px solid #e3eae1;
+            border-radius: 24px;
+            background: #fffefa;
+            box-shadow: 0 13px 35px rgba(23,61,50,.045);
+        }
+
+        .pa-pet-delete__panel-heading {
+            display: flex;
+            align-items: center;
+            gap: 17px;
+            margin-bottom: 28px;
+        }
+
+        .pa-pet-delete__danger-icon {
+            display: grid;
+            width: 61px;
+            height: 61px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #f0d5cf;
+            border-radius: 18px;
+            background: #fff0ed;
+            color: #b55349;
+        }
+
+        .pa-pet-delete__danger-icon svg {
+            width: 29px;
+            height: 29px;
+        }
+
+        .pa-pet-delete__section-label {
+            display: block;
+            margin-bottom: 9px;
+            color: #aa7845;
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .13em;
+        }
+
+        .pa-pet-delete__panel-heading .pa-pet-delete__section-label {
+            color: #b55b51;
+        }
+
+        .pa-pet-delete__panel-heading h2 {
+            margin: 0 0 7px;
+            color: #173d32;
+            font-family: "Fraunces",Georgia,serif;
+            font-size: clamp(1.65rem,2.6vw,2.2rem);
+            font-weight: 600;
+            letter-spacing: -.045em;
+        }
+
+        .pa-pet-delete__panel-heading p {
+            margin: 0;
+            color: #819085;
+            font-size: .85rem;
+            line-height: 1.7;
+        }
+
+        .pa-pet-delete__profile {
+            display: grid;
+            grid-template-columns: 205px minmax(0,1fr);
+            gap: 23px;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 15px;
+            border: 1px solid #e2eae0;
+            border-radius: 19px;
+            background: #f8faf6;
+        }
+
+        .pa-pet-delete__profile-image {
+            position: relative;
+            height: 185px;
+            overflow: hidden;
+            border-radius: 14px;
+            background: #e8efe4;
+        }
+
+        .pa-pet-delete__profile-image img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pa-pet-delete__image-fallback {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            background: linear-gradient(135deg,#e4eee1,#f5f2e8);
+            color: #668f71;
+        }
+
+        .pa-pet-delete__image-fallback svg {
+            width: 78px;
+            height: 78px;
+        }
+
+        .pa-pet-delete__profile-eyebrow {
+            display: block;
+            margin-bottom: 9px;
+            color: #a17c49;
+            font-size: .67rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+        }
+
+        .pa-pet-delete__profile-info h3 {
+            margin: 0 0 7px;
+            color: #173d32;
+            font-family: "Fraunces",Georgia,serif;
+            font-size: clamp(1.7rem,2.6vw,2.3rem);
+            font-weight: 600;
+            letter-spacing: -.045em;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-pet-delete__profile-id {
+            display: block;
+            margin-bottom: 16px;
+            color: #89978c;
+            font-size: .8rem;
+        }
+
+        .pa-pet-delete__profile-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 13px;
+            border: 1px solid #d9e7d7;
+            border-radius: 999px;
+            background: #edf5eb;
+            color: #4b7354;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+        .pa-pet-delete__status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .pa-pet-delete__details-heading {
+            margin-bottom: 18px;
+        }
+
+        .pa-pet-delete__details-heading h3 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces",Georgia,serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: -.035em;
+        }
+
+        .pa-pet-delete__details {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 12px;
+            margin: 0;
+        }
+
+        .pa-pet-delete__detail {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid #e5ece2;
+            border-radius: 14px;
+            background: #f8faf6;
+        }
+
+        .pa-pet-delete__detail--full {
+            grid-column: 1 / -1;
+        }
+
+        .pa-pet-delete__detail dt {
+            margin-bottom: 7px;
+            color: #91a093;
+            font-size: .74rem;
+            font-weight: 700;
+        }
+
+        .pa-pet-delete__detail dd {
+            margin: 0;
+            color: #365542;
+            font-size: .9rem;
+            font-weight: 800;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-pet-delete__warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-top: 27px;
+            padding: 20px;
+            border: 1px solid #f0d9c3;
+            border-radius: 16px;
+            background: #fff8ef;
+        }
+
+        .pa-pet-delete__warning-icon {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 12px;
+            background: #f9e8d3;
+            color: #a77438;
+        }
+
+        .pa-pet-delete__warning-icon svg {
+            width: 23px;
+            height: 23px;
+        }
+
+        .pa-pet-delete__warning strong {
+            display: block;
+            margin-bottom: 7px;
+            color: #8f6031;
+            font-size: .88rem;
+        }
+
+        .pa-pet-delete__warning p {
+            margin: 0;
+            color: #9a7d5d;
+            font-size: .82rem;
+            line-height: 1.8;
+        }
+
+        .pa-pet-delete__form {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e8eee6;
+        }
+
+        .pa-pet-delete__form-info {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 20px;
+            color: #819085;
+            font-size: .8rem;
+            line-height: 1.6;
+        }
+
+        .pa-pet-delete__form-info svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: #79927d;
+        }
+
+        .pa-pet-delete__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pa-pet-delete__keep,
+        .pa-pet-delete__submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 52px;
+            padding: 13px 22px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-size: .85rem;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+            transition:
+                background-color .2s,
+                border-color .2s,
+                transform .2s,
+                box-shadow .2s;
+        }
+
+        .pa-pet-delete__keep {
+            border-color: #d9e6d9;
+            background: #fff;
+            color: #536e5a;
+        }
+
+        .pa-pet-delete__keep:hover {
+            border-color: #b8d1bb;
+            background: #edf5eb;
+            color: #173d32;
+        }
+
+        .pa-pet-delete__submit {
+            flex: 1;
+            border-color: #ac493f;
+            background: linear-gradient(135deg,#c96558,#a94239);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .pa-pet-delete__submit:hover {
+            transform: translateY(-2px);
+            background: #a94239;
+            color: #fff;
+            box-shadow: 0 12px 25px rgba(169,66,57,.19);
+        }
+
+        .pa-pet-delete__keep svg,
+        .pa-pet-delete__submit svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .pa-pet-delete__sidebar {
+            display: grid;
+            gap: 20px;
+        }
+
+        .pa-pet-delete__guidance {
+            padding: 28px;
+            border: 1px solid #e5e8dc;
+            border-radius: 22px;
+            background: #fbfaf4;
+        }
+
+        .pa-pet-delete__guidance-icon {
+            display: grid;
+            width: 48px;
+            height: 48px;
+            margin-bottom: 21px;
+            place-items: center;
+            border-radius: 14px;
+            background: #e7f0e4;
+            color: #245847;
+        }
+
+        .pa-pet-delete__guidance-icon svg {
+            width: 25px;
+            height: 25px;
+        }
+
+        .pa-pet-delete__guidance h2 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces",Georgia,serif;
+            font-size: 1.9rem;
+            font-weight: 600;
+            letter-spacing: -.045em;
+            line-height: 1.27;
+        }
+
+        .pa-pet-delete__guidance h2 em {
+            display: block;
+            color: #c8914e;
+            font-weight: 500;
+        }
+
+        .pa-pet-delete__guidance > p {
+            margin: 16px 0 0;
+            color: #7e8b80;
+            font-size: .84rem;
+            line-height: 1.85;
+        }
+
+        .pa-pet-delete__guidance-divider {
+            height: 1px;
+            margin: 26px 0;
+            background: #e4e9de;
+        }
+
+        .pa-pet-delete__guidance-item {
+            display: flex;
+            gap: 13px;
+            margin-bottom: 23px;
+        }
+
+        .pa-pet-delete__guidance-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .pa-pet-delete__guidance-number {
+            display: grid;
+            width: 31px;
+            height: 31px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #d8e5d6;
+            border-radius: 9px;
+            background: #edf5eb;
+            color: #54745b;
+            font-size: .72rem;
+            font-weight: 800;
+        }
+
+        .pa-pet-delete__guidance-item strong {
+            display: block;
+            margin: 4px 0 6px;
+            color: #375841;
+            font-size: .84rem;
+        }
+
+        .pa-pet-delete__guidance-item p {
+            margin: 0;
+            color: #859186;
+            font-size: .79rem;
+            line-height: 1.75;
+        }
+
+        .pa-pet-delete__alternative {
+            padding: 25px;
+            border: 1px solid #dce9de;
+            border-radius: 21px;
+            background: #eff5ed;
+        }
+
+        .pa-pet-delete__alternative-icon {
+            display: grid;
+            width: 43px;
+            height: 43px;
+            margin-bottom: 17px;
+            place-items: center;
+            border-radius: 13px;
+            background: #dcebd9;
+            color: #245847;
+        }
+
+        .pa-pet-delete__alternative-icon svg {
+            width: 23px;
+            height: 23px;
+        }
+
+        .pa-pet-delete__alternative h3 {
+            margin: 0 0 11px;
+            color: #244d35;
+            font-family: "Fraunces",Georgia,serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -.03em;
+        }
+
+        .pa-pet-delete__alternative p {
+            margin: 0 0 20px;
+            color: #728675;
+            font-size: .82rem;
+            line-height: 1.8;
+        }
+
+        .pa-pet-delete__alternative a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 43px;
+            padding: 10px 14px;
+            border: 1px solid #c7ddc8;
+            border-radius: 11px;
+            background: #fffefa;
+            color: #245847;
+            font-size: .8rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-pet-delete__alternative a:hover {
+            border-color: #99ba9e;
+            background: #e6f1e4;
+            color: #173d32;
+        }
+
+        .pa-pet-delete__alternative a svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .pa-pet-delete a:focus-visible,
+        .pa-pet-delete button:focus-visible {
+            outline: 3px solid #c8914e;
+            outline-offset: 3px;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .pa-pet-delete__layout {
+                grid-template-columns: minmax(0,1fr) 285px;
+            }
+
+            .pa-pet-delete__hero-art {
+                width: 190px;
+                height: 190px;
+                margin-right: 0;
+            }
+
+            .pa-pet-delete__panel {
+                padding: 28px;
+            }
+
+            .pa-pet-delete__profile {
+                grid-template-columns: 170px minmax(0,1fr);
+            }
+
+            .pa-pet-delete__profile-image {
+                height: 160px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-pet-delete__layout {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-pet-delete__sidebar {
+                grid-template-columns: repeat(2,minmax(0,1fr));
+                align-items: start;
+            }
+
+            .pa-pet-delete__hero-art {
+                position: absolute;
+                right: -40px;
+                opacity: .18;
+                pointer-events: none;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-pet-delete__hero {
+                min-height: auto;
+                padding: 34px;
+                border-radius: 22px;
+            }
+
+            .pa-pet-delete__panel {
+                border-radius: 20px;
+            }
+
+            .pa-pet-delete__sidebar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 520px) {
+            .pa-pet-delete {
+                margin-bottom: 30px;
+            }
+
+            .pa-pet-delete__breadcrumb {
+                gap: 8px;
+                font-size: .75rem;
+            }
+
+            .pa-pet-delete__hero {
+                padding: 29px 23px;
+            }
+
+            .pa-pet-delete__hero h1 {
+                font-size: clamp(2.2rem,9vw,3rem);
+            }
+
+            .pa-pet-delete__hero p {
+                font-size: .87rem;
+            }
+
+            .pa-pet-delete__panel {
+                padding: 23px 18px;
+            }
+
+            .pa-pet-delete__panel-heading {
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .pa-pet-delete__danger-icon {
+                width: 45px;
+                height: 45px;
+                border-radius: 13px;
+            }
+
+            .pa-pet-delete__danger-icon svg {
+                width: 23px;
+                height: 23px;
+            }
+
+            .pa-pet-delete__profile {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .pa-pet-delete__profile-image {
+                height: 220px;
+            }
+
+            .pa-pet-delete__profile-info {
+                padding: 4px 5px 9px;
+            }
+
+            .pa-pet-delete__details {
+                gap: 9px;
+            }
+
+            .pa-pet-delete__detail {
+                padding: 14px;
+            }
+
+            .pa-pet-delete__warning {
+                padding: 16px;
+            }
+
+            .pa-pet-delete__warning-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pa-pet-delete__warning-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .pa-pet-delete__actions {
+                flex-direction: column-reverse;
+            }
+
+            .pa-pet-delete__keep,
+            .pa-pet-delete__submit {
+                width: 100%;
+            }
+
+            .pa-pet-delete__guidance,
+            .pa-pet-delete__alternative {
+                padding: 23px;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-pet-delete *,
+            .pa-pet-delete *::before,
+            .pa-pet-delete *::after {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const image = document.getElementById("deletePetImage");
+            const fallback = document.getElementById("deletePetFallback");
+
+            if (!image || !fallback) {
+                return;
+            }
+
+            const showFallback = () => {
+                image.hidden = true;
+                fallback.hidden = false;
+            };
+
+            image.addEventListener("error", showFallback, {
+                once: true
+            });
+
+            if (image.complete && image.naturalWidth === 0) {
+                showFallback();
+            }
+        })();
+    </script>
+}

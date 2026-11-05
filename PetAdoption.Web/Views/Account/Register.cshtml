@@ -1,327 +1,1636 @@
 ﻿@model PetAdoption.Web.Models.Account.RegisterVm
 
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Create Account";
+    ViewData["Description"] = "Join PetAdoption as an adopter or shelter and become part of a community connecting pets with loving homes.";
 }
 
-<div class="row justify-content-center">
-    <div class="col-xl-11">
-        <div class="card overflow-hidden border-0">
-            <div class="row g-0">
-                <div class="col-lg-4 d-none d-lg-flex">
-                    <div class="w-100 p-5 text-white d-flex flex-column justify-content-between"
-                         style="background: linear-gradient(145deg, #064e3b 0%, #16a34a 55%, #2563eb 130%);">
+<section class="pa-register" aria-labelledby="registerTitle">
 
-                        <div>
-                            <div class="d-inline-flex align-items-center gap-2 mb-5">
-                                <span class="fs-3">🐾</span>
-                                <span class="fw-bold fs-5">
-                                    Pet Adoption
-                                </span>
-                            </div>
+    <div class="pa-register__shell">
 
-                            <h1 class="display-6 fw-bold text-white mb-4">
-                                Join the community.
-                            </h1>
+        <aside class="pa-register__visual">
 
-                            <p class="fs-5 text-white-50">
-                                Create an adopter account or register your shelter
-                                and start using the platform in minutes.
-                            </p>
-                        </div>
+            <img src="https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&amp;fit=crop&amp;w=1400&amp;q=85"
+                 alt=""
+                 class="pa-register__photo"
+                 decoding="async" />
 
-                        <div class="small text-white-50">
-                            <div class="mb-3">
-                                ✓ Discover pets available for adoption
-                            </div>
+            <div class="pa-register__overlay"></div>
 
-                            <div class="mb-3">
-                                ✓ Track adoption requests
-                            </div>
+            <div class="pa-register__visual-top">
+                <span class="pa-register__visual-badge">
+                    <svg class="pa-register__icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                    </svg>
 
-                            <div>
-                                ✓ Manage pets and requests as a shelter
-                            </div>
-                        </div>
-                    </div>
+                    A PLACE FOR SECOND CHANCES
+                </span>
+            </div>
+
+            <div class="pa-register__visual-content">
+
+                <div class="pa-register__visual-mark">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M3 10 12 3l9 7" />
+                        <path d="M5 9v11h14V9" />
+                        <path d="M9 20v-6h6v6" />
+                        <path d="M12 11c-2-3-5-1-4 1 1 2 4 4 4 4s3-2 4-4c1-2-2-4-4-1Z" />
+                    </svg>
                 </div>
 
-                <div class="col-lg-8">
-                    <div class="p-4 p-md-5">
-                        <div class="mb-4">
-                            <div class="text-success fw-semibold text-uppercase small mb-2">
-                                Get Started
+                <h2>
+                    A new chapter
+                    <em>starts with you.</em>
+                </h2>
+
+                <p>
+                    Whether you're searching for a companion
+                    or helping pets find their forever homes,
+                    your journey begins here.
+                </p>
+
+                <div class="pa-register__visual-features">
+
+                    <div class="pa-register__visual-feature">
+                        <span class="pa-register__feature-check">✓</span>
+                        Discover pets waiting for a home
+                    </div>
+
+                    <div class="pa-register__visual-feature">
+                        <span class="pa-register__feature-check">✓</span>
+                        Follow your adoption requests
+                    </div>
+
+                    <div class="pa-register__visual-feature">
+                        <span class="pa-register__feature-check">✓</span>
+                        Manage pets and requests as a shelter
+                    </div>
+                </div>
+            </div>
+
+            <div class="pa-register__visual-bottom">
+                <span class="pa-register__visual-line"></span>
+                ADOPT · LOVE · BELONG
+            </div>
+
+            <div class="pa-register__visual-glow"
+                 aria-hidden="true">
+            </div>
+        </aside>
+
+        <div class="pa-register__form-panel">
+
+            <div class="pa-register__form-inner">
+
+                <a asp-controller="Home"
+                   asp-action="Welcome"
+                   class="pa-register__brand"
+                   aria-label="PetAdoption home">
+
+                    <img src="~/images/logo.png"
+                         asp-append-version="true"
+                         alt="PetAdoption"
+                         class="pa-register__logo" />
+                </a>
+
+                <div class="pa-register__heading">
+
+                    <div class="pa-register__eyebrow">
+                        <span class="pa-register__eyebrow-line"></span>
+                        START SOMETHING WONDERFUL
+                    </div>
+
+                    <h1 id="registerTitle" class="pa-register__title">
+                        Join our
+                        <span>community.</span>
+                    </h1>
+
+                    <p class="pa-register__subtitle">
+                        Create your account and take the first step
+                        toward making a meaningful difference.
+                    </p>
+                </div>
+
+                <form asp-controller="Account"
+                      asp-action="Register"
+                      method="post"
+                      asp-antiforgery="true"
+                      id="registerForm"
+                      class="pa-register__form">
+
+                    <input asp-for="ReturnUrl"
+                           type="hidden" />
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="pa-register__validation"
+                         role="alert">
+                    </div>
+
+                    <fieldset class="pa-register__role-section">
+
+                        <legend class="pa-register__section-label">
+                            I want to join as
+                        </legend>
+
+                        <div class="pa-register__role-grid">
+
+                            <div class="pa-register__role-option">
+
+                                <input asp-for="IsShelter"
+                                       type="radio"
+                                       value="false"
+                                       id="adopterRole"
+                                       class="pa-register__role-input" />
+
+                                <label for="adopterRole"
+                                       class="pa-register__role-card">
+
+                                    <span class="pa-register__role-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="1.8"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round"
+                                             aria-hidden="true">
+                                            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                                        </svg>
+                                    </span>
+
+                                    <span class="pa-register__role-details">
+                                        <strong>Adopter</strong>
+                                        <small>Find your companion</small>
+                                    </span>
+
+                                    <span class="pa-register__role-indicator"
+                                          aria-hidden="true"></span>
+                                </label>
                             </div>
 
-                            <h2 class="section-title mb-2">
-                                Create your account
-                            </h2>
+                            <div class="pa-register__role-option">
 
-                            <p class="text-muted mb-0">
-                                Choose whether you are registering as an adopter
-                                or representing a shelter.
-                            </p>
+                                <input asp-for="IsShelter"
+                                       type="radio"
+                                       value="true"
+                                       id="shelterRole"
+                                       class="pa-register__role-input" />
+
+                                <label for="shelterRole"
+                                       class="pa-register__role-card">
+
+                                    <span class="pa-register__role-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="1.8"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round"
+                                             aria-hidden="true">
+                                            <path d="m3 10 9-7 9 7" />
+                                            <path d="M5 9v11h14V9" />
+                                            <path d="M9 20v-7h6v7" />
+                                        </svg>
+                                    </span>
+
+                                    <span class="pa-register__role-details">
+                                        <strong>Shelter</strong>
+                                        <small>Manage pet adoptions</small>
+                                    </span>
+
+                                    <span class="pa-register__role-indicator"
+                                          aria-hidden="true"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="pa-register__section-heading">
+                        <span class="pa-register__section-number">01</span>
+
+                        <div>
+                            <h2>Account details</h2>
+                            <p>Tell us a little about yourself.</p>
+                        </div>
+                    </div>
+
+                    <div class="pa-register__fields">
+
+                        <div class="pa-register__field">
+
+                            <label asp-for="FullName"
+                                   class="pa-register__label">
+                            </label>
+
+                            <div class="pa-register__input-wrap">
+
+                                <span class="pa-register__input-icon"
+                                      aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+                                        <circle cx="12" cy="8" r="4" />
+                                        <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+                                    </svg>
+                                </span>
+
+                                <input asp-for="FullName"
+                                       class="form-control pa-register__input"
+                                       autocomplete="name"
+                                       placeholder="Your full name"
+                                       aria-describedby="fullNameHint" />
+                            </div>
+
+                            <span id="fullNameHint"
+                                  class="pa-register__field-hint">
+                                @(Model.IsShelter
+                                                                ? "Optional for shelter accounts."
+                                                                : "Required for adopter accounts.")
+                            </span>
+
+                            <span asp-validation-for="FullName"
+                                  class="pa-register__field-error"></span>
                         </div>
 
-                        <form asp-action="Register"
-                              method="post"
-                              novalidate>
+                        <div class="pa-register__field">
 
-                            <input type="hidden"
-                                   asp-for="ReturnUrl" />
+                            <label asp-for="Email"
+                                   class="pa-register__label">
+                            </label>
 
-                            <div asp-validation-summary="All"
-                                 class="text-danger mb-3">
+                            <div class="pa-register__input-wrap">
+
+                                <span class="pa-register__input-icon"
+                                      aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+                                        <rect x="3" y="5" width="18" height="14" rx="3" />
+                                        <path d="m4 7 8 6 8-6" />
+                                    </svg>
+                                </span>
+
+                                <input asp-for="Email"
+                                       type="email"
+                                       maxlength="@(Model.IsShelter ? 256 : 128)"
+                                       class="form-control pa-register__input"
+                                       autocomplete="email"
+                                       inputmode="email"
+                                       placeholder="you@example.com" />
                             </div>
 
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label asp-for="FullName"
-                                           class="form-label">
-                                    </label>
+                            <span asp-validation-for="Email"
+                                  class="pa-register__field-error"></span>
+                        </div>
 
-                                    <input asp-for="FullName"
-                                           class="form-control"
-                                           autocomplete="name"
-                                           placeholder="Your full name" />
+                        <div class="pa-register__field">
 
-                                    <span asp-validation-for="FullName"
-                                          class="text-danger">
-                                    </span>
-                                </div>
+                            <label asp-for="Password"
+                                   class="pa-register__label">
+                            </label>
 
-                                <div class="col-md-6">
-                                    <label asp-for="Email"
-                                           class="form-label">
-                                    </label>
+                            <div class="pa-register__input-wrap">
 
-                                    <input asp-for="Email"
-                                           class="form-control"
-                                           autocomplete="email"
-                                           placeholder="you@example.com" />
+                                <span class="pa-register__input-icon"
+                                      aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+                                        <rect x="5" y="10" width="14" height="11" rx="2" />
+                                        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                                    </svg>
+                                </span>
 
-                                    <span asp-validation-for="Email"
-                                          class="text-danger">
-                                    </span>
-                                </div>
+                                <input asp-for="Password"
+                                       id="registerPassword"
+                                       type="password"
+                                       class="form-control pa-register__input pa-register__input--password"
+                                       autocomplete="new-password"
+                                       placeholder="Create a password" />
 
-                                <div class="col-md-6">
-                                    <label asp-for="Password"
-                                           class="form-label">
-                                    </label>
-
-                                    <input asp-for="Password"
-                                           id="registerPassword"
-                                           class="form-control"
-                                           autocomplete="new-password"
-                                           placeholder="Create a password" />
-
-                                    <span asp-validation-for="Password"
-                                          class="text-danger">
-                                    </span>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label asp-for="ConfirmPassword"
-                                           class="form-label">
-                                    </label>
-
-                                    <input asp-for="ConfirmPassword"
-                                           class="form-control"
-                                           autocomplete="new-password"
-                                           placeholder="Repeat your password" />
-
-                                    <span asp-validation-for="ConfirmPassword"
-                                          class="text-danger">
-                                    </span>
-                                </div>
+                                <button type="button"
+                                        class="pa-register__password-toggle"
+                                        data-pa-password-toggle="registerPassword"
+                                        aria-controls="registerPassword"
+                                        aria-label="Show password"
+                                        aria-pressed="false">
+                                    Show
+                                </button>
                             </div>
 
-                            <div class="bg-light rounded-4 p-3 mt-3 mb-4">
-                                <div class="small fw-semibold mb-1">
-                                    Password requirements
-                                </div>
+                            <span asp-validation-for="Password"
+                                  class="pa-register__field-error"></span>
+                        </div>
 
-                                <div class="small text-muted">
-                                    At least 8 characters with uppercase,
-                                    lowercase, a number and a special character.
-                                </div>
+                        <div class="pa-register__field">
+
+                            <label asp-for="ConfirmPassword"
+                                   class="pa-register__label">
+                            </label>
+
+                            <div class="pa-register__input-wrap">
+
+                                <span class="pa-register__input-icon"
+                                      aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+                                        <rect x="5" y="10" width="14" height="11" rx="2" />
+                                        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                                    </svg>
+                                </span>
+
+                                <input asp-for="ConfirmPassword"
+                                       id="registerConfirmPassword"
+                                       type="password"
+                                       class="form-control pa-register__input pa-register__input--password"
+                                       autocomplete="new-password"
+                                       placeholder="Repeat your password" />
+
+                                <button type="button"
+                                        class="pa-register__password-toggle"
+                                        data-pa-password-toggle="registerConfirmPassword"
+                                        aria-controls="registerConfirmPassword"
+                                        aria-label="Show password"
+                                        aria-pressed="false">
+                                    Show
+                                </button>
                             </div>
 
-                            <div class="border rounded-4 p-3 p-md-4 mb-4">
-                                <div class="form-check form-switch">
-                                    <input asp-for="IsShelter"
-                                           class="form-check-input"
-                                           id="isShelter"
-                                           role="switch" />
-
-                                    <label asp-for="IsShelter"
-                                           class="form-check-label fw-semibold">
-                                    </label>
-                                </div>
-
-                                <p class="small text-muted mb-0 mt-2">
-                                    Enable this option if you are creating an
-                                    account on behalf of an animal shelter.
-                                </p>
-                            </div>
-
-                            <div id="shelterFields"
-                                 class="border rounded-4 p-3 p-md-4 mb-4"
-                                 style="display: none;">
-
-                                <div class="d-flex align-items-center gap-2 mb-4">
-                                    <div class="fs-3">
-                                        🏠
-                                    </div>
-
-                                    <div>
-                                        <h5 class="mb-0">
-                                            Shelter Information
-                                        </h5>
-
-                                        <div class="small text-muted">
-                                            Tell us about your organization.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label asp-for="ShelterName"
-                                               class="form-label">
-                                        </label>
-
-                                        <input asp-for="ShelterName"
-                                               class="form-control"
-                                               autocomplete="organization" />
-
-                                        <span asp-validation-for="ShelterName"
-                                              class="text-danger">
-                                        </span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="ShelterCity"
-                                               class="form-label">
-                                        </label>
-
-                                        <input asp-for="ShelterCity"
-                                               class="form-control"
-                                               autocomplete="address-level2" />
-
-                                        <span asp-validation-for="ShelterCity"
-                                              class="text-danger">
-                                        </span>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label asp-for="ShelterAddress"
-                                               class="form-label">
-                                        </label>
-
-                                        <input asp-for="ShelterAddress"
-                                               class="form-control"
-                                               autocomplete="street-address" />
-
-                                        <span asp-validation-for="ShelterAddress"
-                                              class="text-danger">
-                                        </span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="ShelterPhone"
-                                               class="form-label">
-                                        </label>
-
-                                        <input asp-for="ShelterPhone"
-                                               class="form-control"
-                                               autocomplete="tel" />
-
-                                        <span asp-validation-for="ShelterPhone"
-                                              class="text-danger">
-                                        </span>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label asp-for="ShelterEmail"
-                                               class="form-label">
-                                        </label>
-
-                                        <input asp-for="ShelterEmail"
-                                               class="form-control"
-                                               autocomplete="email" />
-
-                                        <span asp-validation-for="ShelterEmail"
-                                              class="text-danger">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button type="submit"
-                                    class="btn btn-success btn-lg w-100 mb-4">
-                                Create Account
-                            </button>
-
-                            <div class="text-center text-muted">
-                                Already have an account?
-
-                                <a asp-controller="Account"
-                                   asp-action="Login"
-                                   asp-route-returnUrl="@Model.ReturnUrl"
-                                   class="fw-semibold text-decoration-none">
-                                    Sign in
-                                </a>
-                            </div>
-                        </form>
+                            <span asp-validation-for="ConfirmPassword"
+                                  class="pa-register__field-error"></span>
+                        </div>
                     </div>
+
+                    <div class="pa-register__password-help">
+
+                        <div class="pa-register__password-help-icon"
+                             aria-hidden="true">
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6Z" />
+                                <path d="m9 12 2 2 4-4" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <strong>Password requirements</strong>
+                            <p>
+                                At least 8 characters, including uppercase
+                                and lowercase letters, a number, and a symbol.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="shelterFields"
+                         class="pa-register__shelter-fields"
+                         hidden="@(!Model.IsShelter)">
+
+                        <div class="pa-register__section-heading">
+                            <span class="pa-register__section-number">02</span>
+
+                            <div>
+                                <h2>Shelter information</h2>
+                                <p>Tell us about your organization.</p>
+                            </div>
+                        </div>
+
+                        <div class="pa-register__fields">
+
+                            <div class="pa-register__field">
+
+                                <label asp-for="ShelterName"
+                                       class="pa-register__label">
+                                </label>
+
+                                <input asp-for="ShelterName"
+                                       class="form-control pa-register__input pa-register__input--plain"
+                                       autocomplete="organization"
+                                       placeholder="Organization name" />
+
+                                <span asp-validation-for="ShelterName"
+                                      class="pa-register__field-error"></span>
+                            </div>
+
+                            <div class="pa-register__field">
+
+                                <label asp-for="ShelterCity"
+                                       class="pa-register__label">
+                                </label>
+
+                                <input asp-for="ShelterCity"
+                                       class="form-control pa-register__input pa-register__input--plain"
+                                       autocomplete="address-level2"
+                                       placeholder="City" />
+
+                                <span asp-validation-for="ShelterCity"
+                                      class="pa-register__field-error"></span>
+                            </div>
+
+                            <div class="pa-register__field pa-register__field--full">
+
+                                <label asp-for="ShelterAddress"
+                                       class="pa-register__label">
+                                </label>
+
+                                <input asp-for="ShelterAddress"
+                                       class="form-control pa-register__input pa-register__input--plain"
+                                       autocomplete="street-address"
+                                       placeholder="Street address" />
+
+                                <span asp-validation-for="ShelterAddress"
+                                      class="pa-register__field-error"></span>
+                            </div>
+
+                            <div class="pa-register__field">
+
+                                <label asp-for="ShelterPhone"
+                                       class="pa-register__label">
+                                </label>
+
+                                <input asp-for="ShelterPhone"
+                                       type="tel"
+                                       class="form-control pa-register__input pa-register__input--plain"
+                                       autocomplete="tel"
+                                       placeholder="+1 234 567 890" />
+
+                                <span asp-validation-for="ShelterPhone"
+                                      class="pa-register__field-error"></span>
+                            </div>
+
+                            <div class="pa-register__field">
+
+                                <label asp-for="ShelterEmail"
+                                       class="pa-register__label">
+                                </label>
+
+                                <input asp-for="ShelterEmail"
+                                       type="email"
+                                       class="form-control pa-register__input pa-register__input--plain"
+                                       autocomplete="email"
+                                       placeholder="contact@example.com" />
+
+                                <span asp-validation-for="ShelterEmail"
+                                      class="pa-register__field-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pa-register__submit-area">
+
+                        <button type="submit"
+                                class="pa-register__submit">
+
+                            <span>Create Account</span>
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <path d="M5 12h14" />
+                                <path d="m13 6 6 6-6 6" />
+                            </svg>
+                        </button>
+
+                        <p class="pa-register__submit-note">
+                            Your account will be created using
+                            PetAdoption's secure sign-in system.
+                        </p>
+                    </div>
+
+                    <div class="pa-register__divider">
+                        <span></span>
+                        <span>ALREADY PART OF OUR COMMUNITY?</span>
+                        <span></span>
+                    </div>
+
+                    <div class="pa-register__login-link">
+
+                        <a asp-controller="Account"
+                           asp-action="Login"
+                           asp-route-returnUrl="@Model.ReturnUrl">
+
+                            Sign in to your account
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <path d="M5 12h14" />
+                                <path d="m13 6 6 6-6 6" />
+                            </svg>
+                        </a>
+                    </div>
+                </form>
+
+                <div class="pa-register__form-footer">
+
+                    <span class="pa-register__footer-dot"></span>
+
+                    Made for second chances.
+
+                    <a asp-controller="Home"
+                       asp-action="Welcome">
+                        Back to home
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+@section Styles {
+    <style>
+        .pa-register {
+            width: 100%;
+            max-width: 1260px;
+            margin: clamp(18px, 3vw, 52px) auto;
+        }
+
+        .pa-register__shell {
+            display: grid;
+            grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+            overflow: hidden;
+            border: 1px solid rgba(23, 61, 50, 0.08);
+            border-radius: 32px;
+            background: #fffefa;
+            box-shadow: 0 36px 100px rgba(23, 61, 50, 0.09), 0 8px 28px rgba(23, 61, 50, 0.04);
+        }
+
+        .pa-register__visual {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 920px;
+            padding: clamp(30px, 3.8vw, 58px);
+            overflow: hidden;
+            isolation: isolate;
+            background: #173d32;
+            color: #fff;
+        }
+
+        .pa-register__photo {
+            position: absolute;
+            inset: 0;
+            z-index: -3;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            filter: saturate(0.88);
+            transition: transform 1.2s ease;
+        }
+
+        .pa-register__visual:hover .pa-register__photo {
+            transform: scale(1.045);
+        }
+
+        .pa-register__overlay {
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            background: linear-gradient( 180deg, rgba(10, 35, 27, 0.55) 0%, rgba(10, 35, 27, 0.08) 28%, rgba(10, 35, 27, 0.55) 58%, rgba(9, 31, 24, 0.98) 100% );
+        }
+
+        .pa-register__visual-top,
+        .pa-register__visual-content,
+        .pa-register__visual-bottom {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pa-register__visual-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.27);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.13);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+        }
+
+        .pa-register__icon {
+            width: 17px;
+            height: 17px;
+            color: #f4c57a;
+        }
+
+        .pa-register__visual-content {
+            margin-top: auto;
+            animation: pa-register-enter 850ms ease both;
+        }
+
+        .pa-register__visual-mark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(244, 197, 122, 0.34);
+            border-radius: 17px;
+            background: rgba(244, 197, 122, 0.13);
+            color: #f4c57a;
+            backdrop-filter: blur(10px);
+        }
+
+            .pa-register__visual-mark svg {
+                width: 29px;
+                height: 29px;
+            }
+
+        .pa-register__visual-content h2 {
+            max-width: 430px;
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.8rem, 4vw, 4.1rem);
+            font-weight: 500;
+            letter-spacing: -0.055em;
+            line-height: 1.12;
+        }
+
+            .pa-register__visual-content h2 em {
+                display: block;
+                margin-top: 4px;
+                color: #f4c57a;
+                font-style: normal;
+            }
+
+        .pa-register__visual-content p {
+            max-width: 385px;
+            margin: 22px 0 0;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.94rem;
+            line-height: 1.9;
+        }
+
+        .pa-register__visual-features {
+            display: grid;
+            gap: 17px;
+            margin-top: 37px;
+        }
+
+        .pa-register__visual-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 0.87rem;
+            font-weight: 500;
+        }
+
+        .pa-register__feature-check {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 27px;
+            height: 27px;
+            flex-shrink: 0;
+            border: 1px solid rgba(244, 197, 122, 0.35);
+            border-radius: 50%;
+            background: rgba(244, 197, 122, 0.16);
+            color: #f4c57a;
+            font-weight: 800;
+        }
+
+        .pa-register__visual-bottom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 55px;
+            color: rgba(255, 255, 255, 0.77);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-register__visual-line {
+            width: 30px;
+            height: 2px;
+            border-radius: 999px;
+            background: #f4c57a;
+        }
+
+        .pa-register__visual-glow {
+            position: absolute;
+            right: -160px;
+            bottom: -190px;
+            z-index: -1;
+            width: 460px;
+            height: 460px;
+            border-radius: 50%;
+            background: rgba(200, 145, 78, 0.14);
+            filter: blur(85px);
+            pointer-events: none;
+        }
+
+        .pa-register__form-panel {
+            display: flex;
+            justify-content: center;
+            min-width: 0;
+            padding: clamp(30px, 4.5vw, 70px);
+            background: radial-gradient( circle at 100% 0%, rgba(200, 145, 78, 0.055), transparent 35% ), #fffefa;
+        }
+
+        .pa-register__form-inner {
+            width: 100%;
+            max-width: 550px;
+            animation: pa-register-enter 650ms ease both;
+        }
+
+        .pa-register__brand {
+            display: inline-flex;
+            max-width: 100%;
+            margin-bottom: 35px;
+        }
+
+        .pa-register__logo {
+            display: block;
+            width: min(100%, 230px);
+            max-height: 85px;
+            object-fit: contain;
+            object-position: left center;
+        }
+
+        .pa-register__eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 17px;
+            color: #9b7742;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+        }
+
+        .pa-register__eyebrow-line {
+            width: 25px;
+            height: 2px;
+            background: #c8914e;
+            border-radius: 999px;
+        }
+
+        .pa-register__title {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.9rem, 4.5vw, 4rem);
+            font-weight: 600;
+            letter-spacing: -0.06em;
+            line-height: 1.1;
+        }
+
+            .pa-register__title span {
+                color: #c8914e;
+            }
+
+        .pa-register__subtitle {
+            max-width: 460px;
+            margin: 19px 0 0;
+            color: #69766e;
+            font-size: 0.94rem;
+            line-height: 1.85;
+        }
+
+        .pa-register__form {
+            margin-top: 32px;
+        }
+
+        .pa-register__validation {
+            margin-bottom: 20px;
+            padding: 14px 17px;
+            border: 1px solid #f2c7be;
+            border-radius: 12px;
+            background: #fff3f0;
+            color: #a8392e;
+            font-size: 0.85rem;
+        }
+
+            .pa-register__validation.validation-summary-valid {
+                display: none;
+            }
+
+            .pa-register__validation ul {
+                margin: 0;
+                padding-left: 18px;
+            }
+
+        .pa-register__section-label {
+            margin-bottom: 15px;
+            color: #283e34;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .pa-register__role-section {
+            min-width: 0;
+            margin: 0 0 35px;
+            padding: 0;
+            border: 0;
+        }
+
+        .pa-register__role-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .pa-register__role-option {
+            position: relative;
+            min-width: 0;
+        }
+
+        .pa-register__role-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        .pa-register__role-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 144px;
+            padding: 19px;
+            border: 1.5px solid #e3eae2;
+            border-radius: 17px;
+            background: #fbfcf9;
+            cursor: pointer;
+            transition: border-color 230ms ease, background-color 230ms ease, box-shadow 230ms ease, transform 230ms ease;
+        }
+
+            .pa-register__role-card:hover {
+                border-color: #b3c8b8;
+                transform: translateY(-2px);
+            }
+
+        .pa-register__role-input:checked + .pa-register__role-card {
+            border-color: #245847;
+            background: #f0f5ef;
+            box-shadow: 0 0 0 3px rgba(36, 88, 71, 0.075);
+        }
+
+        .pa-register__role-input:focus-visible + .pa-register__role-card {
+            outline: 3px solid #c8914e;
+            outline-offset: 3px;
+        }
+
+        .pa-register__role-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #eaf1e9;
+            color: #245847;
+        }
+
+            .pa-register__role-icon svg {
+                width: 21px;
+                height: 21px;
+            }
+
+        .pa-register__role-details {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+            .pa-register__role-details strong {
+                color: #213e30;
+                font-size: 0.91rem;
+            }
+
+            .pa-register__role-details small {
+                color: #718175;
+                font-size: 0.76rem;
+                line-height: 1.4;
+            }
+
+        .pa-register__role-indicator {
+            position: absolute;
+            top: 20px;
+            right: 18px;
+            width: 17px;
+            height: 17px;
+            border: 1.5px solid #c3cec4;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .pa-register__role-input:checked + .pa-register__role-card
+        .pa-register__role-indicator {
+            border: 5px solid #245847;
+        }
+
+        .pa-register__section-heading {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin-bottom: 20px;
+        }
+
+        .pa-register__section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 37px;
+            height: 37px;
+            flex-shrink: 0;
+            border: 1px solid #ead9bc;
+            border-radius: 12px;
+            background: #fcf4e8;
+            color: #ad7840;
+            font-size: 0.79rem;
+            font-weight: 800;
+        }
+
+        .pa-register__section-heading h2 {
+            margin: 0 0 3px;
+            color: #173d32;
+            font-size: 1.07rem;
+            font-weight: 800;
+        }
+
+        .pa-register__section-heading p {
+            margin: 0;
+            color: #87938a;
+            font-size: 0.8rem;
+        }
+
+        .pa-register__fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px 15px;
+        }
+
+        .pa-register__field {
+            min-width: 0;
+        }
+
+        .pa-register__field--full {
+            grid-column: 1 / -1;
+        }
+
+        .pa-register__label {
+            display: block;
+            margin-bottom: 9px;
+            color: #283e34;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .pa-register__input-wrap {
+            position: relative;
+        }
+
+        .pa-register__input-icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 19px;
+            height: 19px;
+            color: #89998e;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+            .pa-register__input-icon svg {
+                width: 19px;
+                height: 19px;
+            }
+
+        .pa-register__input {
+            width: 100%;
+            min-height: 53px;
+            padding: 12px 14px 12px 45px;
+            border: 1px solid #e0e8df;
+            border-radius: 13px;
+            background: #fbfcf9;
+            color: #173d32;
+            font-family: "DM Sans", sans-serif;
+            font-size: 0.88rem;
+            transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+        }
+
+        .pa-register__input--plain {
+            padding-left: 15px;
+        }
+
+        .pa-register__input--password {
+            padding-right: 68px;
+        }
+
+        .pa-register__input::placeholder {
+            color: #9aa69d;
+        }
+
+        .pa-register__input:focus {
+            border-color: #42755b;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(36, 88, 71, 0.11);
+            color: #173d32;
+            outline: none;
+        }
+
+        .pa-register__password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 9px;
+            z-index: 2;
+            min-height: 35px;
+            padding: 7px 11px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #245847;
+            font-size: 0.78rem;
+            font-weight: 800;
+            transform: translateY(-50%);
+        }
+
+            .pa-register__password-toggle:hover {
+                background: #eaf1e9;
+            }
+
+            .pa-register__password-toggle:focus-visible {
+                outline: 3px solid #c8914e;
+                outline-offset: 2px;
+            }
+
+        .pa-register__field-hint,
+        .pa-register__field-error {
+            display: block;
+            margin-top: 7px;
+            font-size: 0.76rem;
+            line-height: 1.5;
+        }
+
+        .pa-register__field-hint {
+            color: #89968b;
+        }
+
+        .pa-register__field-error {
+            color: #b33e35;
+        }
+
+            .pa-register__field-error:empty {
+                display: none;
+            }
+
+        .pa-register__input.input-validation-error {
+            border-color: #dc8176;
+        }
+
+        .pa-register__password-help {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            margin-top: 23px;
+            padding: 17px;
+            border: 1px solid #dce8db;
+            border-radius: 14px;
+            background: #f0f5ee;
+        }
+
+        .pa-register__password-help-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            border-radius: 11px;
+            background: #dfebdd;
+            color: #245847;
+        }
+
+            .pa-register__password-help-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+        .pa-register__password-help strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #234735;
+            font-size: 0.84rem;
+        }
+
+        .pa-register__password-help p {
+            margin: 0;
+            color: #687c6c;
+            font-size: 0.79rem;
+            line-height: 1.65;
+        }
+
+        .pa-register__shelter-fields {
+            margin-top: 33px;
+            padding-top: 30px;
+            border-top: 1px solid #e7ece5;
+        }
+
+            .pa-register__shelter-fields[hidden] {
+                display: none !important;
+            }
+
+            .pa-register__shelter-fields.is-entering {
+                animation: pa-register-reveal 300ms ease both;
+            }
+
+        .pa-register__submit-area {
+            margin-top: 29px;
+        }
+
+        .pa-register__submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            width: 100%;
+            min-height: 57px;
+            padding: 14px 24px;
+            border: 1px solid #173d32;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            font-size: 0.94rem;
+            font-weight: 800;
+            box-shadow: 0 12px 25px rgba(23, 61, 50, 0.18);
+            transition: transform 220ms ease, box-shadow 220ms ease;
+        }
+
+            .pa-register__submit:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 17px 32px rgba(23, 61, 50, 0.24);
+            }
+
+            .pa-register__submit:focus-visible {
+                outline: 3px solid #c8914e;
+                outline-offset: 3px;
+            }
+
+            .pa-register__submit svg {
+                width: 20px;
+                height: 20px;
+                transition: transform 200ms ease;
+            }
+
+            .pa-register__submit:hover svg {
+                transform: translateX(4px);
+            }
+
+        .pa-register__submit-note {
+            margin: 13px 0 0;
+            color: #87938a;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .pa-register__divider {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin: 29px 0 20px;
+        }
+
+            .pa-register__divider span:first-child,
+            .pa-register__divider span:last-child {
+                height: 1px;
+                flex: 1;
+                background: #e7ece5;
+            }
+
+            .pa-register__divider span:nth-child(2) {
+                color: #99a49a;
+                font-size: 0.63rem;
+                font-weight: 800;
+                letter-spacing: 0.1em;
+                text-align: center;
+            }
+
+        .pa-register__login-link {
+            text-align: center;
+        }
+
+            .pa-register__login-link a {
+                display: inline-flex;
+                align-items: center;
+                gap: 9px;
+                padding: 7px 0;
+                color: #245847;
+                font-size: 0.88rem;
+                font-weight: 800;
+                text-decoration: none;
+            }
+
+                .pa-register__login-link a:hover {
+                    color: #b37a3e;
+                }
+
+            .pa-register__login-link svg {
+                width: 17px;
+                height: 17px;
+            }
+
+        .pa-register__form-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
+            color: #96a198;
+            font-size: 0.76rem;
+        }
+
+        .pa-register__footer-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #c8914e;
+        }
+
+        .pa-register__form-footer a {
+            color: #245847;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+            .pa-register__form-footer a:hover {
+                text-decoration: underline;
+            }
+
+        @@keyframes pa-register-enter {
+            from {
+                opacity: 0;
+                transform: translateY(17px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes pa-register-reveal {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (max-width: 1100px) {
+            .pa-register__shell {
+                grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+            }
+
+            .pa-register__visual {
+                padding: 32px;
+            }
+
+            .pa-register__form-panel {
+                padding: 35px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-register__shell {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-register__form-panel {
+                order: 1;
+                padding: 42px;
+            }
+
+            .pa-register__visual {
+                order: 2;
+                min-height: 390px;
+                padding: 35px;
+            }
+
+            .pa-register__visual-content h2 {
+                font-size: 3rem;
+            }
+
+            .pa-register__visual-features {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+                margin-top: 25px;
+            }
+
+            .pa-register__visual-bottom {
+                margin-top: 25px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-register {
+                max-width: 610px;
+                margin: 12px auto 30px;
+            }
+
+            .pa-register__shell {
+                border-radius: 24px;
+            }
+
+            .pa-register__form-panel {
+                padding: 30px;
+            }
+
+            .pa-register__brand {
+                margin-bottom: 30px;
+            }
+
+            .pa-register__logo {
+                width: 205px;
+            }
+
+            .pa-register__title {
+                font-size: clamp(2.75rem, 8vw, 3.7rem);
+            }
+
+            .pa-register__visual {
+                min-height: 340px;
+                padding: 28px;
+            }
+
+            .pa-register__visual-content h2 {
+                font-size: 2.6rem;
+            }
+
+            .pa-register__visual-features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 540px) {
+            .pa-register__form-panel {
+                padding: 27px 20px 32px;
+            }
+
+            .pa-register__fields {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .pa-register__role-card {
+                min-height: 138px;
+                padding: 15px;
+            }
+
+            .pa-register__role-icon {
+                width: 35px;
+                height: 35px;
+            }
+
+            .pa-register__role-details strong {
+                font-size: 0.85rem;
+            }
+
+            .pa-register__role-details small {
+                font-size: 0.71rem;
+            }
+
+            .pa-register__title {
+                font-size: 2.8rem;
+            }
+
+            .pa-register__visual {
+                min-height: 290px;
+                padding: 24px;
+            }
+
+            .pa-register__visual-mark {
+                display: none;
+            }
+
+            .pa-register__visual-content h2 {
+                font-size: 2.2rem;
+            }
+
+            .pa-register__visual-content p {
+                font-size: 0.84rem;
+                line-height: 1.65;
+            }
+
+            .pa-register__visual-features,
+            .pa-register__visual-bottom {
+                display: none;
+            }
+        }
+
+        @@media (max-width: 360px) {
+            .pa-register__role-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-register__role-card {
+                min-height: 105px;
+            }
+
+            .pa-register__title {
+                font-size: 2.45rem;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-register__form-inner,
+            .pa-register__visual-content,
+            .pa-register__shelter-fields.is-entering {
+                animation: none;
+            }
+
+            .pa-register__photo,
+            .pa-register__role-card,
+            .pa-register__submit,
+            .pa-register__submit svg {
+                transition: none;
+            }
+
+                .pa-register__visual:hover .pa-register__photo,
+                .pa-register__role-card:hover,
+                .pa-register__submit:hover,
+                .pa-register__submit:hover svg {
+                    transform: none;
+                }
+        }
+    </style>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        const isShelter =
-            document.getElementById('isShelter');
+        (() => {
+            const form = document.getElementById("registerForm");
+            const roleInputs = document.querySelectorAll(
+                'input[name="IsShelter"]'
+            );
+            const shelterFields = document.getElementById("shelterFields");
 
-        const shelterFields =
-            document.getElementById('shelterFields');
+            const fullName = document.getElementById("FullName");
+            const fullNameHint = document.getElementById("fullNameHint");
+            const email = document.getElementById("Email");
 
-        function toggleShelterFields() {
-            if (isShelter.checked) {
-                shelterFields.style.display = 'block';
+            const shelterName = document.getElementById("ShelterName");
+            const shelterCity = document.getElementById("ShelterCity");
+            const shelterAddress = document.getElementById("ShelterAddress");
 
-                shelterFields.animate(
-                    [
-                        {
-                            opacity: 0,
-                            transform: 'translateY(-8px)'
-                        },
-                        {
-                            opacity: 1,
-                            transform: 'translateY(0)'
+            if (!form || !shelterFields) {
+                return;
+            }
+
+            const getSelectedRole = () => {
+                const selected = Array.from(roleInputs).find(
+                    input => input.checked
+                );
+
+                return selected?.value === "true";
+            };
+
+            const updateRole = (animate = false) => {
+                const isShelter = getSelectedRole();
+                const wasHidden = shelterFields.hidden;
+
+                shelterFields.hidden = !isShelter;
+
+                if (fullName) {
+                    fullName.required = !isShelter;
+                }
+
+                if (fullNameHint) {
+                    fullNameHint.textContent = isShelter
+                        ? "Optional for shelter accounts."
+                        : "Required for adopter accounts.";
+                }
+
+                if (email) {
+                    email.maxLength = isShelter ? 256 : 128;
+                }
+
+                [shelterName, shelterCity, shelterAddress].forEach(
+                    field => {
+                        if (field) {
+                            field.required = isShelter;
                         }
-                    ],
-                    {
-                        duration: 250,
-                        easing: 'ease-out'
                     }
                 );
-            } else {
-                shelterFields.style.display = 'none';
-            }
-        }
 
-        isShelter.addEventListener(
-            'change',
-            toggleShelterFields
-        );
+                if (isShelter && wasHidden && animate) {
+                    shelterFields.classList.remove("is-entering");
 
-        toggleShelterFields();
+                    void shelterFields.offsetWidth;
+
+                    shelterFields.classList.add("is-entering");
+                } else {
+                    shelterFields.classList.remove("is-entering");
+                }
+            };
+
+            roleInputs.forEach(input => {
+                input.addEventListener("change", () => {
+                    updateRole(true);
+                });
+            });
+
+            document.querySelectorAll(
+                "[data-pa-password-toggle]"
+            ).forEach(button => {
+                const input = document.getElementById(
+                    button.dataset.paPasswordToggle
+                );
+
+                if (!input) {
+                    return;
+                }
+
+                button.addEventListener("click", () => {
+                    const isHidden = input.type === "password";
+
+                    input.type = isHidden ? "text" : "password";
+
+                    button.textContent = isHidden ? "Hide" : "Show";
+
+                    button.setAttribute(
+                        "aria-label",
+                        isHidden ? "Hide password" : "Show password"
+                    );
+
+                    button.setAttribute(
+                        "aria-pressed",
+                        String(isHidden)
+                    );
+                });
+            });
+
+            form.addEventListener("submit", event => {
+                updateRole();
+
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    form.reportValidity();
+                }
+            }, true);
+
+            updateRole();
+        })();
     </script>
 }

@@ -2,15 +2,29 @@
 @model IReadOnlyList<PetAdoption.Application.DTOs.PetDto>
 
 @{
-    ViewData["Title"] = "Browse Pets";
+    ViewData["Title"] = "Find Your Companion";
+    ViewData["Description"] = "Explore pets, discover their stories, and find your next companion through PetAdoption.";
 
     int page = ViewBag.Page ?? 1;
     int pageSize = ViewBag.PageSize ?? 9;
-    int total = ViewBag.Total ?? 0;
+    int total = ViewBag.Total ?? Model.Count;
     int totalPages = ViewBag.TotalPages ?? 1;
 
-    string? search = ViewBag.Search as string;
+    page = Math.Max(1, page);
+    total = Math.Max(0, total);
+    totalPages = Math.Max(1, totalPages);
+
+    string search = ViewBag.Search as string ?? string.Empty;
     Species? selectedSpecies = ViewBag.Species as Species?;
+
+    bool hasFilters =
+        !string.IsNullOrWhiteSpace(search) ||
+        selectedSpecies.HasValue;
+
+    bool isAdopter = User.IsInRole("Adopter");
+
+    int firstPage = Math.Max(1, page - 2);
+    int lastPage = Math.Min(totalPages, page + 2);
 
     string BuildUrl(int targetPage)
     {
@@ -24,286 +38,2216 @@
                 page = targetPage,
                 pageSize
             }
-        )!;
+        ) ?? "#";
     }
 }
 
-<section class="mb-4">
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
-        <div>
-            <div class="text-primary text-uppercase small fw-semibold mb-2">
-                Discover your companion
+<div class="pa-discover">
+
+    <nav class="pa-discover__breadcrumb"
+         aria-label="Breadcrumb">
+
+        <a asp-controller="Home"
+           asp-action="Welcome">
+            Home
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Explore Pets
+        </span>
+    </nav>
+
+    <header class="pa-discover__hero">
+
+        <div class="pa-discover__hero-glow"
+             aria-hidden="true"></div>
+
+        <div class="pa-discover__hero-content">
+
+            <div class="pa-discover__eyebrow">
+
+                <span class="pa-discover__eyebrow-dot"></span>
+
+                DISCOVER YOUR NEXT COMPANION
             </div>
 
-            <h1 class="section-title mb-2">
-                Browse Pets
+            <h1>
+                Their next chapter
+                <span>could start with you.</span>
             </h1>
 
-            <p class="section-subtitle mb-0">
-                Search through pets currently registered on the platform.
+            <p class="pa-discover__hero-description">
+                Every pet has a story worth discovering.
+                Explore animals registered on PetAdoption,
+                get to know their personalities, and
+                find a companion who feels like home.
             </p>
+
+            <a href="#petCollection"
+               class="pa-discover__hero-button">
+
+                Explore Pets
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+
+                    <path d="M12 5v14" />
+                    <path d="m6 13 6 6 6-6" />
+                </svg>
+            </a>
         </div>
 
-        <div class="d-flex align-items-center gap-2 text-muted">
-            <span class="badge bg-white text-dark shadow-sm fs-6">
-                @total pets found
+        <div class="pa-discover__hero-art"
+             aria-hidden="true">
+
+            <div class="pa-discover__art-orbit
+                        pa-discover__art-orbit--outer"></div>
+
+            <div class="pa-discover__art-orbit
+                        pa-discover__art-orbit--inner"></div>
+
+            <div class="pa-discover__art-center">
+
+                <svg viewBox="0 0 96 96"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.5"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M17 41 48 17l31 24" />
+                    <path d="M25 36v42h46V36" />
+
+                    <path d="M37 78V55h22v23" />
+
+                    <path d="M48 40c-5-7-15-2-12 6 2 6 12 13 12 13s10-7 12-13c3-8-7-13-12-6Z" />
+                </svg>
+            </div>
+
+            <span class="pa-discover__art-spark
+                         pa-discover__art-spark--one"></span>
+
+            <span class="pa-discover__art-spark
+                         pa-discover__art-spark--two"></span>
+        </div>
+    </header>
+
+    <section class="pa-discover__filters"
+             aria-labelledby="discoverFiltersTitle">
+
+        <div class="pa-discover__filters-heading">
+
+            <div>
+                <span class="pa-discover__section-eyebrow">
+                    FIND YOUR MATCH
+                </span>
+
+                <h2 id="discoverFiltersTitle">
+                    Meet your future friend.
+                </h2>
+
+                <p>
+                    Search by name or breed, or narrow
+                    your results by animal type.
+                </p>
+            </div>
+
+            <span class="pa-discover__filters-icon"
+                  aria-hidden="true">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m16 16 5 5" />
+                </svg>
             </span>
         </div>
-    </div>
-</section>
 
-<section class="card p-3 p-md-4 mb-5">
-    <form method="get" class="row g-3 align-items-end">
-        <div class="col-lg-5">
-            <label for="search" class="form-label">
-                Search
-            </label>
+        <form asp-controller="Home"
+              asp-action="Index"
+              method="get"
+              id="petSearchForm"
+              class="pa-discover__filter-form">
 
-            <input id="search"
-                   type="text"
-                   name="search"
-                   value="@search"
-                   class="form-control"
-                   placeholder="Search by name or breed..." />
-        </div>
+            <div class="pa-discover__field
+                        pa-discover__field--search">
 
-        <div class="col-md-5 col-lg-3">
-            <label for="species" class="form-label">
-                Species
-            </label>
+                <label for="search">
+                    Search pets
+                </label>
 
-            <select id="species"
-                    name="species"
-                    class="form-select">
-                <option value="">All species</option>
+                <div class="pa-discover__input-wrap">
 
-                @foreach (var species in Enum.GetValues<Species>())
-                {
-                    if (selectedSpecies == species)
-                    {
-                        <option value="@species" selected>
-                            @species
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m16 16 5 5" />
+                    </svg>
+
+                    <input id="search"
+                           type="search"
+                           name="search"
+                           value="@search"
+                           class="pa-discover__input"
+                           placeholder="Search by name or breed..."
+                           autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="pa-discover__field">
+
+                <label for="species">
+                    Animal type
+                </label>
+
+                <div class="pa-discover__select-wrap">
+
+                    <select id="species"
+                            name="species"
+                            class="pa-discover__select">
+
+                        <option value="">
+                            All species
                         </option>
-                    }
-                    else
-                    {
-                        <option value="@species">
-                            @species
-                        </option>
-                    }
-                }
-            </select>
-        </div>
 
-        <div class="col-md-4 col-lg-2">
-            <label for="pageSize" class="form-label">
-                Per page
-            </label>
+                        @foreach (var species in Enum.GetValues<Species>())
+                        {
+                            if (selectedSpecies == species)
+                            {
+                                <option value="@species" selected>
+                                    @species
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@species">
+                                    @species
+                                </option>
+                            }
+                        }
+                    </select>
 
-            <select id="pageSize"
-                    name="pageSize"
-                    class="form-select">
-                @foreach (var size in new[] { 6, 9, 12, 15, 18 })
-                {
-                    if (pageSize == size)
-                    {
-                        <option value="@size" selected>
-                            @size
-                        </option>
-                    }
-                    else
-                    {
-                        <option value="@size">
-                            @size
-                        </option>
-                    }
-                }
-            </select>
-        </div>
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
 
-        <div class="col-md-3 col-lg-2 d-grid">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="pa-discover__field
+                        pa-discover__field--size">
+
+                <label for="pageSize">
+                    Per page
+                </label>
+
+                <div class="pa-discover__select-wrap">
+
+                    <select id="pageSize"
+                            name="pageSize"
+                            class="pa-discover__select">
+
+                        @foreach (var size in new[] { 6, 9, 12, 15, 18 })
+                        {
+                            if (pageSize == size)
+                            {
+                                <option value="@size" selected>
+                                    @size
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@size">
+                                    @size
+                                </option>
+                            }
+                        }
+                    </select>
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </div>
+
             <button type="submit"
-                    class="btn btn-primary">
-                Search
-            </button>
-        </div>
+                    class="pa-discover__search-button">
 
-        @if (!string.IsNullOrWhiteSpace(search)
-                || selectedSpecies.HasValue)
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m16 16 5 5" />
+                </svg>
+
+                Find Pets
+            </button>
+        </form>
+
+        @if (hasFilters)
         {
-            <div class="col-12">
+            <div class="pa-discover__active-filters">
+
+                <div class="pa-discover__active-tags">
+
+                    <span class="pa-discover__active-label">
+                        Active filters:
+                    </span>
+
+                    @if (!string.IsNullOrWhiteSpace(search))
+                    {
+                        <span class="pa-discover__active-tag">
+                            Search: @search
+                        </span>
+                    }
+
+                    @if (selectedSpecies.HasValue)
+                    {
+                        <span class="pa-discover__active-tag">
+                            @selectedSpecies.Value
+                        </span>
+                    }
+                </div>
+
                 <a asp-controller="Home"
                    asp-action="Index"
-                   class="btn btn-sm btn-outline-secondary">
+                   asp-route-pageSize="@pageSize"
+                   class="pa-discover__clear">
+
                     Clear Filters
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M6 6l12 12" />
+                        <path d="M18 6 6 18" />
+                    </svg>
                 </a>
             </div>
         }
-    </form>
-</section>
+    </section>
 
-@if (!Model.Any())
-{
-    <div class="empty-state">
-        <div class="display-5 mb-3">🔍</div>
+    <section id="petCollection"
+             class="pa-discover__collection"
+             aria-labelledby="petCollectionTitle">
 
-        <h4>No pets found</h4>
+        <div class="pa-discover__collection-heading">
 
-        <p class="mb-3">
-            Try changing the search term or selecting another species.
-        </p>
+            <div>
+                <span class="pa-discover__section-eyebrow">
+                    PET DISCOVERY
+                </span>
 
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-primary">
-            Clear Search
-        </a>
-    </div>
-}
-else
-{
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-        @foreach (var pet in Model)
+                <h2 id="petCollectionTitle">
+                    @(hasFilters ? "Your Search Results" : "Meet the Pets")
+                </h2>
+
+                <p>
+                    @if (hasFilters)
+                    {
+                        <text>
+                            Explore pets matching your
+                            selected search criteria.
+                        </text>
+                    }
+                    else
+                    {
+                        <text>
+                            Get to know the animals currently
+                            featured in our directory.
+                        </text>
+                    }
+                </p>
+            </div>
+
+            <div class="pa-discover__result-count">
+
+                <span class="pa-discover__result-icon">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <circle cx="7" cy="8" r="1" />
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="17" cy="8" r="1" />
+                        <circle cx="20" cy="12" r="1" />
+
+                        <path d="M12 12c-2.2 0-3.4 2-5 3.5-1.4 1.4-.8 4.5 1.8 4.5 1.4 0 2.2-.8 3.2-.8s1.8.8 3.2.8c2.6 0 3.2-3.1 1.8-4.5C15.4 14 14.2 12 12Z" />
+                    </svg>
+                </span>
+
+                <strong>@total</strong>
+
+                <span>
+                    @(total == 1 ? "pet found" : "pets found")
+                </span>
+            </div>
+        </div>
+
+        @if (Model.Count == 0)
         {
-            var imageUrl =
-            string.IsNullOrWhiteSpace(pet.ImageUrl)
-            ? "https://placehold.co/800x600?text="
-            + Uri.EscapeDataString(pet.Name)
-            : pet.ImageUrl;
+            <div class="pa-discover__empty">
 
-            var badgeClass =
-            pet.Status switch
-            {
-                PetStatus.Available => "success",
-                PetStatus.Reserved => "warning text-dark",
-                PetStatus.Adopted => "secondary",
-                _ => "dark"
-            };
+                <div class="pa-discover__empty-icon"
+                     aria-hidden="true">
 
-            <div class="col">
-                <article class="card h-100">
-                    <div class="position-relative">
-                        <img class="card-img-top"
-                             src="@imageUrl"
-                             alt="@pet.Name"
-                             loading="lazy" />
+                    <svg viewBox="0 0 64 64"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
 
-                        <span class="badge bg-@badgeClass position-absolute top-0 end-0 m-3 shadow-sm">
-                            @pet.Status
-                        </span>
-                    </div>
+                        <circle cx="27" cy="27" r="15" />
+                        <path d="m39 39 16 16" />
+                        <path d="M21 27h12" />
+                    </svg>
+                </div>
 
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between gap-3 mb-3">
-                            <div>
-                                <h4 class="mb-1">
-                                    @pet.Name
-                                </h4>
+                <span class="pa-discover__empty-eyebrow">
+                    @(hasFilters ? "NO MATCHES FOUND" : "NO LISTINGS YET")
+                </span>
 
-                                <div class="small text-muted">
-                                    @pet.Species
-                                    @if (!string.IsNullOrWhiteSpace(pet.Breed))
-                                    {
-                                        <span>• @pet.Breed</span>
-                                    }
+                <h3>
+                    @(hasFilters
+                        ? "No pets match your search."
+                        : "No pets to show right now.")
+                </h3>
+
+                <p>
+                    @if (hasFilters)
+                    {
+                        <text>
+                            We couldn't find any pets matching
+                            your current filters. Try another
+                            search or explore the full directory.
+                        </text>
+                    }
+                    else
+                    {
+                        <text>
+                            There are currently no pet listings
+                            available to display. Check back
+                            as the directory is updated.
+                        </text>
+                    }
+                </p>
+
+                @if (hasFilters)
+                {
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="pa-discover__empty-button">
+
+                        Clear All Filters
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+
+                            <path d="M5 12h14" />
+                            <path d="m13 6 6 6-6 6" />
+                        </svg>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="pa-discover__grid">
+
+                @foreach (var pet in Model)
+                {
+                    var petName = string.IsNullOrWhiteSpace(pet.Name)
+                        ? "Unnamed Pet"
+                        : pet.Name.Trim();
+
+                    var hasImage =
+                        Uri.TryCreate(
+                            pet.ImageUrl,
+                            UriKind.Absolute,
+                            out var imageUri)
+                        && (
+                            imageUri.Scheme == Uri.UriSchemeHttps ||
+                            imageUri.Scheme == Uri.UriSchemeHttp
+                        );
+
+                    var statusClass = pet.Status switch
+                    {
+                        PetStatus.Available => "available",
+                        PetStatus.Reserved => "reserved",
+                        PetStatus.Adopted => "adopted",
+                        _ => "unknown"
+                    };
+
+                    var shelterName =
+                        string.IsNullOrWhiteSpace(pet.ShelterName)
+                            ? "Shelter not specified"
+                            : pet.ShelterName;
+
+                    var description =
+                        string.IsNullOrWhiteSpace(pet.Description)
+                            ? "No description is available for this pet yet."
+                            : pet.Description;
+
+                    <article class="pa-discover__card">
+
+                        <div class="pa-discover__card-media">
+
+                            @if (hasImage)
+                            {
+                                <img src="@pet.ImageUrl"
+                                     alt="Photo of @petName"
+                                     class="pa-discover__card-image"
+                                     loading="lazy"
+                                     decoding="async"
+                                     data-pa-pet-image />
+                            }
+
+                            <div class="pa-discover__image-fallback"
+                                 hidden="@hasImage"
+                                 aria-hidden="true">
+
+                                <svg viewBox="0 0 96 96"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2.3"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+
+                                    <path d="M18 40 48 17l30 23" />
+                                    <path d="M26 35v43h44V35" />
+
+                                    <path d="M38 78V56h20v22" />
+
+                                    <path d="M48 42c-5-7-14-2-11 5 2 6 11 12 11 12s9-6 11-12c3-7-6-12-11-5Z" />
+                                </svg>
+                            </div>
+
+                            <span class="pa-discover__status
+                                         pa-discover__status--@statusClass">
+
+                                <span class="pa-discover__status-dot"></span>
+
+                                @pet.Status
+                            </span>
+
+                            <span class="pa-discover__species-badge">
+                                @pet.Species
+                            </span>
+                        </div>
+
+                        <div class="pa-discover__card-body">
+
+                            <div class="pa-discover__card-top">
+
+                                <div class="pa-discover__card-title-wrap">
+
+                                    <span class="pa-discover__card-eyebrow">
+                                        MEET YOUR COMPANION
+                                    </span>
+
+                                    <h3>
+                                        <a asp-controller="Pets"
+                                           asp-action="Details"
+                                           asp-route-id="@pet.Id">
+                                            @petName
+                                        </a>
+                                    </h3>
+
+                                    <div class="pa-discover__breed">
+
+                                        @if (!string.IsNullOrWhiteSpace(pet.Breed))
+                                        {
+                                            @pet.Breed
+                                        }
+                                        else
+                                        {
+                                            <span>Breed not specified</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="pa-discover__age">
+
+                                    <strong>@pet.AgeYears</strong>
+
+                                    <span>
+                                        @(pet.AgeYears == 1 ? "year" : "years")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <p class="pa-discover__description">
+                                @description
+                            </p>
+
+                            <div class="pa-discover__shelter">
+
+                                <span class="pa-discover__shelter-icon"
+                                      aria-hidden="true">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+
+                                        <path d="M3 10 12 3l9 7" />
+                                        <path d="M5 9v11h14V9" />
+                                        <path d="M9 20v-7h6v7" />
+                                    </svg>
+                                </span>
+
+                                <div>
+                                    <small>Listed by</small>
+                                    <strong>@shelterName</strong>
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <span class="badge bg-light text-dark">
-                                @pet.AgeYears yrs
-                            </span>
-                        </div>
-                    </div>
+                        <div class="pa-discover__card-actions">
 
-                    <p class="text-truncate-3 mb-4">
-                        @(string.IsNullOrWhiteSpace(pet.Description)
-                                            ? "No description is available for this pet."
-                                            : pet.Description)
-                </p>
-
-                        <div class="small text-muted mb-4">
-                            <span class="me-1">🏠</span>
-                            @pet.ShelterName
-                        </div>
-
-                        <div class="d-flex gap-2">
                             <a asp-controller="Pets"
                                asp-action="Details"
                                asp-route-id="@pet.Id"
-                               class="btn btn-outline-primary flex-grow-1">
+                               class="pa-discover__details-button">
+
                                 View Details
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>
                             </a>
 
-                    @if (pet.Status == PetStatus.Available
-                                        && User.IsInRole("Adopter"))
+                            @if (pet.Status == PetStatus.Available && isAdopter)
                             {
                                 <a asp-controller="AdoptionRequests"
                                    asp-action="Create"
                                    asp-route-petId="@pet.Id"
-                                   class="btn btn-success">
+                                   class="pa-discover__adopt-button">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         aria-hidden="true">
+
+                                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                                    </svg>
+
                                     Adopt
                                 </a>
                             }
                         </div>
-                    </div>
-                </article>
+                    </article>
+                }
             </div>
-        }
-    </div>
 
-    <nav class="mt-5"
-         aria-label="Pet pagination">
-        <ul class="pagination justify-content-center">
-            <li class="page-item @(page <= 1 ? "disabled" : "")">
-                @if (page <= 1)
-                {
-                    <span class="page-link">
-                        ‹
-                    </span>
-                }
-                else
-                {
-                    <a class="page-link"
-                       href="@BuildUrl(page - 1)">
-                        ‹
-                    </a>
-                }
-            </li>
-
-            @for (
-                    int i = Math.Max(1, page - 2);
-                    i <= Math.Min(totalPages, page + 2);
-                    i++
-                    )
+            @if (totalPages > 1)
             {
-                <li class="page-item @(i == page ? "active" : "")">
-                    <a class="page-link"
-                       href="@BuildUrl(i)">
-                        @i
-                    </a>
-                </li>
+                <nav class="pa-discover__pagination"
+                     aria-label="Pet pagination">
+
+                    <div class="pa-discover__pagination-controls">
+
+                        @if (page > 1)
+                        {
+                            <a href="@BuildUrl(page - 1)"
+                               class="pa-discover__page-arrow"
+                               aria-label="Previous page">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M19 12H5" />
+                                    <path d="m11 18-6-6 6-6" />
+                                </svg>
+
+                                <span>Previous</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="pa-discover__page-arrow is-disabled"
+                                  aria-disabled="true">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M19 12H5" />
+                                    <path d="m11 18-6-6 6-6" />
+                                </svg>
+
+                                <span>Previous</span>
+                            </span>
+                        }
+
+                        <div class="pa-discover__page-numbers">
+
+                            @if (firstPage > 1)
+                            {
+                                <a href="@BuildUrl(1)"
+                                   class="pa-discover__page-number">
+                                    1
+                                </a>
+
+                                @if (firstPage > 2)
+                                {
+                                    <span class="pa-discover__page-ellipsis"
+                                          aria-hidden="true">…</span>
+                                }
+                            }
+
+                            @for (int i = firstPage; i <= lastPage; i++)
+                            {
+                                if (i == page)
+                                {
+                                    <span class="pa-discover__page-number is-active"
+                                          aria-current="page">
+                                        @i
+                                    </span>
+                                }
+                                else
+                                {
+                                    <a href="@BuildUrl(i)"
+                                       class="pa-discover__page-number">
+                                        @i
+                                    </a>
+                                }
+                            }
+
+                            @if (lastPage < totalPages)
+                            {
+                                @if (lastPage < totalPages - 1)
+                                {
+                                    <span class="pa-discover__page-ellipsis"
+                                          aria-hidden="true">…</span>
+                                }
+
+                                <a href="@BuildUrl(totalPages)"
+                                   class="pa-discover__page-number">
+                                    @totalPages
+                                </a>
+                            }
+                        </div>
+
+                        @if (page < totalPages)
+                        {
+                            <a href="@BuildUrl(page + 1)"
+                               class="pa-discover__page-arrow"
+                               aria-label="Next page">
+
+                                <span>Next</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="pa-discover__page-arrow is-disabled"
+                                  aria-disabled="true">
+
+                                <span>Next</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>
+                            </span>
+                        }
+                    </div>
+
+                    <p class="pa-discover__page-description">
+                        Page @(page) of @totalPages
+                    </p>
+                </nav>
+            }
+        }
+    </section>
+
+    <section class="pa-discover__bottom-cta">
+
+        <div class="pa-discover__bottom-icon"
+             aria-hidden="true">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+            </svg>
+        </div>
+
+        <div>
+            <h2>Find the connection that matters.</h2>
+
+            <p>
+                A little curiosity can be the beginning
+                of a lifelong friendship.
+            </p>
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="Welcome">
+
+            Our Story
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+            </svg>
+        </a>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .pa-discover {
+            width: 100%;
+            max-width: 1350px;
+            margin: 0 auto 55px;
+            color: #173d32;
+        }
+
+        .pa-discover [hidden] {
+            display: none !important;
+        }
+
+        .pa-discover__breadcrumb {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            color: #89968b;
+            font-size: 0.82rem;
+        }
+
+        .pa-discover__breadcrumb a {
+            color: #637a69;
+            text-decoration: none;
+        }
+
+        .pa-discover__breadcrumb a:hover {
+            color: #c8914e;
+        }
+
+        .pa-discover__breadcrumb [aria-current="page"] {
+            color: #173d32;
+            font-weight: 700;
+        }
+
+        .pa-discover__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            min-height: 360px;
+            margin-bottom: 30px;
+            padding: clamp(32px, 4.5vw, 60px);
+            overflow: hidden;
+            isolation: isolate;
+            border-radius: 28px;
+            background:
+                radial-gradient(
+                    circle at 85% 45%,
+                    rgba(244, 197, 122, 0.16),
+                    transparent 36%
+                ),
+                linear-gradient(125deg, #173d32, #245847);
+            box-shadow: 0 22px 48px rgba(23, 61, 50, 0.15);
+        }
+
+        .pa-discover__hero-glow {
+            position: absolute;
+            right: -100px;
+            bottom: -190px;
+            z-index: -1;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: rgba(244, 197, 122, 0.12);
+            filter: blur(65px);
+            pointer-events: none;
+        }
+
+        .pa-discover__hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 735px;
+            animation: pa-discover-enter 650ms ease both;
+        }
+
+        .pa-discover__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 23px;
+            color: #f4c57a;
+            font-size: 0.71rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-discover__eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 0 5px rgba(244, 197, 122, 0.13);
+        }
+
+        .pa-discover__hero h1 {
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.75rem, 4.9vw, 4.6rem);
+            font-weight: 600;
+            letter-spacing: -0.06em;
+            line-height: 1.1;
+        }
+
+        .pa-discover__hero h1 span {
+            display: block;
+            color: #f4c57a;
+        }
+
+        .pa-discover__hero-description {
+            max-width: 580px;
+            margin: 23px 0 28px;
+            color: rgba(255, 255, 255, 0.83);
+            font-size: 0.96rem;
+            line-height: 1.85;
+        }
+
+        .pa-discover__hero-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 53px;
+            padding: 14px 24px;
+            border: 1px solid #f4c57a;
+            border-radius: 13px;
+            background: #f4c57a;
+            color: #173d32;
+            font-size: 0.87rem;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+            transition:
+                transform 220ms ease,
+                box-shadow 220ms ease;
+        }
+
+        .pa-discover__hero-button:hover {
+            transform: translateY(-2px);
+            color: #173d32;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .pa-discover__hero-button svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .pa-discover__hero-art {
+            position: relative;
+            display: grid;
+            width: 260px;
+            height: 260px;
+            flex-shrink: 0;
+            place-items: center;
+            margin-right: 10px;
+            animation: pa-discover-float 6s ease-in-out infinite;
+        }
+
+        .pa-discover__art-orbit {
+            position: absolute;
+            border: 1px solid rgba(244, 197, 122, 0.23);
+            border-radius: 50%;
+        }
+
+        .pa-discover__art-orbit--outer {
+            inset: 0;
+        }
+
+        .pa-discover__art-orbit--inner {
+            inset: 35px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .pa-discover__art-center {
+            display: grid;
+            width: 145px;
+            height: 145px;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.34);
+            border-radius: 42px;
+            background: rgba(244, 197, 122, 0.13);
+            color: #f4c57a;
+            transform: rotate(-7deg);
+        }
+
+        .pa-discover__art-center svg {
+            width: 96px;
+            height: 96px;
+            transform: rotate(7deg);
+        }
+
+        .pa-discover__art-spark {
+            position: absolute;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 20px rgba(244, 197, 122, 0.55);
+        }
+
+        .pa-discover__art-spark--one {
+            top: 20px;
+            right: 55px;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pa-discover__art-spark--two {
+            bottom: 38px;
+            left: 23px;
+            width: 5px;
+            height: 5px;
+        }
+
+        .pa-discover__filters {
+            margin-bottom: 42px;
+            padding: clamp(23px, 3.3vw, 36px);
+            border: 1px solid #e2eae0;
+            border-radius: 24px;
+            background: #fffefa;
+            box-shadow: 0 12px 32px rgba(23, 61, 50, 0.045);
+        }
+
+        .pa-discover__filters-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 26px;
+        }
+
+        .pa-discover__section-eyebrow {
+            display: block;
+            margin-bottom: 11px;
+            color: #a97843;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-discover__filters-heading h2,
+        .pa-discover__collection-heading h2 {
+            margin: 0 0 9px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.75rem, 2.8vw, 2.4rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-discover__filters-heading p,
+        .pa-discover__collection-heading p {
+            margin: 0;
+            color: #7e8b80;
+            font-size: 0.87rem;
+            line-height: 1.75;
+        }
+
+        .pa-discover__filters-icon {
+            display: grid;
+            width: 49px;
+            height: 49px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #dce9dc;
+            border-radius: 15px;
+            background: #edf5ec;
+            color: #245847;
+        }
+
+        .pa-discover__filters-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .pa-discover__filter-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 180px 125px auto;
+            align-items: end;
+            gap: 13px;
+        }
+
+        .pa-discover__field {
+            min-width: 0;
+        }
+
+        .pa-discover__field label {
+            display: block;
+            margin-bottom: 10px;
+            color: #375243;
+            font-size: 0.84rem;
+            font-weight: 800;
+        }
+
+        .pa-discover__input-wrap,
+        .pa-discover__select-wrap {
+            position: relative;
+        }
+
+        .pa-discover__input-wrap > svg {
+            position: absolute;
+            top: 50%;
+            left: 16px;
+            width: 21px;
+            height: 21px;
+            color: #819686;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .pa-discover__input,
+        .pa-discover__select {
+            width: 100%;
+            min-height: 54px;
+            border: 1px solid #dfe8df;
+            border-radius: 13px;
+            background: #fbfcf9;
+            color: #173d32;
+            font-family: "DM Sans", sans-serif;
+            font-size: 0.87rem;
+            outline: none;
+            transition:
+                border-color 200ms ease,
+                box-shadow 200ms ease,
+                background-color 200ms ease;
+        }
+
+        .pa-discover__input {
+            padding: 13px 17px 13px 48px;
+        }
+
+        .pa-discover__input::placeholder {
+            color: #9aa89c;
+        }
+
+        .pa-discover__select {
+            padding: 13px 34px 13px 14px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .pa-discover__select-wrap > svg {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            width: 18px;
+            height: 18px;
+            color: #61806a;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .pa-discover__input:focus,
+        .pa-discover__select:focus {
+            border-color: #42755b;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(36, 88, 71, 0.11);
+        }
+
+        .pa-discover__search-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 54px;
+            padding: 13px 20px;
+            border: 1px solid #173d32;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            font-size: 0.84rem;
+            font-weight: 800;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(23, 61, 50, 0.13);
+            transition:
+                transform 220ms ease,
+                box-shadow 220ms ease;
+        }
+
+        .pa-discover__search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 28px rgba(23, 61, 50, 0.19);
+        }
+
+        .pa-discover__search-button svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .pa-discover__active-filters {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 13px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e7ede5;
+        }
+
+        .pa-discover__active-tags {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .pa-discover__active-label {
+            color: #87958a;
+            font-size: 0.79rem;
+            font-weight: 700;
+        }
+
+        .pa-discover__active-tag {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            padding: 7px 12px;
+            border: 1px solid #dce9d9;
+            border-radius: 9px;
+            background: #edf5eb;
+            color: #426c4c;
+            font-size: 0.77rem;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-discover__clear {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #a17342;
+            font-size: 0.79rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-discover__clear:hover {
+            color: #173d32;
+        }
+
+        .pa-discover__clear svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .pa-discover__collection {
+            scroll-margin-top: 115px;
+        }
+
+        .pa-discover__collection-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 17px;
+            margin-bottom: 27px;
+        }
+
+        .pa-discover__result-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 16px;
+            border: 1px solid #dce8db;
+            border-radius: 13px;
+            background: #eff5ed;
+            color: #5b785f;
+            font-size: 0.79rem;
+            font-weight: 700;
+        }
+
+        .pa-discover__result-icon {
+            display: flex;
+            color: #477a55;
+        }
+
+        .pa-discover__result-icon svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .pa-discover__result-count strong {
+            color: #245847;
+            font-size: 1.05rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pa-discover__grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 23px;
+        }
+
+        .pa-discover__card {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid #e2eae0;
+            border-radius: 23px;
+            background: #fffefa;
+            box-shadow: 0 12px 32px rgba(23, 61, 50, 0.045);
+            transition:
+                transform 260ms ease,
+                border-color 260ms ease,
+                box-shadow 260ms ease;
+        }
+
+        .pa-discover__card:hover {
+            transform: translateY(-5px);
+            border-color: #c7d9c8;
+            box-shadow: 0 23px 43px rgba(23, 61, 50, 0.1);
+        }
+
+        .pa-discover__card-media {
+            position: relative;
+            height: 260px;
+            overflow: hidden;
+            background: #e7eee4;
+        }
+
+        .pa-discover__card-image {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 650ms ease;
+        }
+
+        .pa-discover__card:hover .pa-discover__card-image {
+            transform: scale(1.055);
+        }
+
+        .pa-discover__image-fallback {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            place-items: center;
+            background:
+                radial-gradient(
+                    circle at 65% 40%,
+                    rgba(244, 197, 122, 0.2),
+                    transparent 45%
+                ),
+                linear-gradient(140deg, #e4eee0, #f4f2e8);
+            color: #62876d;
+        }
+
+        .pa-discover__image-fallback svg {
+            width: 112px;
+            height: 112px;
+            opacity: 0.8;
+        }
+
+        .pa-discover__status {
+            position: absolute;
+            top: 17px;
+            right: 17px;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 13px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(8px);
+        }
+
+        .pa-discover__status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .pa-discover__status--available {
+            background: rgba(233, 247, 237, 0.96);
+            color: #2f7c4c;
+        }
+
+        .pa-discover__status--reserved {
+            background: rgba(255, 246, 225, 0.96);
+            color: #a57629;
+        }
+
+        .pa-discover__status--adopted {
+            background: rgba(241, 243, 241, 0.96);
+            color: #66776a;
+        }
+
+        .pa-discover__status--unknown {
+            background: rgba(255, 255, 255, 0.95);
+            color: #576c5a;
+        }
+
+        .pa-discover__species-badge {
+            position: absolute;
+            bottom: 17px;
+            left: 17px;
+            z-index: 2;
+            padding: 9px 13px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 999px;
+            background: rgba(23, 61, 50, 0.88);
+            color: #fff;
+            font-size: 0.76rem;
+            font-weight: 800;
+            backdrop-filter: blur(8px);
+        }
+
+        .pa-discover__card-body {
+            flex: 1;
+            padding: 26px 25px 23px;
+        }
+
+        .pa-discover__card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 13px;
+        }
+
+        .pa-discover__card-title-wrap {
+            min-width: 0;
+        }
+
+        .pa-discover__card-eyebrow {
+            display: block;
+            margin-bottom: 8px;
+            color: #a17c49;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+        }
+
+        .pa-discover__card-top h3 {
+            margin: 0 0 7px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.65rem, 2.2vw, 2.05rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-discover__card-top h3 a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .pa-discover__card-top h3 a:hover {
+            color: #b47d40;
+        }
+
+        .pa-discover__breed {
+            color: #8b988d;
+            font-size: 0.81rem;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-discover__age {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 61px;
+            min-height: 63px;
+            padding: 8px 11px;
+            border: 1px solid #dce8d9;
+            border-radius: 13px;
+            background: #f0f5ee;
+            text-align: center;
+        }
+
+        .pa-discover__age strong {
+            color: #245847;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.1;
+        }
+
+        .pa-discover__age span {
+            margin-top: 3px;
+            color: #66806b;
+            font-size: 0.68rem;
+            font-weight: 800;
+        }
+
+        .pa-discover__description {
+            display: -webkit-box;
+            min-height: 4.8em;
+            margin: 22px 0 23px;
+            overflow: hidden;
+            color: #738277;
+            font-size: 0.87rem;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+        }
+
+        .pa-discover__shelter {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 15px;
+            border: 1px solid #e5ece2;
+            border-radius: 14px;
+            background: #f7faf5;
+        }
+
+        .pa-discover__shelter-icon {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 11px;
+            background: #e6efe3;
+            color: #537c5c;
+        }
+
+        .pa-discover__shelter-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .pa-discover__shelter > div {
+            min-width: 0;
+        }
+
+        .pa-discover__shelter small {
+            display: block;
+            margin-bottom: 4px;
+            color: #94a095;
+            font-size: 0.69rem;
+            font-weight: 700;
+        }
+
+        .pa-discover__shelter strong {
+            display: block;
+            color: #47664e;
+            font-size: 0.79rem;
+            font-weight: 800;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-discover__card-actions {
+            display: flex;
+            gap: 10px;
+            padding: 20px 25px 24px;
+            border-top: 1px solid #edf0e9;
+        }
+
+        .pa-discover__details-button,
+        .pa-discover__adopt-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 47px;
+            padding: 12px 16px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+            transition:
+                transform 220ms ease,
+                background-color 220ms ease,
+                border-color 220ms ease,
+                box-shadow 220ms ease;
+        }
+
+        .pa-discover__details-button {
+            flex: 1;
+            border-color: #d7e7d7;
+            background: #eff5ed;
+            color: #326346;
+        }
+
+        .pa-discover__details-button:hover {
+            border-color: #bbd2bc;
+            background: #e4f0e2;
+            color: #245847;
+        }
+
+        .pa-discover__adopt-button {
+            border-color: #245847;
+            background: #245847;
+            color: #fff;
+        }
+
+        .pa-discover__adopt-button:hover {
+            transform: translateY(-2px);
+            background: #173d32;
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(23, 61, 50, 0.17);
+        }
+
+        .pa-discover__details-button svg,
+        .pa-discover__adopt-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pa-discover__empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: clamp(50px, 6vw, 85px) 24px;
+            border: 1px solid #e2eae0;
+            border-radius: 24px;
+            background: #fffefa;
+            text-align: center;
+            box-shadow: 0 12px 32px rgba(23, 61, 50, 0.045);
+        }
+
+        .pa-discover__empty-icon {
+            display: grid;
+            width: 104px;
+            height: 104px;
+            margin-bottom: 25px;
+            place-items: center;
+            border: 1px solid #dce9db;
+            border-radius: 30px;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+        .pa-discover__empty-icon svg {
+            width: 60px;
+            height: 60px;
+        }
+
+        .pa-discover__empty-eyebrow {
+            margin-bottom: 12px;
+            color: #a97843;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+        }
+
+        .pa-discover__empty h3 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-discover__empty p {
+            max-width: 480px;
+            margin: 17px 0 25px;
+            color: #7f8e82;
+            font-size: 0.89rem;
+            line-height: 1.85;
+        }
+
+        .pa-discover__empty-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 51px;
+            padding: 13px 23px;
+            border: 1px solid #173d32;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-discover__empty-button:hover {
+            color: #fff;
+            box-shadow: 0 12px 25px rgba(23, 61, 50, 0.18);
+        }
+
+        .pa-discover__empty-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pa-discover__pagination {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 45px;
+        }
+
+        .pa-discover__pagination-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pa-discover__page-numbers {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .pa-discover__page-number,
+        .pa-discover__page-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 43px;
+            min-height: 43px;
+            padding: 10px 13px;
+            border: 1px solid #e0e9df;
+            border-radius: 11px;
+            background: #fffefa;
+            color: #587260;
+            font-size: 0.82rem;
+            font-weight: 800;
+            line-height: 1.3;
+            text-decoration: none;
+            transition:
+                border-color 200ms ease,
+                background-color 200ms ease,
+                color 200ms ease;
+        }
+
+        .pa-discover__page-arrow {
+            gap: 9px;
+            padding-inline: 15px;
+        }
+
+        .pa-discover__page-arrow svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        a.pa-discover__page-number:hover,
+        a.pa-discover__page-arrow:hover {
+            border-color: #aac6ad;
+            background: #edf5eb;
+            color: #245847;
+        }
+
+        .pa-discover__page-number.is-active {
+            border-color: #245847;
+            background: #245847;
+            color: #fff;
+            box-shadow: 0 6px 15px rgba(23, 61, 50, 0.15);
+        }
+
+        .pa-discover__page-arrow.is-disabled {
+            background: #f4f6f2;
+            color: #a9b3a9;
+            cursor: default;
+        }
+
+        .pa-discover__page-ellipsis {
+            padding-inline: 5px;
+            color: #8e9d90;
+            font-weight: 800;
+        }
+
+        .pa-discover__page-description {
+            margin: 0;
+            color: #819085;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .pa-discover__bottom-cta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 19px;
+            margin-top: 43px;
+            padding: 29px 32px;
+            border: 1px solid #dfe9dd;
+            border-radius: 21px;
+            background: #eff5ed;
+        }
+
+        .pa-discover__bottom-icon {
+            display: grid;
+            width: 54px;
+            height: 54px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 16px;
+            background: #dcebd9;
+            color: #245847;
+        }
+
+        .pa-discover__bottom-icon svg {
+            width: 27px;
+            height: 27px;
+        }
+
+        .pa-discover__bottom-cta > div:nth-child(2) {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .pa-discover__bottom-cta h2 {
+            margin: 0 0 6px;
+            color: #244d35;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.45rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+        }
+
+        .pa-discover__bottom-cta p {
+            margin: 0;
+            color: #718473;
+            font-size: 0.83rem;
+            line-height: 1.65;
+        }
+
+        .pa-discover__bottom-cta > a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 46px;
+            padding: 12px 18px;
+            border: 1px solid #245847;
+            border-radius: 11px;
+            background: #245847;
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .pa-discover__bottom-cta > a:hover {
+            background: #173d32;
+            color: #fff;
+        }
+
+        .pa-discover__bottom-cta > a svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pa-discover a:focus-visible,
+        .pa-discover button:focus-visible {
+            outline: 3px solid #c8914e;
+            outline-offset: 4px;
+        }
+
+        @@keyframes pa-discover-enter {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
             }
 
-            <li class="page-item @(page >= totalPages ? "disabled" : "")">
-                @if (page >= totalPages)
-                {
-                    <span class="page-link">
-                        ›
-                    </span>
-                }
-                else
-                {
-                    <a class="page-link"
-                       href="@BuildUrl(page + 1)">
-                        ›
-                    </a>
-                }
-            </li>
-        </ul>
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-        <div class="text-center text-muted small mt-2">
-            Page @(page) of @totalPages
-        </div>
-    </nav>
+        @@keyframes pa-discover-float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .pa-discover__grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .pa-discover__hero-art {
+                width: 215px;
+                height: 215px;
+                margin-right: 0;
+            }
+
+            .pa-discover__art-center {
+                width: 120px;
+                height: 120px;
+                border-radius: 35px;
+            }
+
+            .pa-discover__art-center svg {
+                width: 80px;
+                height: 80px;
+            }
+
+            .pa-discover__filter-form {
+                grid-template-columns: minmax(0, 1fr) 170px 110px;
+            }
+
+            .pa-discover__search-button {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-discover__hero-art {
+                position: absolute;
+                right: -45px;
+                opacity: 0.2;
+                pointer-events: none;
+            }
+
+            .pa-discover__hero-content {
+                max-width: 650px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-discover {
+                margin-bottom: 30px;
+            }
+
+            .pa-discover__hero {
+                min-height: auto;
+                padding: 33px;
+                border-radius: 22px;
+            }
+
+            .pa-discover__hero-art {
+                right: -85px;
+                opacity: 0.12;
+            }
+
+            .pa-discover__filter-form {
+                grid-template-columns: minmax(0, 1fr) 130px;
+            }
+
+            .pa-discover__field--search {
+                grid-column: 1 / -1;
+            }
+
+            .pa-discover__search-button {
+                grid-column: 1 / -1;
+            }
+
+            .pa-discover__filters {
+                border-radius: 21px;
+            }
+
+            .pa-discover__grid {
+                gap: 17px;
+            }
+
+            .pa-discover__card-media {
+                height: 235px;
+            }
+
+            .pa-discover__card-body {
+                padding: 22px 19px;
+            }
+
+            .pa-discover__card-actions {
+                padding: 18px 19px;
+            }
+        }
+
+        @@media (max-width: 620px) {
+            .pa-discover__grid {
+                grid-template-columns: 1fr;
+                max-width: 470px;
+                margin-inline: auto;
+            }
+
+            .pa-discover__card-media {
+                height: 265px;
+            }
+
+            .pa-discover__filter-form {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-discover__field--search,
+            .pa-discover__search-button {
+                grid-column: auto;
+            }
+
+            .pa-discover__page-arrow span {
+                display: none;
+            }
+
+            .pa-discover__page-arrow {
+                min-width: 43px;
+                padding: 10px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .pa-discover__breadcrumb {
+                font-size: 0.75rem;
+            }
+
+            .pa-discover__hero {
+                padding: 29px 23px;
+            }
+
+            .pa-discover__hero h1 {
+                font-size: clamp(2.3rem, 9vw, 3.1rem);
+            }
+
+            .pa-discover__hero-description {
+                font-size: 0.87rem;
+            }
+
+            .pa-discover__filters {
+                padding: 23px 19px;
+            }
+
+            .pa-discover__filters-icon {
+                display: none;
+            }
+
+            .pa-discover__collection-heading {
+                align-items: flex-start;
+            }
+
+            .pa-discover__card-media {
+                height: 235px;
+            }
+
+            .pa-discover__page-numbers {
+                gap: 4px;
+            }
+
+            .pa-discover__page-number {
+                min-width: 35px;
+                min-height: 40px;
+                padding: 8px;
+            }
+
+            .pa-discover__pagination-controls {
+                gap: 6px;
+            }
+
+            .pa-discover__bottom-cta {
+                padding: 22px;
+            }
+
+            .pa-discover__bottom-cta > a {
+                width: 100%;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-discover__hero-content,
+            .pa-discover__hero-art {
+                animation: none;
+            }
+
+            .pa-discover__card,
+            .pa-discover__card-image,
+            .pa-discover__hero-button,
+            .pa-discover__search-button,
+            .pa-discover__adopt-button,
+            .pa-discover__page-number,
+            .pa-discover__page-arrow {
+                transition: none;
+            }
+
+            .pa-discover__card:hover,
+            .pa-discover__card:hover .pa-discover__card-image,
+            .pa-discover__hero-button:hover,
+            .pa-discover__search-button:hover,
+            .pa-discover__adopt-button:hover {
+                transform: none;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            "use strict";
+
+            const form = document.getElementById("petSearchForm");
+            const pageSize = document.getElementById("pageSize");
+
+            // Automatically apply the selected page size.
+            // The regular submit button remains available
+            // when JavaScript is disabled.
+
+            if (form && pageSize) {
+                pageSize.addEventListener("change", () => {
+                    form.requestSubmit();
+                });
+            }
+
+            // Replace broken external pet photos with
+            // the built-in vector illustration.
+
+            document.querySelectorAll(
+                "[data-pa-pet-image]"
+            ).forEach(image => {
+                const media = image.closest(
+                    ".pa-discover__card-media"
+                );
+
+                const fallback = media?.querySelector(
+                    ".pa-discover__image-fallback"
+                );
+
+                const showFallback = () => {
+                    image.hidden = true;
+
+                    if (fallback) {
+                        fallback.hidden = false;
+                    }
+                };
+
+                image.addEventListener(
+                    "error",
+                    showFallback,
+                    { once: true }
+                );
+
+                if (image.complete && image.naturalWidth === 0) {
+                    showFallback();
+                }
+            });
+        })();
+    </script>
 }

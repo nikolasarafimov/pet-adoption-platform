@@ -10,14 +10,17 @@ namespace PetAdoption.Application.Services
     {
         private readonly IRepository<Pet> _pets;
         private readonly IRepository<Shelter> _shelters;
+        private readonly IRepository<AdoptionRequest> _requests;
 
         public PetService(
             IRepository<Pet> pets,
-            IRepository<Shelter> shelters
+            IRepository<Shelter> shelters,
+            IRepository<AdoptionRequest> requests
         )
         {
             _pets = pets;
             _shelters = shelters;
+            _requests = requests;
         }
 
         public async Task<IReadOnlyList<PetDto>> GetAllAsync(
@@ -26,10 +29,9 @@ namespace PetAdoption.Application.Services
             int? shelterId = null
         )
         {
-            var searchText =
-                string.IsNullOrWhiteSpace(search)
-                    ? string.Empty
-                    : search.Trim().ToLower();
+            var searchText = string.IsNullOrWhiteSpace(search)
+                ? string.Empty
+                : search.Trim().ToLower();
 
             var pets = await _pets.ListAsync(
                 pet =>
@@ -80,8 +82,19 @@ namespace PetAdoption.Application.Services
             int shelterId
         )
         {
-            ValidateName(name);
+            var normalizedName = ValidateName(name);
+            ValidateSpecies(species);
             ValidateAge(ageYears);
+
+            var normalizedBreed = NormalizeOptional(
+                breed, nameof(breed), 128
+            );
+
+            var normalizedDescription = NormalizeOptional(
+                description, nameof(description), 1024
+            );
+
+            var normalizedImageUrl = ValidateImageUrl(imageUrl);
 
             _ = await _shelters.GetByIdAsync(shelterId)
                 ?? throw new ArgumentException(
@@ -90,12 +103,12 @@ namespace PetAdoption.Application.Services
 
             var pet = new Pet
             {
-                Name = name.Trim(),
+                Name = normalizedName,
                 Species = species,
-                Breed = NormalizeOptional(breed),
+                Breed = normalizedBreed,
                 AgeYears = ageYears,
-                Description = NormalizeOptional(description),
-                ImageUrl = NormalizeOptional(imageUrl),
+                Description = normalizedDescription,
+                ImageUrl = normalizedImageUrl,
                 ShelterId = shelterId,
                 Status = PetStatus.Available
             };
@@ -118,8 +131,20 @@ namespace PetAdoption.Application.Services
             PetStatus status
         )
         {
-            ValidateName(name);
+            var normalizedName = ValidateName(name);
+            ValidateSpecies(species);
             ValidateAge(ageYears);
+            ValidateStatus(status);
+
+            var normalizedBreed = NormalizeOptional(
+                breed, nameof(breed), 128
+            );
+
+            var normalizedDescription = NormalizeOptional(
+                description, nameof(description), 1024
+            );
+
+            var normalizedImageUrl = ValidateImageUrl(imageUrl);
 
             var pet = await _pets.GetByIdAsync(id)
                 ?? throw new ArgumentException(
@@ -131,12 +156,36 @@ namespace PetAdoption.Application.Services
                     "Shelter not found."
                 );
 
-            pet.Name = name.Trim();
+            ValidateStatusTransition(pet.Status, status);
+
+            if (pet.ShelterId != shelterId)
+            {
+                if (pet.Status == PetStatus.Reserved
+                    || pet.Status == PetStatus.Adopted)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot change the shelter of a reserved or adopted pet."
+                    );
+                }
+
+                var existingRequests = await _requests.ListAsync(
+                    request => request.PetId == id
+                );
+
+                if (existingRequests.Any())
+                {
+                    throw new InvalidOperationException(
+                        "Cannot change the shelter of a pet with adoption history."
+                    );
+                }
+            }
+
+            pet.Name = normalizedName;
             pet.Species = species;
-            pet.Breed = NormalizeOptional(breed);
+            pet.Breed = normalizedBreed;
             pet.AgeYears = ageYears;
-            pet.Description = NormalizeOptional(description);
-            pet.ImageUrl = NormalizeOptional(imageUrl);
+            pet.Description = normalizedDescription;
+            pet.ImageUrl = normalizedImageUrl;
             pet.ShelterId = shelterId;
             pet.Status = status;
 
@@ -150,6 +199,25 @@ namespace PetAdoption.Application.Services
                 ?? throw new ArgumentException(
                     "Pet not found."
                 );
+
+            var existingRequests = await _requests.ListAsync(
+                request => request.PetId == id
+            );
+
+            if (existingRequests.Any())
+            {
+                throw new InvalidOperationException(
+                    "Cannot delete a pet with existing adoption requests."
+                );
+            }
+
+            if (pet.Status == PetStatus.Reserved
+                || pet.Status == PetStatus.Adopted)
+            {
+                throw new InvalidOperationException(
+                    "Cannot delete a reserved or adopted pet."
+                );
+            }
 
             await _pets.DeleteAsync(pet);
             await _pets.SaveChangesAsync();
@@ -171,12 +239,45 @@ namespace PetAdoption.Application.Services
             );
         }
 
-        private static void ValidateName(string name)
+        private static string ValidateName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException(
                     "Pet name is required."
+                );
+            }
+
+            var normalized = name.Trim();
+
+            if (normalized.Length > 128)
+            {
+                throw new ArgumentException(
+                    "Pet name cannot exceed 128 characters."
+                );
+            }
+
+            return normalized;
+        }
+
+        private static void ValidateSpecies(Species species)
+        {
+            if (!Enum.IsDefined(species))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(species),
+                    "Invalid pet species."
+                );
+            }
+        }
+
+        private static void ValidateStatus(PetStatus status)
+        {
+            if (!Enum.IsDefined(status))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(status),
+                    "Invalid pet status."
                 );
             }
         }
@@ -190,15 +291,86 @@ namespace PetAdoption.Application.Services
                     "Pet age cannot be negative."
                 );
             }
+
+            if (ageYears > 200)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(ageYears),
+                    "Pet age cannot exceed 200 years."
+                );
+            }
+        }
+
+        private static void ValidateStatusTransition(
+            PetStatus currentStatus,
+            PetStatus newStatus
+        )
+        {
+            if (currentStatus == newStatus)
+            {
+                return;
+            }
+
+            if (currentStatus == PetStatus.Reserved
+                || currentStatus == PetStatus.Adopted
+                || newStatus == PetStatus.Reserved
+                || newStatus == PetStatus.Adopted)
+            {
+                throw new InvalidOperationException(
+                    "Reserved and adopted statuses can only be changed through the adoption workflow."
+                );
+            }
+        }
+
+        private static string? ValidateImageUrl(string? imageUrl)
+        {
+            var normalized = NormalizeOptional(
+                imageUrl, nameof(imageUrl), 512
+            );
+
+            if (normalized == null)
+            {
+                return null;
+            }
+
+            if (!Uri.TryCreate(
+                    normalized,
+                    UriKind.Absolute,
+                    out var uri
+                )
+                || (uri.Scheme != Uri.UriSchemeHttp
+                    && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                throw new ArgumentException(
+                    "Image URL must be a valid HTTP or HTTPS URL."
+                );
+            }
+
+            return normalized;
         }
 
         private static string? NormalizeOptional(
-            string? value
+            string? value,
+            string parameterName,
+            int maxLength
         )
         {
-            return string.IsNullOrWhiteSpace(value)
-                ? null
-                : value.Trim();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var normalized = value.Trim();
+
+            if (normalized.Length > maxLength)
+            {
+                throw new ArgumentException(
+                    $"{parameterName} cannot exceed {maxLength} characters.",
+                    parameterName
+                );
+            }
+
+            return normalized;
         }
     }
 }

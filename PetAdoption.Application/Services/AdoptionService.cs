@@ -8,6 +8,8 @@ namespace PetAdoption.Application.Services
 {
     public class AdoptionService : IAdoptionService
     {
+        private const int MaxMessageLength = 512;
+
         private readonly IRepository<AdoptionRequest> _requests;
         private readonly IRepository<Pet> _pets;
         private readonly IRepository<Adopter> _adopters;
@@ -61,8 +63,13 @@ namespace PetAdoption.Application.Services
             string? message
         )
         {
+            var normalizedMessage = NormalizeMessage(message);
+
             var pet = await _pets.GetByIdAsync(petId)
-                ?? throw new ArgumentException("Pet not found.");
+                ?? throw new ArgumentException(
+                    "Pet not found.",
+                    nameof(petId)
+                );
 
             if (pet.Status != PetStatus.Available)
             {
@@ -71,20 +78,31 @@ namespace PetAdoption.Application.Services
                 );
             }
 
-            var adopter = await _adopters.GetByIdAsync(adopterId)
-                ?? throw new ArgumentException("Adopter not found.");
+            _ = await _adopters.GetByIdAsync(adopterId)
+                ?? throw new ArgumentException(
+                    "Adopter not found.",
+                    nameof(adopterId)
+                );
 
-            var existingRequests = await _requests.ListAsync(
+            var pendingRequests = await _requests.ListAsync(
                 request =>
                     request.PetId == petId
-                    && request.AdopterId == adopterId
                     && request.Status == AdoptionRequestStatus.Pending
             );
 
-            if (existingRequests.Any())
+            if (pendingRequests.Any(
+                request => request.AdopterId == adopterId
+            ))
             {
                 throw new InvalidOperationException(
                     "You already have a pending request for this pet."
+                );
+            }
+
+            if (pendingRequests.Any())
+            {
+                throw new InvalidOperationException(
+                    "Another adoption request is already pending for this pet."
                 );
             }
 
@@ -94,9 +112,7 @@ namespace PetAdoption.Application.Services
             {
                 PetId = petId,
                 AdopterId = adopterId,
-                Message = string.IsNullOrWhiteSpace(message)
-                    ? null
-                    : message.Trim(),
+                Message = normalizedMessage,
                 Status = AdoptionRequestStatus.Pending,
                 CreatedAt = DateTime.UtcNow
             };
@@ -114,7 +130,8 @@ namespace PetAdoption.Application.Services
                 && status != AdoptionRequestStatus.Rejected)
             {
                 throw new ArgumentException(
-                    "Only approval or rejection is allowed here."
+                    "Only approval or rejection is allowed here.",
+                    nameof(status)
                 );
             }
 
@@ -126,7 +143,8 @@ namespace PetAdoption.Application.Services
 
             var request = requests.FirstOrDefault()
                 ?? throw new ArgumentException(
-                    "Adoption request not found."
+                    "Adoption request not found.",
+                    nameof(requestId)
                 );
 
             if (request.Status != AdoptionRequestStatus.Pending)
@@ -136,17 +154,20 @@ namespace PetAdoption.Application.Services
                 );
             }
 
+            if (request.Pet.Status != PetStatus.Reserved)
+            {
+                throw new InvalidOperationException(
+                    "The pet is no longer reserved for this request."
+                );
+            }
+
             request.Status = status;
             request.DecisionAt = DateTime.UtcNow;
 
-            if (status == AdoptionRequestStatus.Approved)
-            {
-                request.Pet.Status = PetStatus.Adopted;
-            }
-            else
-            {
-                request.Pet.Status = PetStatus.Available;
-            }
+            request.Pet.Status =
+                status == AdoptionRequestStatus.Approved
+                    ? PetStatus.Adopted
+                    : PetStatus.Available;
 
             await _requests.UpdateAsync(request);
             await _pets.UpdateAsync(request.Pet);
@@ -165,7 +186,8 @@ namespace PetAdoption.Application.Services
 
             var request = requests.FirstOrDefault()
                 ?? throw new ArgumentException(
-                    "Adoption request not found."
+                    "Adoption request not found.",
+                    nameof(requestId)
                 );
 
             if (request.AdopterId != adopterId)
@@ -182,9 +204,15 @@ namespace PetAdoption.Application.Services
                 );
             }
 
+            if (request.Pet.Status != PetStatus.Reserved)
+            {
+                throw new InvalidOperationException(
+                    "The pet is no longer reserved for this request."
+                );
+            }
+
             request.Status = AdoptionRequestStatus.Cancelled;
             request.DecisionAt = DateTime.UtcNow;
-
             request.Pet.Status = PetStatus.Available;
 
             await _requests.UpdateAsync(request);
@@ -203,10 +231,31 @@ namespace PetAdoption.Application.Services
 
             var request = requests.FirstOrDefault()
                 ?? throw new ArgumentException(
-                    "Adoption request not found."
+                    "Adoption request not found.",
+                    nameof(requestId)
                 );
 
             return request.Pet.ShelterId;
+        }
+
+        private static string? NormalizeMessage(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return null;
+            }
+
+            var normalized = message.Trim();
+
+            if (normalized.Length > MaxMessageLength)
+            {
+                throw new ArgumentException(
+                    $"Message cannot exceed {MaxMessageLength} characters.",
+                    nameof(message)
+                );
+            }
+
+            return normalized;
         }
 
         private static AdoptionRequestDto Map(

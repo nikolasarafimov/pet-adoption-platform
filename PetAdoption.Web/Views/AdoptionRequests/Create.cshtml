@@ -1,130 +1,1428 @@
 ﻿@model int
 
 @{
-    ViewData["Title"] = "Adoption Request";
+    ViewData["Title"] = "Request Adoption";
+    ViewData["Description"] = "Submit an adoption request and introduce yourself to the shelter.";
+
+    var errorMessage = TempData["err"] as string;
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-8 col-xl-7">
-        <section class="text-center mb-4">
-            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 mb-3"
-                 style="width: 72px; height: 72px;">
-                <span class="fs-2">
-                    ❤️
+<div class="pa-request">
+
+    <nav class="pa-request__breadcrumb"
+         aria-label="Breadcrumb">
+
+        <a asp-controller="Home"
+           asp-action="Welcome">
+            Home
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a asp-controller="Home"
+           asp-action="Index">
+            Explore Pets
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a asp-controller="Pets"
+           asp-action="Details"
+           asp-route-id="@Model">
+            Pet Details
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Adoption Request
+        </span>
+    </nav>
+
+    <header class="pa-request__hero">
+
+        <div class="pa-request__hero-glow"
+             aria-hidden="true"></div>
+
+        <div class="pa-request__hero-content">
+
+            <div class="pa-request__eyebrow">
+
+                <span class="pa-request__eyebrow-icon">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                    </svg>
                 </span>
+
+                YOUR ADOPTION JOURNEY
             </div>
 
-            <div class="text-success fw-semibold text-uppercase small mb-2">
-                Adoption
-            </div>
+            <h1 id="requestTitle"
+                class="pa-request__hero-title">
 
-            <h1 class="section-title mb-2">
-                Submit an Adoption Request
+                A new beginning
+                <span>starts here.</span>
             </h1>
 
-            <p class="section-subtitle">
-                Introduce yourself to the shelter and explain why
-                this pet would be a good fit for your home.
+            <p class="pa-request__hero-description">
+                Every meaningful connection starts with a first step.
+                Introduce yourself to the shelter and share
+                why you'd love to welcome this pet into your home.
             </p>
-        </section>
 
-        @if (TempData["err"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["err"]
+            <div class="pa-request__hero-bottom">
+
+                <span class="pa-request__hero-tag">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M3 10 12 3l9 7" />
+                        <path d="M5 9v11h14V9" />
+                        <path d="M9 20v-7h6v7" />
+                    </svg>
+
+                    A HOME TO BELONG
+                </span>
+
+                <span class="pa-request__hero-divider"></span>
+
+                <span class="pa-request__pet-id">
+                    Pet reference #@Model
+                </span>
             </div>
-        }
+        </div>
 
-        <div class="card p-4 p-md-5">
-            <form asp-controller="AdoptionRequests"
-                  asp-action="Create"
-                  method="post">
+        <div class="pa-request__hero-art"
+             aria-hidden="true">
 
-                <input type="hidden"
-                       name="petId"
-                       value="@Model" />
+            <div class="pa-request__art-orbit
+                        pa-request__art-orbit--outer"></div>
 
-                <div class="mb-4">
-                    <label for="message"
-                           class="form-label">
-                        Message to the shelter
-                    </label>
+            <div class="pa-request__art-orbit
+                        pa-request__art-orbit--inner"></div>
 
-                    <textarea id="message"
-                              name="message"
-                              class="form-control"
-                              rows="7"
-                              maxlength="512"
-                              placeholder="Tell the shelter about your home, lifestyle, previous experience with pets, and why you would like to adopt.">
-                    </textarea>
+            <div class="pa-request__art-center">
 
-                    <div class="d-flex justify-content-between mt-2">
-                        <div class="form-text">
-                            Optional, but a thoughtful message can help the shelter.
-                        </div>
+                <svg viewBox="0 0 88 88"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.6"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
 
-                        <div id="messageCounter"
-                             class="small text-muted">
-                            0 / 512
-                        </div>
+                    <path d="M15 40 44 16l29 24" />
+                    <path d="M22 35v36h44V35" />
+                    <path d="M35 71V51h18v20" />
+                    <path d="M44 39c-5-7-14-2-11 5 2 5 11 11 11 11s9-6 11-11c3-7-6-12-11-5Z" />
+                </svg>
+            </div>
+
+            <span class="pa-request__art-spark
+                         pa-request__art-spark--one"></span>
+
+            <span class="pa-request__art-spark
+                         pa-request__art-spark--two"></span>
+        </div>
+    </header>
+
+    <div class="pa-request__layout">
+
+        <main class="pa-request__main">
+
+            <section class="pa-request__card"
+                     aria-labelledby="requestFormTitle">
+
+                <div class="pa-request__card-heading">
+
+                    <div class="pa-request__heading-icon"
+                         aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-5 3V7a2 2 0 0 1 1-2Z" />
+                            <path d="M8 10h8" />
+                            <path d="M8 14h5" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <span class="pa-request__card-eyebrow">
+                            YOUR INTRODUCTION
+                        </span>
+
+                        <h2 id="requestFormTitle">
+                            Tell your story.
+                        </h2>
+
+                        <p>
+                            Share a little about yourself
+                            and what makes your home special.
+                        </p>
                     </div>
                 </div>
 
-                <div class="bg-light rounded-4 p-4 mb-4">
-                    <div class="d-flex gap-3">
-                        <div class="fs-4">
-                            🔒
+                <div class="pa-request__card-divider"></div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="pa-request__error"
+                         role="alert">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v6" />
+                            <path d="M12 17h.01" />
+                        </svg>
+
+                        <div>
+                            <strong>Unable to submit request</strong>
+                            <p>@errorMessage</p>
+                        </div>
+                    </div>
+                }
+
+                <form asp-controller="AdoptionRequests"
+                      asp-action="Create"
+                      method="post"
+                      asp-antiforgery="true"
+                      id="adoptionRequestForm">
+
+                    <input type="hidden"
+                           name="petId"
+                           value="@Model" />
+
+                    <div class="pa-request__field">
+
+                        <div class="pa-request__label-row">
+
+                            <label for="message"
+                                   class="pa-request__label">
+
+                                Message to the shelter
+                            </label>
+
+                            <span class="pa-request__optional">
+                                Optional
+                            </span>
+                        </div>
+
+                        <p id="messageDescription"
+                           class="pa-request__field-description">
+
+                            A thoughtful introduction can help
+                            the shelter understand your interest
+                            in adopting this pet.
+                        </p>
+
+                        <textarea id="message"
+                                  name="message"
+                                  class="pa-request__textarea"
+                                  rows="8"
+                                  maxlength="512"
+                                  aria-describedby="messageDescription messageHint messageCounter"
+                                  placeholder="Hello! I'd love to adopt this pet because... Tell the shelter about your home, daily routine, experience with animals, and why you believe you'd be a great match."></textarea>
+
+                        <div class="pa-request__field-footer">
+
+                            <span id="messageHint"
+                                  class="pa-request__field-hint">
+
+                                Write in your own words.
+                                There is no required format.
+                            </span>
+
+                            <span id="messageCounter"
+                                  class="pa-request__counter"
+                                  aria-label="Characters used">
+
+                                0 / 512
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="pa-request__tip">
+
+                        <div class="pa-request__tip-icon"
+                             aria-hidden="true">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <path d="M9 18h6" />
+                                <path d="M10 22h4" />
+                                <path d="M8.5 14.5A7 7 0 1 1 15.5 14.5C14.6 15.4 14 16 14 18h-4c0-2-.6-2.6-1.5-3.5Z" />
+                            </svg>
                         </div>
 
                         <div>
-                            <div class="fw-semibold mb-1">
-                                What happens next?
-                            </div>
+                            <strong>A small suggestion</strong>
 
-                            <div class="small text-muted">
-                                Your request will be sent to the shelter for review.
-                                You can track its status from My Requests.
-                            </div>
+                            <p>
+                                You might mention your living situation,
+                                availability to care for a pet, and any
+                                previous experience with animals.
+                                Only share what you're comfortable sharing.
+                            </p>
                         </div>
                     </div>
+
+                    <div class="pa-request__form-footer">
+
+                        <div class="pa-request__form-notice">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 11v5" />
+                                <path d="M12 8h.01" />
+                            </svg>
+
+                            Your message will be included
+                            with your adoption request.
+                        </div>
+
+                        <div class="pa-request__actions">
+
+                            <a asp-controller="Pets"
+                               asp-action="Details"
+                               asp-route-id="@Model"
+                               class="pa-request__cancel">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M19 12H5" />
+                                    <path d="m11 18-6-6 6-6" />
+                                </svg>
+
+                                Back to Pet
+                            </a>
+
+                            <button type="submit"
+                                    class="pa-request__submit">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                                </svg>
+
+                                Submit Request
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </main>
+
+        <aside class="pa-request__sidebar"
+               aria-label="Adoption process information">
+
+            <section class="pa-request__guide">
+
+                <div class="pa-request__guide-top">
+
+                    <span class="pa-request__guide-icon"
+                          aria-hidden="true">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6Z" />
+                            <path d="m9 12 2 2 4-4" />
+                        </svg>
+                    </span>
+
+                    <span class="pa-request__guide-eyebrow">
+                        THE ADOPTION PROCESS
+                    </span>
                 </div>
 
-                <div class="d-flex flex-column flex-sm-row gap-2">
-                    <button type="submit"
-                            class="btn btn-success flex-grow-1">
-                        Submit Request
-                    </button>
+                <h2>
+                    What happens
+                    <span>next?</span>
+                </h2>
 
-                    <a asp-controller="Pets"
-                       asp-action="Details"
-                       asp-route-id="@Model"
-                       class="btn btn-outline-secondary">
-                        Back to Pet
-                    </a>
-                </div>
-            </form>
-        </div>
+                <p class="pa-request__guide-intro">
+                    Here's what to expect after
+                    submitting your request.
+                </p>
+
+                <ol class="pa-request__steps">
+
+                    <li class="pa-request__step">
+
+                        <span class="pa-request__step-number">01</span>
+
+                        <div>
+                            <strong>Submit your request</strong>
+
+                            <p>
+                                Send your interest in adopting
+                                this pet to the platform.
+                            </p>
+                        </div>
+                    </li>
+
+                    <li class="pa-request__step">
+
+                        <span class="pa-request__step-number">02</span>
+
+                        <div>
+                            <strong>Shelter review</strong>
+
+                            <p>
+                                The shelter can review your
+                                request and make a decision.
+                            </p>
+                        </div>
+                    </li>
+
+                    <li class="pa-request__step">
+
+                        <span class="pa-request__step-number">03</span>
+
+                        <div>
+                            <strong>Follow your status</strong>
+
+                            <p>
+                                Visit My Requests to see
+                                updates to your adoption request.
+                            </p>
+                        </div>
+                    </li>
+                </ol>
+
+                <a asp-controller="AdoptionRequests"
+                   asp-action="Index"
+                   class="pa-request__guide-link">
+
+                    My Requests
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                    </svg>
+                </a>
+            </section>
+
+            <section class="pa-request__encouragement">
+
+                <span class="pa-request__encouragement-icon"
+                      aria-hidden="true">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                    </svg>
+                </span>
+
+                <h3>Every story starts somewhere.</h3>
+
+                <p>
+                    A thoughtful introduction is a meaningful
+                    first step toward a potential new companion.
+                </p>
+            </section>
+        </aside>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        const message =
-            document.getElementById('message');
-
-        const messageCounter =
-            document.getElementById('messageCounter');
-
-        function updateCounter() {
-            messageCounter.textContent =
-                `${message.value.length} / 512`;
+@section Styles {
+    <style>
+        .pa-request {
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto 55px;
         }
 
-        message.addEventListener(
-            'input',
-            updateCounter
-        );
+        .pa-request__breadcrumb {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            color: #89968b;
+            font-size: 0.81rem;
+        }
 
-        updateCounter();
+            .pa-request__breadcrumb a {
+                color: #637a69;
+                text-decoration: none;
+                transition: color 200ms ease;
+            }
+
+                .pa-request__breadcrumb a:hover {
+                    color: #c8914e;
+                }
+
+            .pa-request__breadcrumb [aria-current="page"] {
+                color: #173d32;
+                font-weight: 700;
+            }
+
+        .pa-request__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            min-height: 320px;
+            margin-bottom: 29px;
+            padding: clamp(32px, 4.5vw, 60px);
+            overflow: hidden;
+            isolation: isolate;
+            border-radius: 28px;
+            background: radial-gradient( circle at 85% 45%, rgba(244, 197, 122, 0.15), transparent 36% ), linear-gradient(125deg, #173d32, #245847);
+            box-shadow: 0 22px 48px rgba(23, 61, 50, 0.15);
+        }
+
+        .pa-request__hero-glow {
+            position: absolute;
+            right: -100px;
+            bottom: -190px;
+            z-index: -1;
+            width: 460px;
+            height: 460px;
+            border-radius: 50%;
+            background: rgba(244, 197, 122, 0.12);
+            filter: blur(65px);
+            pointer-events: none;
+        }
+
+        .pa-request__hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 720px;
+            animation: pa-request-enter 650ms ease both;
+        }
+
+        .pa-request__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 21px;
+            color: #f4c57a;
+            font-size: 0.71rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-request__eyebrow-icon {
+            display: flex;
+            width: 27px;
+            height: 27px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(244, 197, 122, 0.34);
+            border-radius: 9px;
+            background: rgba(244, 197, 122, 0.12);
+        }
+
+            .pa-request__eyebrow-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+
+        .pa-request__hero-title {
+            margin: 0;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.6rem, 4.6vw, 4.25rem);
+            font-weight: 600;
+            letter-spacing: -0.06em;
+            line-height: 1.12;
+        }
+
+            .pa-request__hero-title span {
+                display: block;
+                color: #f4c57a;
+            }
+
+        .pa-request__hero-description {
+            max-width: 560px;
+            margin: 22px 0 25px;
+            color: rgba(255, 255, 255, 0.84);
+            font-size: 0.96rem;
+            line-height: 1.85;
+        }
+
+        .pa-request__hero-bottom {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .pa-request__hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #f4c57a;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.09em;
+        }
+
+            .pa-request__hero-tag svg {
+                width: 18px;
+                height: 18px;
+            }
+
+        .pa-request__hero-divider {
+            width: 1px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.27);
+        }
+
+        .pa-request__pet-id {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.79rem;
+            font-weight: 600;
+        }
+
+        .pa-request__hero-art {
+            position: relative;
+            display: grid;
+            width: 245px;
+            height: 245px;
+            flex-shrink: 0;
+            place-items: center;
+            margin-right: 20px;
+            animation: pa-request-float 6s ease-in-out infinite;
+        }
+
+        .pa-request__art-orbit {
+            position: absolute;
+            border: 1px solid rgba(244, 197, 122, 0.24);
+            border-radius: 50%;
+        }
+
+        .pa-request__art-orbit--outer {
+            inset: 0;
+        }
+
+        .pa-request__art-orbit--inner {
+            inset: 34px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .pa-request__art-center {
+            display: grid;
+            width: 132px;
+            height: 132px;
+            place-items: center;
+            border: 1px solid rgba(244, 197, 122, 0.32);
+            border-radius: 38px;
+            background: rgba(244, 197, 122, 0.13);
+            color: #f4c57a;
+            backdrop-filter: blur(12px);
+            transform: rotate(-7deg);
+        }
+
+            .pa-request__art-center svg {
+                width: 78px;
+                height: 78px;
+                transform: rotate(7deg);
+            }
+
+        .pa-request__art-spark {
+            position: absolute;
+            border-radius: 50%;
+            background: #f4c57a;
+            box-shadow: 0 0 20px rgba(244, 197, 122, 0.55);
+        }
+
+        .pa-request__art-spark--one {
+            top: 20px;
+            right: 52px;
+            width: 8px;
+            height: 8px;
+        }
+
+        .pa-request__art-spark--two {
+            bottom: 37px;
+            left: 23px;
+            width: 5px;
+            height: 5px;
+        }
+
+        .pa-request__layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 325px;
+            align-items: start;
+            gap: 25px;
+        }
+
+        .pa-request__main,
+        .pa-request__sidebar {
+            min-width: 0;
+        }
+
+        .pa-request__card {
+            padding: clamp(25px, 3.5vw, 45px);
+            border: 1px solid #e4ebe2;
+            border-radius: 25px;
+            background: #fffefa;
+            box-shadow: 0 15px 45px rgba(23, 61, 50, 0.055);
+        }
+
+        .pa-request__card-heading {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .pa-request__heading-icon {
+            display: grid;
+            width: 59px;
+            height: 59px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #dce9dc;
+            border-radius: 18px;
+            background: #edf5ec;
+            color: #245847;
+        }
+
+            .pa-request__heading-icon svg {
+                width: 28px;
+                height: 28px;
+            }
+
+        .pa-request__card-eyebrow {
+            display: block;
+            margin-bottom: 9px;
+            color: #a97843;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .pa-request__card-heading h2 {
+            margin: 0 0 7px;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.65rem, 2.5vw, 2.2rem);
+            font-weight: 600;
+            letter-spacing: -0.045em;
+        }
+
+        .pa-request__card-heading p {
+            margin: 0;
+            color: #7a887d;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+
+        .pa-request__card-divider {
+            height: 1px;
+            margin: 30px 0 32px;
+            background: #e6ece4;
+        }
+
+        .pa-request__error {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            margin-bottom: 26px;
+            padding: 17px 19px;
+            border: 1px solid #edc8c1;
+            border-radius: 15px;
+            background: #fff2ef;
+            color: #ac453b;
+        }
+
+            .pa-request__error > svg {
+                width: 21px;
+                height: 21px;
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+
+            .pa-request__error strong {
+                display: block;
+                margin-bottom: 5px;
+                font-size: 0.87rem;
+            }
+
+            .pa-request__error p {
+                margin: 0;
+                font-size: 0.83rem;
+                line-height: 1.7;
+            }
+
+        .pa-request__label-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .pa-request__label {
+            color: #283e34;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .pa-request__optional {
+            color: #96a198;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .pa-request__field-description {
+            margin: 0 0 17px;
+            color: #78867b;
+            font-size: 0.86rem;
+            line-height: 1.75;
+        }
+
+        .pa-request__textarea {
+            display: block;
+            width: 100%;
+            min-height: 225px;
+            padding: 19px 21px;
+            border: 1px solid #dfe8df;
+            border-radius: 16px;
+            background: #fbfcf9;
+            color: #173d32;
+            font-family: "DM Sans", sans-serif;
+            font-size: 0.91rem;
+            line-height: 1.85;
+            resize: vertical;
+            outline: none;
+            transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+        }
+
+            .pa-request__textarea::placeholder {
+                color: #9aa69d;
+            }
+
+            .pa-request__textarea:hover {
+                border-color: #bbd0bf;
+            }
+
+            .pa-request__textarea:focus {
+                border-color: #42755b;
+                background: #fff;
+                box-shadow: 0 0 0 4px rgba(36, 88, 71, 0.11);
+            }
+
+        .pa-request__field-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 9px 18px;
+            margin-top: 12px;
+        }
+
+        .pa-request__field-hint {
+            color: #8b998f;
+            font-size: 0.77rem;
+            line-height: 1.6;
+        }
+
+        .pa-request__counter {
+            flex-shrink: 0;
+            padding: 5px 10px;
+            border: 1px solid #dce8db;
+            border-radius: 8px;
+            background: #f0f5ee;
+            color: #617a64;
+            font-size: 0.75rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+            .pa-request__counter.is-near-limit {
+                border-color: #ebd0a5;
+                background: #fff6e8;
+                color: #9f712e;
+            }
+
+        .pa-request__tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-top: 29px;
+            padding: 20px;
+            border: 1px solid #e8e2cf;
+            border-radius: 16px;
+            background: #fbf9f0;
+        }
+
+        .pa-request__tip-icon {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 12px;
+            background: #f6ecd0;
+            color: #ad7b3d;
+        }
+
+            .pa-request__tip-icon svg {
+                width: 21px;
+                height: 21px;
+            }
+
+        .pa-request__tip strong {
+            display: block;
+            margin-bottom: 7px;
+            color: #856238;
+            font-size: 0.85rem;
+        }
+
+        .pa-request__tip p {
+            margin: 0;
+            color: #847963;
+            font-size: 0.81rem;
+            line-height: 1.8;
+        }
+
+        .pa-request__form-footer {
+            margin-top: 34px;
+            padding-top: 26px;
+            border-top: 1px solid #e6ece4;
+        }
+
+        .pa-request__form-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            margin-bottom: 21px;
+            color: #819085;
+            font-size: 0.8rem;
+            line-height: 1.65;
+        }
+
+            .pa-request__form-notice svg {
+                width: 18px;
+                height: 18px;
+                flex-shrink: 0;
+                margin-top: 1px;
+                color: #77977d;
+            }
+
+        .pa-request__actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .pa-request__cancel,
+        .pa-request__submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
+            min-height: 53px;
+            padding: 14px 21px;
+            border-radius: 13px;
+            font-size: 0.87rem;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+        }
+
+        .pa-request__cancel {
+            border: 1px solid #dbe5da;
+            background: #fff;
+            color: #53695b;
+        }
+
+            .pa-request__cancel:hover {
+                border-color: #adbfaf;
+                background: #f1f6f0;
+                color: #173d32;
+            }
+
+        .pa-request__submit {
+            border: 1px solid #173d32;
+            background: linear-gradient(135deg, #245847, #173d32);
+            color: #fff;
+            box-shadow: 0 10px 23px rgba(23, 61, 50, 0.15);
+            cursor: pointer;
+        }
+
+            .pa-request__submit:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 16px 29px rgba(23, 61, 50, 0.23);
+                color: #fff;
+            }
+
+            .pa-request__cancel svg,
+            .pa-request__submit svg {
+                width: 19px;
+                height: 19px;
+            }
+
+        .pa-request__sidebar {
+            display: grid;
+            gap: 20px;
+        }
+
+        .pa-request__guide {
+            padding: 29px;
+            border: 1px solid #e5e8dd;
+            border-radius: 23px;
+            background: radial-gradient( circle at top right, rgba(244, 197, 122, 0.14), transparent 45% ), #fbfaf4;
+        }
+
+        .pa-request__guide-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .pa-request__guide-icon {
+            display: grid;
+            width: 43px;
+            height: 43px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 13px;
+            background: #e2eee0;
+            color: #245847;
+        }
+
+            .pa-request__guide-icon svg {
+                width: 23px;
+                height: 23px;
+            }
+
+        .pa-request__guide-eyebrow {
+            color: #a17c49;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            line-height: 1.6;
+        }
+
+        .pa-request__guide h2 {
+            margin: 0;
+            color: #173d32;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.85rem;
+            font-weight: 600;
+            letter-spacing: -0.045em;
+            line-height: 1.24;
+        }
+
+            .pa-request__guide h2 span {
+                color: #c8914e;
+            }
+
+        .pa-request__guide-intro {
+            margin: 15px 0 0;
+            color: #788579;
+            font-size: 0.84rem;
+            line-height: 1.8;
+        }
+
+        .pa-request__steps {
+            display: grid;
+            gap: 0;
+            margin: 27px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .pa-request__step {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            padding-bottom: 27px;
+        }
+
+            .pa-request__step:not(:last-child)::before {
+                position: absolute;
+                top: 31px;
+                bottom: 6px;
+                left: 14px;
+                width: 1px;
+                background: #d9e5d6;
+                content: "";
+            }
+
+        .pa-request__step-number {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #d8e6d7;
+            border-radius: 10px;
+            background: #e7f0e4;
+            color: #416b4b;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .pa-request__step strong {
+            display: block;
+            margin: 4px 0 6px;
+            color: #294937;
+            font-size: 0.84rem;
+        }
+
+        .pa-request__step p {
+            margin: 0;
+            color: #7c897e;
+            font-size: 0.79rem;
+            line-height: 1.75;
+        }
+
+        .pa-request__guide-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+            color: #245847;
+            font-size: 0.84rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+            .pa-request__guide-link:hover {
+                color: #b47d40;
+            }
+
+            .pa-request__guide-link svg {
+                width: 18px;
+                height: 18px;
+                transition: transform 200ms ease;
+            }
+
+            .pa-request__guide-link:hover svg {
+                transform: translateX(4px);
+            }
+
+        .pa-request__encouragement {
+            padding: 26px;
+            border: 1px solid #dce9de;
+            border-radius: 21px;
+            background: #eff5ed;
+        }
+
+        .pa-request__encouragement-icon {
+            display: grid;
+            width: 44px;
+            height: 44px;
+            margin-bottom: 19px;
+            place-items: center;
+            border-radius: 14px;
+            background: #dcebd9;
+            color: #245847;
+        }
+
+            .pa-request__encouragement-icon svg {
+                width: 23px;
+                height: 23px;
+            }
+
+        .pa-request__encouragement h3 {
+            margin: 0 0 11px;
+            color: #244d35;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 1.35rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+        }
+
+        .pa-request__encouragement p {
+            margin: 0;
+            color: #667b69;
+            font-size: 0.82rem;
+            line-height: 1.8;
+        }
+
+        .pa-request a:focus-visible,
+        .pa-request button:focus-visible {
+            outline: 3px solid #c8914e;
+            outline-offset: 4px;
+        }
+
+        @@keyframes pa-request-enter {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes pa-request-float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .pa-request__layout {
+                grid-template-columns: minmax(0, 1fr) 285px;
+            }
+
+            .pa-request__guide {
+                padding: 24px;
+            }
+
+            .pa-request__hero-art {
+                margin-right: 0;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pa-request__layout {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-request__sidebar {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                align-items: start;
+            }
+
+            .pa-request__hero-art {
+                position: absolute;
+                right: -30px;
+                width: 210px;
+                height: 210px;
+                opacity: 0.35;
+                pointer-events: none;
+            }
+
+            .pa-request__hero-content {
+                max-width: 610px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .pa-request {
+                margin-bottom: 30px;
+            }
+
+            .pa-request__hero {
+                min-height: auto;
+                padding: 33px;
+                border-radius: 22px;
+            }
+
+            .pa-request__hero-art {
+                right: -75px;
+                opacity: 0.16;
+            }
+
+            .pa-request__card {
+                padding: 28px;
+                border-radius: 21px;
+            }
+
+            .pa-request__sidebar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 520px) {
+            .pa-request__breadcrumb {
+                gap: 8px;
+                font-size: 0.75rem;
+            }
+
+            .pa-request__hero {
+                padding: 29px 23px;
+            }
+
+            .pa-request__hero-title {
+                font-size: clamp(2.3rem, 9vw, 3.1rem);
+            }
+
+            .pa-request__hero-description {
+                font-size: 0.87rem;
+            }
+
+            .pa-request__card {
+                padding: 24px 19px;
+            }
+
+            .pa-request__card-heading {
+                align-items: flex-start;
+                gap: 13px;
+            }
+
+            .pa-request__heading-icon {
+                width: 45px;
+                height: 45px;
+                border-radius: 13px;
+            }
+
+                .pa-request__heading-icon svg {
+                    width: 23px;
+                    height: 23px;
+                }
+
+            .pa-request__card-heading h2 {
+                font-size: 1.65rem;
+            }
+
+            .pa-request__textarea {
+                min-height: 210px;
+                padding: 16px;
+                font-size: 0.87rem;
+            }
+
+            .pa-request__actions {
+                flex-direction: column-reverse;
+            }
+
+            .pa-request__cancel,
+            .pa-request__submit {
+                width: 100%;
+            }
+
+            .pa-request__guide,
+            .pa-request__encouragement {
+                padding: 23px;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-request__hero-content,
+            .pa-request__hero-art {
+                animation: none;
+            }
+
+            .pa-request__cancel,
+            .pa-request__submit,
+            .pa-request__textarea,
+            .pa-request__guide-link svg {
+                transition: none;
+            }
+
+                .pa-request__submit:hover,
+                .pa-request__guide-link:hover svg {
+                    transform: none;
+                }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const message = document.getElementById("message");
+            const counter = document.getElementById("messageCounter");
+
+            if (!message || !counter) {
+                return;
+            }
+
+            const maxLength = message.maxLength;
+
+            const updateCounter = () => {
+                const length = message.value.length;
+
+                counter.textContent = `${length} / ${maxLength}`;
+
+                counter.classList.toggle(
+                    "is-near-limit",
+                    length >= maxLength * 0.9
+                );
+            };
+
+            message.addEventListener("input", updateCounter);
+
+            updateCounter();
+        })();
     </script>
 }

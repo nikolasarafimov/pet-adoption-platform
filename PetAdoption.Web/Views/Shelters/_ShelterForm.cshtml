@@ -1,89 +1,139 @@
 ﻿@model PetAdoption.Web.Models.Shelters.ShelterFormVm
 
 <div asp-validation-summary="ModelOnly"
-     class="alert alert-danger mb-4">
-</div>
+     class="alert alert-danger mb-4"
+     role="alert"></div>
 
-<div class="mb-4">
-    <h5 class="mb-1">
-        Shelter Information
-    </h5>
-
-    <p class="small text-muted mb-0">
-        Enter the organization's public contact and location details.
-    </p>
+<div class="d-flex align-items-start gap-3 mb-4 pb-3 border-bottom">
+    <div class="d-flex align-items-center justify-content-center flex-shrink-0 rounded-3 bg-success bg-opacity-10 text-success"
+         style="width: 46px; height: 46px;">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+            <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
+            <path d="M9 21v-8h6v8" />
+        </svg>
+    </div>
+    <div>
+        <h3 class="h5 fw-bold mb-1">Shelter Information</h3>
+        <p class="small text-muted mb-0">
+            Add the organization's official name and location so it can be identified in the directory.
+        </p>
+    </div>
 </div>
 
 <div class="row g-4">
     <div class="col-md-6">
-        <label asp-for="Name"
-               class="form-label">
-        </label>
-
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <label asp-for="Name" class="form-label"></label>
+            <span class="small fw-semibold text-success">Required</span>
+        </div>
         <input asp-for="Name"
                class="form-control"
-               placeholder="Shelter name" />
-
-        <span asp-validation-for="Name"
-              class="text-danger">
-        </span>
+               type="text"
+               autocomplete="organization"
+               maxlength="128"
+               required
+               aria-describedby="shelterNameHelp"
+               placeholder="e.g. Happy Paws Shelter" />
+        <span asp-validation-for="Name" class="text-danger small"></span>
+        <div id="shelterNameHelp" class="form-text">
+            Use the name visitors will recognize.
+        </div>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="City"
-               class="form-label">
-        </label>
-
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <label asp-for="City" class="form-label"></label>
+            <span class="small fw-semibold text-success">Required</span>
+        </div>
         <input asp-for="City"
                class="form-control"
-               placeholder="City" />
-
-        <span asp-validation-for="City"
-              class="text-danger">
-        </span>
+               type="text"
+               autocomplete="address-level2"
+               maxlength="128"
+               required
+               aria-describedby="shelterCityHelp"
+               placeholder="e.g. Skopje" />
+        <span asp-validation-for="City" class="text-danger small"></span>
+        <div id="shelterCityHelp" class="form-text">
+            City where the shelter is located.
+        </div>
     </div>
 
     <div class="col-12">
-        <label asp-for="Address"
-               class="form-label">
-        </label>
-
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <label asp-for="Address" class="form-label"></label>
+            <span class="small fw-semibold text-success">Required</span>
+        </div>
         <input asp-for="Address"
                class="form-control"
-               placeholder="Street and number" />
-
-        <span asp-validation-for="Address"
-              class="text-danger">
-        </span>
+               type="text"
+               autocomplete="street-address"
+               maxlength="256"
+               required
+               aria-describedby="shelterAddressHelp"
+               placeholder="Street name, building number, and any relevant details" />
+        <span asp-validation-for="Address" class="text-danger small"></span>
+        <div id="shelterAddressHelp" class="form-text">
+            Enter the complete street address for this location.
+        </div>
     </div>
+</div>
 
+<div class="d-flex align-items-start gap-3 mt-5 mb-4 pt-4 border-top">
+    <div class="d-flex align-items-center justify-content-center flex-shrink-0 rounded-3 bg-success bg-opacity-10 text-success"
+         style="width: 46px; height: 46px;">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m3 7 9 6 9-6" />
+        </svg>
+    </div>
+    <div>
+        <h3 class="h5 fw-bold mb-1">Contact Details</h3>
+        <p class="small text-muted mb-0">
+            Provide public contact information to help people reach the shelter.
+            Both fields are optional.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4">
     <div class="col-md-6">
-        <label asp-for="Phone"
-               class="form-label">
-        </label>
-
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <label asp-for="Phone" class="form-label"></label>
+            <span class="small text-muted">Optional</span>
+        </div>
         <input asp-for="Phone"
                class="form-control"
                type="tel"
-               placeholder="+389..." />
-
-        <span asp-validation-for="Phone"
-              class="text-danger">
-        </span>
+               autocomplete="tel"
+               maxlength="64"
+               aria-describedby="shelterPhoneHelp"
+               placeholder="e.g. +389 70 123 456" />
+        <span asp-validation-for="Phone" class="text-danger small"></span>
+        <div id="shelterPhoneHelp" class="form-text">
+            Include the country code for international visitors.
+        </div>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Email"
-               class="form-label">
-        </label>
-
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <label asp-for="Email" class="form-label"></label>
+            <span class="small text-muted">Optional</span>
+        </div>
         <input asp-for="Email"
                class="form-control"
                type="email"
-               placeholder="contact@shelter.com" />
-
-        <span asp-validation-for="Email"
-              class="text-danger">
-        </span>
+               autocomplete="email"
+               maxlength="128"
+               aria-describedby="shelterEmailHelp"
+               placeholder="e.g. contact@shelter.org" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+        <div id="shelterEmailHelp" class="form-text">
+            Use an address the organization regularly checks.
+        </div>
     </div>
 </div>

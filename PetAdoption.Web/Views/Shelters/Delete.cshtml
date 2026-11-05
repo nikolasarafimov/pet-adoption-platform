@@ -2,86 +2,1005 @@
 
 @{
     ViewData["Title"] = "Delete Shelter";
+    ViewData["Description"] = "Review the shelter profile and confirm its removal from the platform.";
 }
 
-<div class="row justify-content-center">
-    <div class="col-lg-8 col-xl-7">
-        <div class="card p-4 p-md-5">
-            <div class="text-center mb-5">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mb-3"
-                     style="width: 80px; height: 80px;">
-                    <span class="fs-2">⚠️</span>
-                </div>
+<div class="pa-shelter-delete">
+    <nav class="pa-shelter-delete__breadcrumb" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Welcome">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>Administration</span>
+        <span aria-hidden="true">/</span>
+        <a asp-controller="Shelters" asp-action="Index">Shelters</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Delete Shelter</span>
+    </nav>
 
-                <h1 class="section-title text-danger mb-2">
-                    Delete Shelter?
-                </h1>
+    <header class="pa-shelter-delete__hero" aria-labelledby="shelterDeleteTitle">
+        <div class="pa-shelter-delete__hero-copy">
+            <span class="pa-shelter-delete__eyebrow">
+                <span class="pa-shelter-delete__eyebrow-dot" aria-hidden="true"></span>
+                SHELTER MANAGEMENT WORKSPACE
+            </span>
 
-                <p class="section-subtitle mb-0">
-                    This action permanently removes the shelter.
-                </p>
-            </div>
+            <h1 id="shelterDeleteTitle">
+                One final review.
+                <span>Before you remove.</span>
+            </h1>
 
-            <div class="bg-light rounded-4 p-4 mb-4">
-                <h4 class="mb-3">
-                    @Model.Name
-                </h4>
+            <p>
+                Make sure you are removing the correct organization.
+                Review its profile and the conditions for deletion below.
+            </p>
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="small text-muted">
-                            Location
-                        </div>
-
-                        <div class="fw-semibold">
-                            @Model.City
-                        </div>
-
-                        <div>
-                            @Model.Address
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="small text-muted">
-                            Contact
-                        </div>
-
-                        <div>
-                            @(Model.Email ?? "-")
-                        </div>
-
-                        <div>
-                            @(Model.Phone ?? "-")
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="alert alert-warning">
-                A shelter that still has pets cannot be deleted.
-                Move or delete those pets first.
-            </div>
-
-            <form asp-action="Delete"
-                  method="post">
-
-                <input type="hidden"
-                       name="id"
-                       value="@Model.Id" />
-
-                <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
-                    <button type="submit"
-                            class="btn btn-danger flex-grow-1">
-                        Delete Shelter
-                    </button>
-
-                    <a asp-action="Index"
-                       class="btn btn-outline-secondary">
-                        Keep Shelter
-                    </a>
-                </div>
-            </form>
+            <a asp-controller="Shelters"
+               asp-action="Index"
+               class="pa-shelter-delete__hero-back">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 12H5m6-6-6 6 6 6" />
+                </svg>
+                Back to Shelter Directory
+            </a>
         </div>
+
+        <div class="pa-shelter-delete__hero-art" aria-hidden="true">
+            <div class="pa-shelter-delete__art-orbit"></div>
+            <div class="pa-shelter-delete__art-orbit pa-shelter-delete__art-orbit--inner"></div>
+            <div class="pa-shelter-delete__art-icon">
+                <svg viewBox="0 0 120 120">
+                    <path d="m17 56 43-35 43 35" />
+                    <path d="M30 51v50h60V51" />
+                    <path d="M49 101V74h22v27" />
+                    <path d="M60 45v18" />
+                    <path d="M60 69h.01" />
+                </svg>
+            </div>
+            <span class="pa-shelter-delete__spark pa-shelter-delete__spark--one"></span>
+            <span class="pa-shelter-delete__spark pa-shelter-delete__spark--two"></span>
+        </div>
+    </header>
+
+    <div class="pa-shelter-delete__layout">
+        <div class="pa-shelter-delete__main">
+            <section class="pa-shelter-delete__panel" aria-labelledby="deleteShelterHeading">
+                <div class="pa-shelter-delete__panel-heading">
+                    <div class="pa-shelter-delete__warning-symbol" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M10.3 3.9 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+                            <path d="M12 9v5m0 4h.01" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <span class="pa-shelter-delete__section-kicker">DELETION CONFIRMATION</span>
+                        <h2 id="deleteShelterHeading">Delete this shelter?</h2>
+                        <p>
+                            This action permanently removes the shelter record if no
+                            linked pets or user accounts prevent deletion.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pa-shelter-delete__profile">
+                    <div class="pa-shelter-delete__profile-header">
+                        <span class="pa-shelter-delete__profile-avatar" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
+                                <path d="M9 21v-8h6v8" />
+                            </svg>
+                        </span>
+                        <div class="pa-shelter-delete__profile-identity">
+                            <span class="pa-shelter-delete__profile-label">SELECTED ORGANIZATION</span>
+                            <h3>@Model.Name</h3>
+                            <span class="pa-shelter-delete__profile-id">Shelter #@Model.Id</span>
+                        </div>
+                    </div>
+
+                    <dl class="pa-shelter-delete__details">
+                        <div class="pa-shelter-delete__detail">
+                            <dt>
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z" />
+                                    <circle cx="12" cy="10" r="2.5" />
+                                </svg>
+                                Location
+                            </dt>
+                            <dd>
+                                <strong>@Model.City</strong>
+                                <span>@Model.Address</span>
+                            </dd>
+                        </div>
+
+                        <div class="pa-shelter-delete__detail">
+                            <dt>
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                                    <path d="m4 7 8 6 8-6" />
+                                </svg>
+                                Email address
+                            </dt>
+                            <dd>
+                                <strong>@(string.IsNullOrWhiteSpace(Model.Email) ? "Not provided" : Model.Email)</strong>
+                            </dd>
+                        </div>
+
+                        <div class="pa-shelter-delete__detail">
+                            <dt>
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M20 16.5v2.6a2 2 0 0 1-2.2 2A17.8 17.8 0 0 1 2.9 6.2 2 2 0 0 1 4.9 4h2.6a2 2 0 0 1 2 1.7l.5 2.5a2 2 0 0 1-.6 1.9L7.8 11.7a14 14 0 0 0 4.5 4.5l1.6-1.6a2 2 0 0 1 1.9-.6l2.5.5a2 2 0 0 1 1.7 2Z" />
+                                </svg>
+                                Phone number
+                            </dt>
+                            <dd>
+                                <strong>@(string.IsNullOrWhiteSpace(Model.Phone) ? "Not provided" : Model.Phone)</strong>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="pa-shelter-delete__alert" role="note">
+                    <span class="pa-shelter-delete__alert-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 11v5m0-8h.01" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h3>Linked records must be resolved first</h3>
+                        <p>
+                            A shelter cannot be deleted while pets or user accounts are linked to it.
+                            Reassign or remove those records first. The system will check these
+                            conditions again when you submit this request.
+                        </p>
+                    </div>
+                </div>
+
+                <form asp-controller="Shelters"
+                      asp-action="Delete"
+                      method="post"
+                      asp-antiforgery="true"
+                      class="pa-shelter-delete__form">
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <label class="pa-shelter-delete__acknowledgment">
+                        <input type="checkbox" name="confirmDeletion" value="true" required />
+                        <span class="pa-shelter-delete__checkbox" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m5 12 4 4L19 6" />
+                            </svg>
+                        </span>
+                        <span>
+                            <strong>I understand that this action is permanent.</strong>
+                            <small>I have reviewed the shelter details and want to proceed.</small>
+                        </span>
+                    </label>
+
+                    <div class="pa-shelter-delete__actions">
+                        <a asp-controller="Shelters"
+                           asp-action="Index"
+                           class="pa-shelter-delete__cancel">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M19 12H5m6-6-6 6 6 6" />
+                            </svg>
+                            Keep Shelter
+                        </a>
+                        <button type="submit" class="pa-shelter-delete__submit">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                            </svg>
+                            Delete Shelter
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <aside class="pa-shelter-delete__aside" aria-label="Deletion guidance">
+            <section class="pa-shelter-delete__guide" aria-labelledby="deletionChecklistHeading">
+                <div class="pa-shelter-delete__guide-header">
+                    <span class="pa-shelter-delete__section-kicker">BEFORE YOU CONFIRM</span>
+                    <h2 id="deletionChecklistHeading">A quick safety check.</h2>
+                    <p>These conditions help protect the platform's connected records.</p>
+                </div>
+
+                <ol class="pa-shelter-delete__checklist">
+                    <li>
+                        <span class="pa-shelter-delete__step">01</span>
+                        <div>
+                            <h3>Review the organization</h3>
+                            <p>Verify the shelter name and location above.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="pa-shelter-delete__step">02</span>
+                        <div>
+                            <h3>Resolve assigned pets</h3>
+                            <p>Move or remove pets belonging to this shelter.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="pa-shelter-delete__step">03</span>
+                        <div>
+                            <h3>Unlink user accounts</h3>
+                            <p>Associated shelter accounts also block deletion.</p>
+                        </div>
+                    </li>
+                </ol>
+            </section>
+
+            <div class="pa-shelter-delete__reassurance">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                    <path d="m9 12 2 2 4-4" />
+                </svg>
+                <div>
+                    <strong>Protected by server-side checks</strong>
+                    <p>If any linked pets or accounts remain, the deletion is rejected.</p>
+                </div>
+            </div>
+        </aside>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .pa-shelter-delete {
+            --sd-forest: #173d32;
+            --sd-green: #2e624a;
+            --sd-ink: #22382d;
+            --sd-muted: #7a897e;
+            --sd-line: #e3e9e0;
+            --sd-danger: #ae4141;
+            --sd-gold: #e4bd80;
+            color: var(--sd-ink);
+            font-family: "DM Sans", sans-serif;
+            padding-bottom: 58px;
+        }
+
+            .pa-shelter-delete * {
+                box-sizing: border-box;
+            }
+
+        .pa-shelter-delete__breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 2px 0 22px;
+            color: #819085;
+            font-size: .79rem;
+            font-weight: 650;
+        }
+
+            .pa-shelter-delete__breadcrumb a {
+                color: #667f6e;
+                text-decoration: none;
+                transition: color .2s ease;
+            }
+
+                .pa-shelter-delete__breadcrumb a:hover {
+                    color: #2b5c43;
+                }
+
+            .pa-shelter-delete__breadcrumb [aria-current="page"] {
+                color: #304e3d;
+            }
+
+        .pa-shelter-delete__hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 289px;
+            overflow: hidden;
+            border: 1px solid rgba(34,80,61,.14);
+            border-radius: 26px;
+            background: linear-gradient(118deg, #153a30 0%, #214e3c 59%, #315d49 100%);
+            box-shadow: 0 17px 34px rgba(29,67,45,.1);
+        }
+
+            .pa-shelter-delete__hero::after {
+                content: "";
+                position: absolute;
+                right: -58px;
+                bottom: -130px;
+                width: 310px;
+                height: 310px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(227,190,132,.11), transparent 70%);
+                pointer-events: none;
+            }
+
+        .pa-shelter-delete__hero-copy {
+            position: relative;
+            z-index: 1;
+            width: min(74%, 790px);
+            padding: 41px clamp(28px, 4.5vw, 61px);
+        }
+
+        .pa-shelter-delete__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #e4c18d;
+            font-size: .67rem;
+            font-weight: 800;
+            letter-spacing: .14em;
+        }
+
+        .pa-shelter-delete__eyebrow-dot {
+            display: block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #e8bf80;
+            box-shadow: 0 0 0 5px rgba(228,189,128,.13);
+        }
+
+        .pa-shelter-delete__hero h1 {
+            max-width: 720px;
+            margin: 15px 0 12px;
+            color: #fff;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(2.2rem, 3.6vw, 3.5rem);
+            font-weight: 600;
+            letter-spacing: -.045em;
+            line-height: 1.12;
+        }
+
+            .pa-shelter-delete__hero h1 span {
+                display: block;
+                color: var(--sd-gold);
+            }
+
+        .pa-shelter-delete__hero p {
+            max-width: 590px;
+            margin: 0 0 22px;
+            color: #d1dfd4;
+            font-size: .9rem;
+            line-height: 1.75;
+        }
+
+        .pa-shelter-delete__hero-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #f0e9d8;
+            font-size: .82rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: color .2s ease, transform .2s ease;
+        }
+
+            .pa-shelter-delete__hero-back:hover {
+                color: #fff;
+                transform: translateX(-3px);
+            }
+
+        .pa-shelter-delete svg {
+            flex-shrink: 0;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .pa-shelter-delete__hero-back svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .pa-shelter-delete__hero-art {
+            position: absolute;
+            inset: 0 1% 0 auto;
+            display: grid;
+            place-items: center;
+            width: 33%;
+            color: #e6bf86;
+            pointer-events: none;
+        }
+
+        .pa-shelter-delete__art-orbit {
+            position: absolute;
+            width: 254px;
+            height: 254px;
+            border: 1px solid rgba(231,200,156,.24);
+            border-radius: 50%;
+            box-shadow: 0 0 0 35px rgba(247,239,222,.025), 0 0 0 77px rgba(247,239,222,.02);
+        }
+
+        .pa-shelter-delete__art-orbit--inner {
+            width: 188px;
+            height: 188px;
+            border-color: rgba(231,200,156,.15);
+            box-shadow: none;
+        }
+
+        .pa-shelter-delete__art-icon {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 139px;
+            height: 139px;
+            border: 1px solid rgba(231,200,156,.2);
+            border-radius: 50%;
+            background: rgba(233,218,186,.09);
+        }
+
+            .pa-shelter-delete__art-icon svg {
+                width: 104px;
+                height: 104px;
+                stroke-width: 2.4;
+            }
+
+        .pa-shelter-delete__spark {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e4bd80;
+            opacity: .8;
+        }
+
+        .pa-shelter-delete__spark--one {
+            top: 22%;
+            right: 15%;
+        }
+
+        .pa-shelter-delete__spark--two {
+            bottom: 24%;
+            left: 13%;
+            width: 5px;
+            height: 5px;
+        }
+
+        .pa-shelter-delete__layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.7fr) minmax(290px, 1fr);
+            align-items: start;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .pa-shelter-delete__main, .pa-shelter-delete__aside {
+            min-width: 0;
+        }
+
+        .pa-shelter-delete__aside {
+            position: sticky;
+            top: 100px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .pa-shelter-delete__panel, .pa-shelter-delete__guide {
+            overflow: hidden;
+            border: 1px solid var(--sd-line);
+            border-radius: 23px;
+            background: #fff;
+            box-shadow: 0 12px 36px rgba(25,54,40,.045);
+        }
+
+        .pa-shelter-delete__panel {
+            padding: clamp(23px, 3.2vw, 40px);
+        }
+
+        .pa-shelter-delete__panel-heading {
+            display: flex;
+            align-items: flex-start;
+            gap: 17px;
+            padding-bottom: 26px;
+            border-bottom: 1px solid #edf0e9;
+        }
+
+        .pa-shelter-delete__warning-symbol {
+            display: grid;
+            place-items: center;
+            width: 55px;
+            height: 55px;
+            flex-shrink: 0;
+            border: 1px solid #f1d2ce;
+            border-radius: 16px;
+            background: #fff1ee;
+            color: #b84c48;
+        }
+
+            .pa-shelter-delete__warning-symbol svg {
+                width: 28px;
+                height: 28px;
+            }
+
+        .pa-shelter-delete__section-kicker {
+            color: #a67b42;
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .15em;
+        }
+
+        .pa-shelter-delete__panel-heading .pa-shelter-delete__section-kicker {
+            color: #b35a4b;
+        }
+
+        .pa-shelter-delete__panel-heading h2, .pa-shelter-delete__guide h2 {
+            margin: 7px 0;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+            font-weight: 600;
+            letter-spacing: -.035em;
+        }
+
+        .pa-shelter-delete__panel-heading p {
+            max-width: 525px;
+            margin: 0;
+            color: var(--sd-muted);
+            font-size: .84rem;
+            line-height: 1.75;
+        }
+
+        .pa-shelter-delete__profile {
+            margin-top: 26px;
+            padding: 23px;
+            border: 1px solid #e6ebe4;
+            border-radius: 18px;
+            background: #fcfdfa;
+        }
+
+        .pa-shelter-delete__profile-header {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding-bottom: 21px;
+            border-bottom: 1px solid #e5ebe3;
+        }
+
+        .pa-shelter-delete__profile-avatar {
+            display: grid;
+            place-items: center;
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            border-radius: 15px;
+            background: #eaf3e9;
+            color: #387354;
+        }
+
+            .pa-shelter-delete__profile-avatar svg {
+                width: 27px;
+                height: 27px;
+            }
+
+        .pa-shelter-delete__profile-identity {
+            min-width: 0;
+        }
+
+        .pa-shelter-delete__profile-label {
+            color: #9b8967;
+            font-size: .63rem;
+            font-weight: 800;
+            letter-spacing: .11em;
+        }
+
+        .pa-shelter-delete__profile-identity h3 {
+            margin: 4px 0 2px;
+            color: #263b30;
+            font-size: 1.15rem;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .pa-shelter-delete__profile-id {
+            color: #859287;
+            font-size: .75rem;
+            font-weight: 650;
+        }
+
+        .pa-shelter-delete__details {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 21px 16px;
+            margin: 20px 0 0;
+        }
+
+        .pa-shelter-delete__detail {
+            min-width: 0;
+        }
+
+            .pa-shelter-delete__detail:first-child {
+                grid-row: span 2;
+            }
+
+            .pa-shelter-delete__detail dt {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                margin-bottom: 8px;
+                color: #849388;
+                font-size: .74rem;
+                font-weight: 700;
+            }
+
+                .pa-shelter-delete__detail dt svg {
+                    width: 16px;
+                    height: 16px;
+                    color: #73947e;
+                }
+
+            .pa-shelter-delete__detail dd {
+                display: grid;
+                gap: 3px;
+                margin: 0;
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+
+                .pa-shelter-delete__detail dd strong {
+                    color: #2c4535;
+                    font-size: .88rem;
+                    font-weight: 800;
+                }
+
+                .pa-shelter-delete__detail dd span {
+                    color: #697e6f;
+                    font-size: .8rem;
+                    line-height: 1.6;
+                }
+
+        .pa-shelter-delete__alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            margin-top: 22px;
+            padding: 18px;
+            border: 1px solid #eed9b3;
+            border-radius: 15px;
+            background: #fffbf3;
+        }
+
+        .pa-shelter-delete__alert-icon {
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            background: #fcf0d9;
+            color: #b47a30;
+        }
+
+            .pa-shelter-delete__alert-icon svg {
+                width: 19px;
+                height: 19px;
+            }
+
+        .pa-shelter-delete__alert h3 {
+            margin: 0 0 5px;
+            color: #7c542f;
+            font-size: .85rem;
+            font-weight: 800;
+        }
+
+        .pa-shelter-delete__alert p {
+            margin: 0;
+            color: #8a7152;
+            font-size: .79rem;
+            line-height: 1.75;
+        }
+
+        .pa-shelter-delete__form {
+            margin-top: 27px;
+            padding-top: 26px;
+            border-top: 1px solid #edf0e9;
+        }
+
+        .pa-shelter-delete__acknowledgment {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+            .pa-shelter-delete__acknowledgment input {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                opacity: 0;
+            }
+
+        .pa-shelter-delete__checkbox {
+            display: grid;
+            place-items: center;
+            width: 23px;
+            height: 23px;
+            flex-shrink: 0;
+            border: 1.5px solid #aabaae;
+            border-radius: 7px;
+            background: #fff;
+            color: transparent;
+            transition: background .2s ease, border-color .2s ease, color .2s ease;
+        }
+
+            .pa-shelter-delete__checkbox svg {
+                width: 15px;
+                height: 15px;
+                stroke-width: 2.5;
+            }
+
+        .pa-shelter-delete__acknowledgment input:checked + .pa-shelter-delete__checkbox {
+            border-color: #3b7954;
+            background: #3b7954;
+            color: #fff;
+        }
+
+        .pa-shelter-delete__acknowledgment input:focus-visible + .pa-shelter-delete__checkbox {
+            outline: 3px solid #c8914e;
+            outline-offset: 3px;
+        }
+
+        .pa-shelter-delete__acknowledgment strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #344a3d;
+            font-size: .82rem;
+            line-height: 1.5;
+        }
+
+        .pa-shelter-delete__acknowledgment small {
+            display: block;
+            color: #839186;
+            font-size: .74rem;
+            line-height: 1.6;
+        }
+
+        .pa-shelter-delete__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .pa-shelter-delete__cancel, .pa-shelter-delete__submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 49px;
+            padding: 13px 20px;
+            border-radius: 12px;
+            font-size: .83rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+        }
+
+            .pa-shelter-delete__cancel svg, .pa-shelter-delete__submit svg {
+                width: 18px;
+                height: 18px;
+            }
+
+        .pa-shelter-delete__cancel {
+            border: 1px solid #dae5d9;
+            background: #f6faf5;
+            color: #2c6345;
+        }
+
+            .pa-shelter-delete__cancel:hover {
+                background: #edf5ec;
+                color: #1e4e37;
+                transform: translateY(-2px);
+            }
+
+        .pa-shelter-delete__submit {
+            border: 1px solid #ae4141;
+            background: #ae4141;
+            color: #fff;
+            box-shadow: 0 7px 18px rgba(174,65,65,.12);
+            cursor: pointer;
+        }
+
+            .pa-shelter-delete__submit:hover {
+                border-color: #963536;
+                background: #963536;
+                color: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(174,65,65,.2);
+            }
+
+        .pa-shelter-delete__guide-header {
+            padding: 25px 25px 17px;
+        }
+
+        .pa-shelter-delete__guide h2 {
+            margin-top: 9px;
+            font-size: 1.45rem;
+        }
+
+        .pa-shelter-delete__guide-header p {
+            margin: 0;
+            color: var(--sd-muted);
+            font-size: .82rem;
+            line-height: 1.7;
+        }
+
+        .pa-shelter-delete__checklist {
+            display: grid;
+            gap: 0;
+            margin: 0;
+            padding: 0 25px 12px;
+            list-style: none;
+        }
+
+            .pa-shelter-delete__checklist li {
+                display: flex;
+                gap: 13px;
+                padding: 16px 0;
+                border-top: 1px solid #edf0e9;
+            }
+
+        .pa-shelter-delete__step {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            border: 1px solid #e6e8db;
+            border-radius: 10px;
+            background: #f8f7ed;
+            color: #a07d4a;
+            font-size: .73rem;
+            font-weight: 800;
+        }
+
+        .pa-shelter-delete__checklist h3 {
+            margin: 1px 0 4px;
+            color: #324b3b;
+            font-size: .86rem;
+            font-weight: 800;
+        }
+
+        .pa-shelter-delete__checklist p {
+            margin: 0;
+            color: #7c8b7e;
+            font-size: .78rem;
+            line-height: 1.7;
+        }
+
+        .pa-shelter-delete__reassurance {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 19px;
+            border: 1px solid #dceadc;
+            border-radius: 17px;
+            background: #f2f8f1;
+        }
+
+            .pa-shelter-delete__reassurance > svg {
+                width: 25px;
+                height: 25px;
+                color: #4f845a;
+            }
+
+            .pa-shelter-delete__reassurance strong {
+                display: block;
+                margin-bottom: 4px;
+                color: #355f41;
+                font-size: .82rem;
+                font-weight: 800;
+            }
+
+            .pa-shelter-delete__reassurance p {
+                margin: 0;
+                color: #6d846f;
+                font-size: .76rem;
+                line-height: 1.7;
+            }
+
+        .pa-shelter-delete :is(a, button):focus-visible {
+            outline: 3px solid #c8914e;
+            outline-offset: 3px;
+        }
+
+        @@media (max-width: 1080px) {
+            .pa-shelter-delete__layout {
+                grid-template-columns: minmax(0, 1.35fr) minmax(265px, 1fr);
+                gap: 18px;
+            }
+        }
+
+        @@media (max-width: 880px) {
+            .pa-shelter-delete__layout {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-shelter-delete__aside {
+                position: static;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                align-items: start;
+            }
+
+            .pa-shelter-delete__hero-art {
+                right: -4%;
+                opacity: .45;
+            }
+
+            .pa-shelter-delete__hero-copy {
+                width: min(100%, 700px);
+            }
+        }
+
+        @@media (max-width: 610px) {
+            .pa-shelter-delete__hero {
+                min-height: 0;
+                border-radius: 22px;
+            }
+
+            .pa-shelter-delete__hero-copy {
+                width: 100%;
+                padding: 34px 25px 36px;
+            }
+
+            .pa-shelter-delete__hero h1 {
+                font-size: 2.15rem;
+            }
+
+            .pa-shelter-delete__hero-art {
+                width: 60%;
+                right: -15%;
+                opacity: .17;
+            }
+
+            .pa-shelter-delete__panel {
+                padding: 23px 19px;
+            }
+
+            .pa-shelter-delete__panel-heading {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .pa-shelter-delete__profile {
+                padding: 18px;
+            }
+
+            .pa-shelter-delete__details {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-shelter-delete__detail:first-child {
+                grid-row: auto;
+            }
+
+            .pa-shelter-delete__alert {
+                padding: 15px;
+            }
+
+            .pa-shelter-delete__actions {
+                flex-direction: column;
+            }
+
+            .pa-shelter-delete__cancel, .pa-shelter-delete__submit {
+                width: 100%;
+            }
+
+            .pa-shelter-delete__aside {
+                grid-template-columns: 1fr;
+            }
+
+            .pa-shelter-delete__guide-header {
+                padding-inline: 20px;
+            }
+
+            .pa-shelter-delete__checklist {
+                padding-inline: 20px;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-shelter-delete *, .pa-shelter-delete *::before, .pa-shelter-delete *::after {
+                transition-duration: 0s !important;
+                animation-duration: 0s !important;
+            }
+        }
+    </style>
+}

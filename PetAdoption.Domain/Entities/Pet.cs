@@ -7,7 +7,8 @@ namespace PetAdoption.Domain.Entities
     {
         public int Id { get; set; }
 
-        [Required, MaxLength(128)]
+        [Required]
+        [MaxLength(128)]
         public string Name { get; set; } = default!;
 
         public Species Species { get; set; }
@@ -15,7 +16,7 @@ namespace PetAdoption.Domain.Entities
         [MaxLength(128)]
         public string? Breed { get; set; }
 
-        [Range(0, int.MaxValue)]
+        [Range(0, 200)]
         public int AgeYears { get; set; }
 
         [MaxLength(1024)]
@@ -29,7 +30,6 @@ namespace PetAdoption.Domain.Entities
 
         public int ShelterId { get; set; }
 
-        public Shelter Shelter { get; set; }
-            = default!;
+        public Shelter Shelter { get; set; } = default!;
     }
 }

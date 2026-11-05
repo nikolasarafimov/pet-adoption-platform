@@ -2,214 +2,551 @@
 @model PetAdoption.Web.Models.Pets.PetListVm
 
 @{
-    ViewData["Title"] = "Pets";
+    ViewData["Title"] = "Pet Directory";
+    ViewData["Description"] = "Browse pet profiles, filter by species and adoption status, and manage shelter listings.";
+
+    var canCreate = Model.IsAdmin || Model.IsShelter;
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.Search)
+        || Model.Species.HasValue
+        || Model.Status.HasValue;
+
+    var totalCount = Model.Pets.Count;
+    var availableCount = Model.Pets.Count(p => p.Status == PetStatus.Available);
+    var reservedCount = Model.Pets.Count(p => p.Status == PetStatus.Reserved);
+    var adoptedCount = Model.Pets.Count(p => p.Status == PetStatus.Adopted);
+    var unavailableCount = Model.Pets.Count(p => p.Status == PetStatus.Unavailable);
+
+    var heroTitle = Model.IsShelter && !Model.IsAdmin
+        ? "Your shelter, their next chapter."
+        : Model.IsAdmin
+            ? "Every pet deserves the spotlight."
+            : "A little love changes everything.";
+
+    var heroDescription = canCreate
+        ? "Keep every profile up to date, manage adoption availability, and help each animal find the right home."
+        : "Get to know the animals in our directory. Explore their stories and discover a companion worth meeting.";
 }
 
-<section class="mb-4">
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
-        <div>
-            <div class="text-primary fw-semibold text-uppercase small mb-2">
-                Pet Directory
+<div class="pa-pet-directory">
+    <nav class="pa-pet-directory__breadcrumb" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Welcome">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Pet Directory</span>
+    </nav>
+
+    <header class="pa-pet-directory__hero">
+        <div class="pa-pet-directory__hero-content">
+            <span class="pa-pet-directory__eyebrow">
+                <span class="pa-pet-directory__eyebrow-dot" aria-hidden="true"></span>
+                @(canCreate ? "PET MANAGEMENT WORKSPACE" : "EXPLORE THE DIRECTORY")
+            </span>
+
+            <h1>@heroTitle</h1>
+            <p>@heroDescription</p>
+
+            <div class="pa-pet-directory__hero-actions">
+                <a href="#petDirectoryResults" class="pa-pet-directory__hero-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 4v16m-6-6 6 6 6-6" />
+                    </svg>
+                    Browse pets
+                </a>
+
+                @if (canCreate)
+                {
+                    <a asp-controller="Pets"
+                       asp-action="Create"
+                       class="pa-pet-directory__hero-secondary">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Add new pet
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="pa-pet-directory__hero-art" aria-hidden="true">
+            <div class="pa-pet-directory__art-ring pa-pet-directory__art-ring--outer"></div>
+            <div class="pa-pet-directory__art-ring pa-pet-directory__art-ring--inner"></div>
+            <div class="pa-pet-directory__art-icon">
+                <svg class="pa-icon"><use href="#pa-icon-paw"></use></svg>
+            </div>
+            <span class="pa-pet-directory__art-spark pa-pet-directory__art-spark--one"></span>
+            <span class="pa-pet-directory__art-spark pa-pet-directory__art-spark--two"></span>
+        </div>
+    </header>
+
+    <section class="pa-pet-directory__filters" aria-labelledby="directoryFiltersTitle">
+        <div class="pa-pet-directory__filters-heading">
+            <div>
+                <span class="pa-pet-directory__section-kicker">FIND THE RIGHT MATCH</span>
+                <h2 id="directoryFiltersTitle">Explore the directory.</h2>
+                <p>Find pets by name or breed, species, and adoption status.</p>
+            </div>
+            <span class="pa-pet-directory__filters-symbol" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+            </span>
+        </div>
+
+        <form asp-controller="Pets"
+              asp-action="Index"
+              method="get"
+              role="search"
+              class="pa-pet-directory__filter-grid">
+            <div class="pa-pet-directory__field pa-pet-directory__field--search">
+                <label asp-for="Search">Pet name or breed</label>
+                <div class="pa-pet-directory__input-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="10.5" cy="10.5" r="6.5" />
+                        <path d="m16 16 5 5" />
+                    </svg>
+                    <input asp-for="Search"
+                           type="search"
+                           class="pa-pet-directory__control pa-pet-directory__control--search"
+                           placeholder="Search by name or breed..."
+                           autocomplete="off" />
+                </div>
             </div>
 
-            <h1 class="section-title mb-2">
-                Pets
-            </h1>
+            <div class="pa-pet-directory__field">
+                <label asp-for="Species">Species</label>
+                <select asp-for="Species"
+                        asp-items="Html.GetEnumSelectList<Species>()"
+                        class="pa-pet-directory__control pa-pet-directory__select">
+                    <option value="">All species</option>
+                </select>
+            </div>
 
-            <p class="section-subtitle mb-0">
-                Browse available pets and manage shelter listings.
-            </p>
-        </div>
+            <div class="pa-pet-directory__field">
+                <label asp-for="Status">Adoption status</label>
+                <select asp-for="Status"
+                        asp-items="Html.GetEnumSelectList<PetStatus>()"
+                        class="pa-pet-directory__control pa-pet-directory__select">
+                    <option value="">All statuses</option>
+                </select>
+            </div>
 
-        @if (Model.IsAdmin || Model.IsShelter)
-        {
-            <a asp-action="Create"
-               class="btn btn-primary px-4">
-                <span class="me-1">＋</span>
-                Add Pet
-            </a>
-        }
-    </div>
-</section>
-
-<section class="card p-3 p-md-4 mb-5">
-    <form method="get" class="row g-3 align-items-end">
-        <div class="col-lg-4">
-            <label asp-for="Search" class="form-label">
-                Search
-            </label>
-
-            <input asp-for="Search"
-                   class="form-control"
-                   placeholder="Search by name or breed..." />
-        </div>
-
-        <div class="col-md-4 col-lg-3">
-            <label asp-for="Species" class="form-label">
-                Species
-            </label>
-
-            <select asp-for="Species"
-                    class="form-select"
-                    asp-items="Html.GetEnumSelectList<Species>()">
-                <option value="">All species</option>
-            </select>
-        </div>
-
-        <div class="col-md-4 col-lg-3">
-            <label asp-for="Status" class="form-label">
-                Status
-            </label>
-
-            <select asp-for="Status"
-                    class="form-select"
-                    asp-items="Html.GetEnumSelectList<PetStatus>()">
-                <option value="">All statuses</option>
-            </select>
-        </div>
-
-        <div class="col-md-4 col-lg-2 d-grid">
-            <button type="submit"
-                    class="btn btn-primary">
-                Filter
+            <button type="submit" class="pa-pet-directory__filter-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="10.5" cy="10.5" r="6.5" />
+                    <path d="m16 16 5 5" />
+                </svg>
+                Apply filters
             </button>
-        </div>
+        </form>
 
-        @if (!string.IsNullOrWhiteSpace(Model.Search)
-                || Model.Species.HasValue
-                || Model.Status.HasValue)
+        @if (hasFilters)
         {
-            <div class="col-12">
-                <a asp-action="Index"
-                   class="btn btn-sm btn-outline-secondary">
-                    Clear Filters
+            <div class="pa-pet-directory__active-filters">
+                <div class="pa-pet-directory__filter-tags">
+                    <span class="pa-pet-directory__filter-label">Active filters</span>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Search))
+                    {
+                        <span class="pa-pet-directory__filter-tag">Search: @Model.Search</span>
+                    }
+                    @if (Model.Species.HasValue)
+                    {
+                        <span class="pa-pet-directory__filter-tag">Species: @Model.Species</span>
+                    }
+                    @if (Model.Status.HasValue)
+                    {
+                        <span class="pa-pet-directory__filter-tag">Status: @Model.Status</span>
+                    }
+                </div>
+
+                <a asp-controller="Pets"
+                   asp-action="Index"
+                   class="pa-pet-directory__clear-filters">
+                    Clear all
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 6 18 18M18 6 6 18" />
+                    </svg>
                 </a>
             </div>
         }
-    </form>
-</section>
+    </section>
 
-@if (!Model.Pets.Any())
-{
-    <div class="empty-state">
-        <div class="display-5 mb-3">🐾</div>
+    <section id="petDirectoryResults"
+             class="pa-pet-directory__results"
+             aria-labelledby="directoryResultsTitle">
+        <div class="pa-pet-directory__results-top">
+            <div>
+                <span class="pa-pet-directory__section-kicker">
+                    @(canCreate ? "MANAGE PET PROFILES" : "MEET YOUR COMPANIONS")
+                </span>
+                <h2 id="directoryResultsTitle">
+                    @(hasFilters ? "Search results" : "Meet the pets")
+                </h2>
+                <p>
+                    @(hasFilters
+                        ? "Listings that match your selected filters."
+                        : canCreate
+                            ? "Keep profiles accurate and adoption information current."
+                            : "A closer look at the pets waiting for their next chapter.")
+                </p>
+            </div>
+            <span class="pa-pet-directory__result-count" aria-live="polite">
+                <strong>@totalCount</strong>
+                @(totalCount == 1 ? "pet found" : "pets found")
+            </span>
+        </div>
 
-        <h4>No pets found</h4>
-
-        <p class="mb-3">
-            Try changing your filters or search query.
-        </p>
-
-        <a asp-action="Index"
-           class="btn btn-primary">
-            Show All Pets
-        </a>
-    </div>
-}
-else
-{
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-        @foreach (var pet in Model.Pets)
+        @if (totalCount > 0)
         {
-            var imageUrl =
-            string.IsNullOrWhiteSpace(pet.ImageUrl)
-            ? "https://placehold.co/800x600?text="
-            + Uri.EscapeDataString(pet.Name)
-            : pet.ImageUrl;
+            <div class="pa-pet-directory__summary" aria-label="Status summary for displayed pets">
+                <span><i class="pa-pet-directory__summary-dot pa-pet-directory__summary-dot--available"></i> @availableCount Available</span>
+                <span><i class="pa-pet-directory__summary-dot pa-pet-directory__summary-dot--reserved"></i> @reservedCount Reserved</span>
+                <span><i class="pa-pet-directory__summary-dot pa-pet-directory__summary-dot--adopted"></i> @adoptedCount Adopted</span>
+                <span><i class="pa-pet-directory__summary-dot pa-pet-directory__summary-dot--unavailable"></i> @unavailableCount Unavailable</span>
+                <small>Counts reflect current results</small>
+            </div>
+        }
 
-            var badgeClass =
-            pet.Status switch
-            {
-                PetStatus.Available => "success",
-                PetStatus.Reserved => "warning text-dark",
-                PetStatus.Adopted => "secondary",
-                _ => "dark"
-            };
+        @if (totalCount == 0)
+        {
+            <div class="pa-pet-directory__empty">
+                <div class="pa-pet-directory__empty-icon" aria-hidden="true">
+                    <svg class="pa-icon"><use href="#pa-icon-paw"></use></svg>
+                </div>
+                <span class="pa-pet-directory__section-kicker">
+                    @(hasFilters ? "NO MATCHES FOUND" : "NOTHING LISTED YET")
+                </span>
+                <h3>@(hasFilters ? "No pets match your search." : "No pets to display yet.")</h3>
+                <p>
+                    @(hasFilters
+                        ? "Try different search terms or clear your filters to see the full directory."
+                        : "There are no pet profiles in this directory yet.")
+                </p>
+                @if (hasFilters)
+                {
+                    <a asp-controller="Pets" asp-action="Index" class="pa-pet-directory__empty-action">
+                        Show all pets
+                        <svg class="pa-icon"><use href="#pa-icon-arrow"></use></svg>
+                    </a>
+                }
+                else if (canCreate)
+                {
+                    <a asp-controller="Pets" asp-action="Create" class="pa-pet-directory__empty-action">
+                        Add the first pet
+                        <svg class="pa-icon"><use href="#pa-icon-arrow"></use></svg>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="pa-pet-directory__grid">
+                @foreach (var pet in Model.Pets)
+                {
+                    var petName = string.IsNullOrWhiteSpace(pet.Name)
+                        ? "Unnamed pet"
+                        : pet.Name.Trim();
 
-            <div class="col">
-                <article class="card h-100">
-                    <div class="position-relative">
-                        <img src="@imageUrl"
-                             alt="@pet.Name"
-                             class="card-img-top"
-                             loading="lazy" />
+                    var validImage = Uri.TryCreate(pet.ImageUrl, UriKind.Absolute, out var imageUri)
+                        && (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps);
 
-                        <span class="badge bg-@badgeClass position-absolute top-0 end-0 m-3 shadow-sm">
-                            @pet.Status
-                        </span>
-                    </div>
+                    var statusClass = pet.Status switch
+                    {
+                        PetStatus.Available => "available",
+                        PetStatus.Reserved => "reserved",
+                        PetStatus.Adopted => "adopted",
+                        _ => "unavailable"
+                    };
 
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                            <div>
-                                <h4 class="mb-1">
-                                    @pet.Name
-                                </h4>
+                    var description = string.IsNullOrWhiteSpace(pet.Description)
+                        ? "There is no description for this pet yet."
+                        : pet.Description.Trim();
 
-                                <div class="small text-muted">
-                                    @pet.Species
+                    var breed = string.IsNullOrWhiteSpace(pet.Breed)
+                        ? "Breed not specified"
+                        : pet.Breed.Trim();
 
-                                    @if (!string.IsNullOrWhiteSpace(pet.Breed))
-                                    {
-                                        <span>• @pet.Breed</span>
-                                    }
+                    var shelterName = string.IsNullOrWhiteSpace(pet.ShelterName)
+                        ? "Shelter not specified"
+                        : pet.ShelterName.Trim();
+
+                    var ageText = pet.AgeYears == 0
+                        ? "Under 1 year"
+                        : pet.AgeYears == 1
+                            ? "1 year old"
+                            : $"{pet.AgeYears} years old";
+
+                    var canManagePet = Model.IsAdmin
+                        || (Model.IsShelter && Model.MyShelterId == pet.ShelterId);
+
+                    <article class="pa-pet-directory__card">
+                        <div class="pa-pet-directory__media">
+                            @if (validImage)
+                            {
+                                <img src="@pet.ImageUrl"
+                                     alt="Photo of @petName"
+                                     loading="lazy"
+                                     decoding="async"
+                                     class="pa-pet-directory__photo"
+                                     data-pa-directory-image />
+                            }
+                            <div class="pa-pet-directory__fallback"
+                                 hidden="@validImage"
+                                 aria-hidden="true">
+                                <span class="pa-pet-directory__fallback-mark">
+                                    <svg class="pa-icon"><use href="#pa-icon-paw"></use></svg>
+                                </span>
+                                <span>Photo coming soon</span>
+                            </div>
+
+                            <span class="pa-pet-directory__status pa-pet-directory__status--@statusClass">
+                                <i aria-hidden="true"></i>
+                                @pet.Status
+                            </span>
+                            <span class="pa-pet-directory__species">@pet.Species</span>
+                        </div>
+
+                        <div class="pa-pet-directory__card-content">
+                            <span class="pa-pet-directory__card-eyebrow">PET PROFILE</span>
+                            <div class="pa-pet-directory__card-heading">
+                                <div class="pa-pet-directory__name-group">
+                                    <h3>
+                                        <a asp-controller="Pets"
+                                           asp-action="Details"
+                                           asp-route-id="@pet.Id">@petName</a>
+                                    </h3>
+                                    <span class="pa-pet-directory__breed">@breed</span>
+                                </div>
+                                <span class="pa-pet-directory__age">@ageText</span>
+                            </div>
+
+                            <p class="pa-pet-directory__description">@description</p>
+
+                            <div class="pa-pet-directory__shelter">
+                                <span class="pa-pet-directory__shelter-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-7h6v7" />
+                                    </svg>
+                                </span>
+                                <div>
+                                    <small>Listed by</small>
+                                    <strong>@shelterName</strong>
+                                </div>
                             </div>
                         </div>
 
-                        <span class="badge bg-light text-dark">
-                            @pet.AgeYears yrs
-                        </span>
-                    </div>
-
-                    <p class="text-truncate-3 mb-3">
-                        @(string.IsNullOrWhiteSpace(pet.Description)
-                                            ? "No description provided."
-                                            : pet.Description)
-                </p>
-
-                        <div class="d-flex align-items-center gap-2 small text-muted mb-4">
-                            <span>🏠</span>
-                            <span>@pet.ShelterName</span>
-                        </div>
-
-                        <div class="d-flex flex-wrap gap-2">
-                            <a asp-action="Details"
+                        <div class="pa-pet-directory__card-actions">
+                            <a asp-controller="Pets"
+                               asp-action="Details"
                                asp-route-id="@pet.Id"
-                               class="btn btn-outline-secondary flex-grow-1">
-                                View
+                               class="pa-pet-directory__action pa-pet-directory__action--details">
+                                View details
+                                <svg class="pa-icon"><use href="#pa-icon-arrow"></use></svg>
                             </a>
 
-                    @if (Model.IsAdopter
-                                        && pet.Status == PetStatus.Available)
+                            @if (Model.IsAdopter && pet.Status == PetStatus.Available)
                             {
                                 <a asp-controller="AdoptionRequests"
                                    asp-action="Create"
                                    asp-route-petId="@pet.Id"
-                                   class="btn btn-success">
+                                   class="pa-pet-directory__action pa-pet-directory__action--adopt">
+                                    <svg class="pa-icon"><use href="#pa-icon-heart"></use></svg>
                                     Adopt
                                 </a>
                             }
 
-                            @if (Model.IsAdmin
-                                                || (Model.IsShelter
-                                                && Model.MyShelterId == pet.ShelterId))
+                            @if (canManagePet)
                             {
-                                <a asp-action="Edit"
+                                <a asp-controller="Pets"
+                                   asp-action="Edit"
                                    asp-route-id="@pet.Id"
-                                   class="btn btn-primary">
+                                   class="pa-pet-directory__action pa-pet-directory__action--edit"
+                                   aria-label="Edit @petName">
                                     Edit
                                 </a>
-
-                                <a asp-action="Delete"
+                                <a asp-controller="Pets"
+                                   asp-action="Delete"
                                    asp-route-id="@pet.Id"
-                                   class="btn btn-outline-danger">
+                                   class="pa-pet-directory__action pa-pet-directory__action--delete"
+                                   aria-label="Delete @petName">
                                     Delete
                                 </a>
                             }
                         </div>
-                    </div>
-                </article>
+                    </article>
+                }
             </div>
         }
-    </div>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .pa-pet-directory { --dir-stroke: #dce6d9; }
+        .pa-pet-directory__breadcrumb { display: flex; align-items: center; gap: 11px; margin-bottom: 23px; color: #7a887d; font-size: .84rem; font-weight: 700; }
+        .pa-pet-directory__breadcrumb a { color: var(--pa-forest-soft); text-decoration: none; }
+        .pa-pet-directory__breadcrumb a:hover { text-decoration: underline; }
+        .pa-pet-directory__hero { position: relative; min-height: 330px; overflow: hidden; display: flex; align-items: center; border-radius: 32px; background: radial-gradient(circle at 82% 15%, rgba(229, 199, 137, .2), transparent 33%), linear-gradient(117deg, #12362b 0%, #1a4c3b 70%, #2e614c 100%); box-shadow: var(--pa-shadow-md); isolation: isolate; }
+        .pa-pet-directory__hero::after { content: ""; position: absolute; width: 360px; height: 360px; right: -130px; bottom: -210px; border-radius: 50%; background: rgba(244, 197, 122, .12); pointer-events: none; }
+        .pa-pet-directory__hero-content { position: relative; z-index: 2; width: min(690px, 72%); padding: clamp(31px, 5vw, 66px); }
+        .pa-pet-directory__eyebrow { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 18px; color: #e9c993; font-size: .73rem; font-weight: 800; letter-spacing: .15em; }
+        .pa-pet-directory__eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #efc57e; box-shadow: 0 0 0 5px rgba(239, 197, 126, .13); }
+        .pa-pet-directory__hero h1 { max-width: 660px; margin: 0 0 16px; color: white; font: 600 clamp(2.2rem, 4.6vw, 4.15rem)/1.09 "Fraunces", Georgia, serif; letter-spacing: -.055em; }
+        .pa-pet-directory__hero p { max-width: 560px; margin: 0; color: #d0ded3; font-size: 1rem; line-height: 1.8; }
+        .pa-pet-directory__hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+        .pa-pet-directory__hero-primary, .pa-pet-directory__hero-secondary { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: 46px; padding: 11px 20px; border-radius: 999px; font-size: .86rem; font-weight: 800; text-decoration: none; transition: background .2s ease, transform .2s ease, border-color .2s ease; }
+        .pa-pet-directory__hero-primary { color: #173d32; background: #f4c57a; }
+        .pa-pet-directory__hero-primary:hover { color: #173d32; background: #ffd99e; transform: translateY(-2px); }
+        .pa-pet-directory__hero-secondary { border: 1px solid rgba(255,255,255,.44); color: white; background: rgba(255,255,255,.055); }
+        .pa-pet-directory__hero-secondary:hover { border-color: white; color: white; background: rgba(255,255,255,.13); transform: translateY(-2px); }
+        .pa-pet-directory__hero-actions svg, .pa-pet-directory__filter-button svg, .pa-pet-directory__clear-filters svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+        .pa-pet-directory__hero-art { position: absolute; z-index: 1; width: 350px; height: 350px; top: 50%; right: 5%; transform: translateY(-50%); display: grid; place-items: center; }
+        .pa-pet-directory__art-ring { position: absolute; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; }
+        .pa-pet-directory__art-ring--outer { width: 94%; height: 94%; }
+        .pa-pet-directory__art-ring--inner { width: 70%; height: 70%; }
+        .pa-pet-directory__art-icon { display: grid; place-items: center; width: 160px; height: 160px; border: 1px solid rgba(255,255,255,.2); border-radius: 48px; color: #f5ca86; background: rgba(255,255,255,.09); box-shadow: 0 25px 50px rgba(4,22,15,.14); transform: rotate(-9deg); }
+        .pa-pet-directory__art-icon svg { width: 92px; height: 92px; stroke-width: 1.2; transform: rotate(9deg); }
+        .pa-pet-directory__art-spark { position: absolute; width: 13px; height: 13px; border-radius: 50%; background: #f5ca86; }
+        .pa-pet-directory__art-spark--one { top: 12%; left: 18%; }
+        .pa-pet-directory__art-spark--two { bottom: 20%; right: 10%; width: 8px; height: 8px; }
+        .pa-pet-directory__filters { margin-top: 28px; padding: clamp(22px, 3vw, 34px); border: 1px solid #e5e9e0; border-radius: 26px; background: rgba(255,255,255,.97); box-shadow: var(--pa-shadow-sm); }
+        .pa-pet-directory__filters-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 25px; }
+        .pa-pet-directory__section-kicker { display: block; margin-bottom: 8px; color: var(--pa-forest-soft); font-size: .72rem; font-weight: 800; letter-spacing: .15em; }
+        .pa-pet-directory__filters h2, .pa-pet-directory__results h2 { margin: 0 0 8px; font: 600 clamp(1.65rem, 2.75vw, 2.35rem)/1.14 "Fraunces", Georgia, serif; letter-spacing: -.05em; }
+        .pa-pet-directory__filters-heading p, .pa-pet-directory__results-top p { margin: 0; font-size: .92rem; }
+        .pa-pet-directory__filters-symbol { display: grid; place-items: center; flex-shrink: 0; width: 46px; height: 46px; border-radius: 14px; color: var(--pa-forest); background: #ebf2e9; }
+        .pa-pet-directory__filters-symbol svg, .pa-pet-directory__input-wrap svg, .pa-pet-directory__shelter-icon svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+        .pa-pet-directory__filter-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(150px, 1fr) minmax(165px, 1fr) auto; align-items: end; gap: 14px; }
+        .pa-pet-directory__field { min-width: 0; }
+        .pa-pet-directory__field label { display: block; margin-bottom: 9px; color: #3c5345; font-size: .82rem; font-weight: 800; }
+        .pa-pet-directory__input-wrap { position: relative; }
+        .pa-pet-directory__input-wrap svg { position: absolute; top: 50%; left: 15px; transform: translateY(-50%); color: #718575; pointer-events: none; }
+        .pa-pet-directory__control { display: block; width: 100%; min-width: 0; height: 50px; padding: 11px 15px; border: 1px solid #dce5d9; border-radius: 13px; color: #243a2d; background: #fbfcf8; font-size: .9rem; outline: none; transition: border .2s ease, box-shadow .2s ease; }
+        .pa-pet-directory__control:focus { border-color: #638d70; box-shadow: 0 0 0 3px rgba(73,125,87,.12); }
+        .pa-pet-directory__control--search { padding-left: 46px; }
+        .pa-pet-directory__control::placeholder { color: #89968d; }
+        .pa-pet-directory__select { padding-right: 30px; cursor: pointer; }
+        .pa-pet-directory__filter-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 20px; border: 0; border-radius: 13px; color: white; background: var(--pa-forest); font-size: .86rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: transform .2s ease, background .2s ease; }
+        .pa-pet-directory__filter-button:hover { background: var(--pa-forest-soft); transform: translateY(-2px); }
+        .pa-pet-directory__active-filters { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 21px; padding-top: 17px; border-top: 1px solid #edf0e8; }
+        .pa-pet-directory__filter-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .pa-pet-directory__filter-label { margin-right: 4px; color: #7a887d; font-size: .78rem; font-weight: 700; }
+        .pa-pet-directory__filter-tag { max-width: min(100%, 340px); overflow-wrap: anywhere; padding: 7px 12px; border: 1px solid #e1e9dd; border-radius: 999px; color: var(--pa-forest); background: #f3f7f0; font-size: .76rem; font-weight: 750; }
+        .pa-pet-directory__clear-filters { display: inline-flex; align-items: center; gap: 7px; color: #82623d; font-size: .8rem; font-weight: 800; text-decoration: none; }
+        .pa-pet-directory__clear-filters:hover { color: #5f452c; text-decoration: underline; }
+        .pa-pet-directory__clear-filters svg { width: 15px; height: 15px; }
+        .pa-pet-directory__results { margin-top: clamp(38px, 5vw, 62px); scroll-margin-top: 120px; }
+        .pa-pet-directory__results-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 23px; }
+        .pa-pet-directory__result-count { display: inline-flex; align-items: baseline; gap: 7px; flex-shrink: 0; padding: 11px 16px; border: 1px solid #d9e5d8; border-radius: 999px; color: var(--pa-muted); background: #edf3e9; font-size: .8rem; font-weight: 700; }
+        .pa-pet-directory__result-count strong { color: var(--pa-forest); font-size: 1rem; }
+        .pa-pet-directory__summary { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; margin-bottom: 22px; padding: 13px 17px; border: 1px solid #e7eadd; border-radius: 15px; background: rgba(255,255,255,.68); color: #506359; font-size: .78rem; font-weight: 700; }
+        .pa-pet-directory__summary > span { display: inline-flex; align-items: center; gap: 7px; }
+        .pa-pet-directory__summary small { margin-left: auto; color: #8b978f; font-size: .73rem; font-weight: 600; }
+        .pa-pet-directory__summary-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+        .pa-pet-directory__summary-dot--available { background: #47916a; }
+        .pa-pet-directory__summary-dot--reserved { background: #d49d46; }
+        .pa-pet-directory__summary-dot--adopted { background: #83938b; }
+        .pa-pet-directory__summary-dot--unavailable { background: #b76464; }
+        .pa-pet-directory__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+        .pa-pet-directory__card { display: flex; flex-direction: column; overflow: hidden; min-width: 0; border: 1px solid #e4e9df; border-radius: 24px; background: white; box-shadow: var(--pa-shadow-sm); transition: transform .28s var(--pa-ease), box-shadow .28s ease, border-color .28s ease; }
+        .pa-pet-directory__card:hover { transform: translateY(-5px); border-color: #cbdcc8; box-shadow: var(--pa-shadow-md); }
+        .pa-pet-directory__media { position: relative; height: clamp(205px, 19vw, 270px); overflow: hidden; background: #eef1e8; }
+        .pa-pet-directory__photo { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--pa-ease); }
+        .pa-pet-directory__card:hover .pa-pet-directory__photo { transform: scale(1.045); }
+        .pa-pet-directory__photo[hidden], .pa-pet-directory__fallback[hidden] { display: none !important; }
+        .pa-pet-directory__fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; height: 100%; color: #7e9282; background: radial-gradient(circle at 28% 15%, #fff7ea, transparent 45%), linear-gradient(135deg, #e5eee2, #f3f0e7); font-size: .78rem; font-weight: 800; }
+        .pa-pet-directory__fallback-mark { display: grid; place-items: center; width: 83px; height: 83px; border: 1px solid rgba(23,61,50,.13); border-radius: 25px; color: #789982; background: rgba(255,255,255,.55); }
+        .pa-pet-directory__fallback-mark .pa-icon { width: 47px; height: 47px; stroke-width: 1.3; }
+        .pa-pet-directory__status { position: absolute; top: 15px; right: 15px; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border-radius: 999px; background: white; font-size: .72rem; font-weight: 800; box-shadow: 0 4px 15px rgba(9,25,16,.12); }
+        .pa-pet-directory__status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        .pa-pet-directory__status--available { color: #267247; }
+        .pa-pet-directory__status--reserved { color: #9c681a; }
+        .pa-pet-directory__status--adopted { color: #53635b; }
+        .pa-pet-directory__status--unavailable { color: #9b4141; }
+        .pa-pet-directory__species { position: absolute; bottom: 14px; left: 14px; padding: 7px 12px; border: 1px solid rgba(255,255,255,.45); border-radius: 999px; color: white; background: rgba(24,56,44,.83); font-size: .73rem; font-weight: 800; backdrop-filter: blur(6px); }
+        .pa-pet-directory__card-content { flex: 1; padding: 23px 23px 18px; }
+        .pa-pet-directory__card-eyebrow { display: inline-block; margin-bottom: 8px; color: #819486; font-size: .65rem; font-weight: 800; letter-spacing: .14em; }
+        .pa-pet-directory__card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+        .pa-pet-directory__name-group { min-width: 0; }
+        .pa-pet-directory__card-heading h3 { margin: 0 0 5px; font: 600 1.55rem/1.2 "Fraunces", Georgia, serif; letter-spacing: -.045em; overflow-wrap: anywhere; }
+        .pa-pet-directory__card-heading h3 a { color: var(--pa-forest-deep); text-decoration: none; }
+        .pa-pet-directory__card-heading h3 a:hover { color: var(--pa-forest-soft); }
+        .pa-pet-directory__breed { display: block; color: #738178; font-size: .8rem; overflow-wrap: anywhere; }
+        .pa-pet-directory__age { flex-shrink: 0; max-width: 110px; padding: 7px 10px; border-radius: 9px; color: #50674e; background: #edf4e9; font-size: .7rem; font-weight: 800; text-align: center; }
+        .pa-pet-directory__description { display: -webkit-box; min-height: 4.85em; margin: 0 0 18px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; color: #66756a; font-size: .85rem; line-height: 1.62; overflow-wrap: anywhere; }
+        .pa-pet-directory__shelter { display: flex; align-items: center; gap: 10px; padding-top: 15px; border-top: 1px solid #edf0ea; }
+        .pa-pet-directory__shelter-icon { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 11px; color: var(--pa-forest-soft); background: #ecf2e9; }
+        .pa-pet-directory__shelter-icon svg { width: 18px; height: 18px; }
+        .pa-pet-directory__shelter small { display: block; margin-bottom: 2px; color: #849186; font-size: .69rem; }
+        .pa-pet-directory__shelter strong { display: block; color: #384b3e; font-size: .8rem; font-weight: 800; overflow-wrap: anywhere; }
+        .pa-pet-directory__card-actions { display: flex; align-items: stretch; flex-wrap: wrap; gap: 8px; padding: 0 23px 22px; }
+        .pa-pet-directory__action { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border: 1px solid transparent; border-radius: 11px; font-size: .76rem; font-weight: 800; line-height: 1.2; text-decoration: none; transition: transform .2s ease, background .2s ease, border-color .2s ease; }
+        .pa-pet-directory__action .pa-icon { width: 16px; height: 16px; }
+        .pa-pet-directory__action:hover { transform: translateY(-2px); }
+        .pa-pet-directory__action--details { flex: 1 1 116px; color: white; background: var(--pa-forest); }
+        .pa-pet-directory__action--details:hover { color: white; background: var(--pa-forest-soft); }
+        .pa-pet-directory__action--adopt { color: #173d32; background: #f5ca83; }
+        .pa-pet-directory__action--adopt:hover { color: #173d32; background: #ffdaa0; }
+        .pa-pet-directory__action--edit { color: var(--pa-forest); border-color: #cadbc8; background: #edf4e9; }
+        .pa-pet-directory__action--edit:hover { color: var(--pa-forest); background: #e0edda; }
+        .pa-pet-directory__action--delete { color: #a14545; border-color: #efd8d8; background: #fff7f6; }
+        .pa-pet-directory__action--delete:hover { color: #872c2c; background: #fde8e7; }
+        .pa-pet-directory__empty { display: flex; flex-direction: column; align-items: center; padding: clamp(40px, 7vw, 78px) 18px; border: 1px dashed #cfdbca; border-radius: 26px; background: rgba(255,255,255,.88); text-align: center; }
+        .pa-pet-directory__empty-icon { display: grid; place-items: center; width: 89px; height: 89px; margin-bottom: 19px; border-radius: 28px; color: #668a6d; background: #eaf2e7; }
+        .pa-pet-directory__empty-icon .pa-icon { width: 48px; height: 48px; stroke-width: 1.35; }
+        .pa-pet-directory__empty h3 { margin: 0 0 10px; font: 600 clamp(1.6rem, 3vw, 2.15rem)/1.2 "Fraunces", Georgia, serif; }
+        .pa-pet-directory__empty p { max-width: 480px; margin: 0 auto 21px; font-size: .9rem; }
+        .pa-pet-directory__empty-action { display: inline-flex; align-items: center; gap: 9px; padding: 11px 18px; border-radius: 999px; color: white; background: var(--pa-forest); font-size: .84rem; font-weight: 800; text-decoration: none; }
+        .pa-pet-directory__empty-action:hover { color: white; background: var(--pa-forest-soft); }
+        .pa-pet-directory__empty-action .pa-icon { width: 17px; height: 17px; }
+        @@media (max-width: 1199.98px) {
+            .pa-pet-directory__filter-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .pa-pet-directory__filter-button { width: 100%; }
+            .pa-pet-directory__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .pa-pet-directory__hero-art { right: -1%; }
+        }
+        @@media (max-width: 767.98px) {
+            .pa-pet-directory__hero { min-height: 0; }
+            .pa-pet-directory__hero-content { width: 100%; padding: 34px 26px 39px; }
+            .pa-pet-directory__hero h1 { font-size: clamp(2rem, 9vw, 3rem); }
+            .pa-pet-directory__hero-art { right: -90px; opacity: .15; }
+            .pa-pet-directory__filter-grid { grid-template-columns: 1fr; }
+            .pa-pet-directory__results-top { align-items: flex-start; flex-direction: column; }
+            .pa-pet-directory__summary small { width: 100%; margin-left: 0; }
+            .pa-pet-directory__grid { grid-template-columns: 1fr; }
+            .pa-pet-directory__media { height: 250px; }
+        }
+        @@media (max-width: 420px) {
+            .pa-pet-directory__hero { border-radius: 24px; }
+            .pa-pet-directory__hero-actions { flex-direction: column; }
+            .pa-pet-directory__hero-primary, .pa-pet-directory__hero-secondary { width: 100%; }
+            .pa-pet-directory__filters { padding: 22px 17px; border-radius: 21px; }
+            .pa-pet-directory__filters-symbol { display: none; }
+            .pa-pet-directory__card-content { padding: 21px 18px 16px; }
+            .pa-pet-directory__card-actions { padding: 0 18px 20px; }
+            .pa-pet-directory__summary { gap: 11px; }
+        }
+        @@media (prefers-reduced-motion: reduce) {
+            .pa-pet-directory *, .pa-pet-directory *::before, .pa-pet-directory *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            "use strict";
+
+            document.querySelectorAll("[data-pa-directory-image]").forEach((image) => {
+                const fallback = image.parentElement?.querySelector(".pa-pet-directory__fallback");
+                const showFallback = () => {
+                    image.hidden = true;
+                    if (fallback) fallback.hidden = false;
+                };
+
+                image.addEventListener("error", showFallback, { once: true });
+
+                if (image.complete && image.naturalWidth === 0) {
+                    showFallback();
+                }
+            });
+        })();
+    </script>
 }

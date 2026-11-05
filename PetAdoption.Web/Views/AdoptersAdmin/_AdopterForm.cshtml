@@ -1,93 +1,288 @@
 ﻿@model PetAdoption.Web.Models.Adopters.AdopterFormVm
 
-<div asp-validation-summary="ModelOnly"
-     class="alert alert-danger mb-4">
-</div>
+<div class="pa-adopter-form">
 
-<div class="mb-4">
-    <h5 class="mb-1">
-        Personal Information
-    </h5>
-
-    <p class="small text-muted mb-0">
-        Enter the adopter's contact and profile details.
-    </p>
-</div>
-
-<div class="row g-4">
-    <div class="col-md-6">
-        <label asp-for="FullName"
-               class="form-label">
-        </label>
-
-        <input asp-for="FullName"
-               class="form-control"
-               autocomplete="name"
-               placeholder="Full name" />
-
-        <span asp-validation-for="FullName"
-              class="text-danger">
-        </span>
+    <div asp-validation-summary="ModelOnly"
+         class="pa-adopter-form__validation"
+         role="alert">
     </div>
 
-    <div class="col-md-6">
-        <label asp-for="Email"
-               class="form-label">
-        </label>
+    <div class="pa-adopter-form__header">
 
-        <input asp-for="Email"
-               type="email"
-               class="form-control"
-               autocomplete="email"
-               placeholder="name@example.com" />
+        <div class="pa-adopter-form__header-icon">
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.7"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+                <circle cx="10" cy="8" r="4" />
+                <path d="M3 21v-2a7 7 0 0 1 14 0v2" />
+                <path d="M19 8v6" />
+                <path d="M16 11h6" />
+            </svg>
+        </div>
 
-        <span asp-validation-for="Email"
-              class="text-danger">
-        </span>
+        <div class="pa-adopter-form__header-content">
+            <span class="pa-adopter-form__eyebrow">
+                ADOPTER PROFILE
+            </span>
+
+            <h2 class="pa-adopter-form__title">
+                Personal Information
+            </h2>
+
+            <p class="pa-adopter-form__description">
+                Add accurate contact details to keep
+                adopter records organized and up to date.
+            </p>
+        </div>
     </div>
 
-    <div class="col-md-6">
-        <label asp-for="Phone"
-               class="form-label">
-        </label>
+    <div class="pa-adopter-form__section-heading">
 
-        <input asp-for="Phone"
-               type="tel"
-               class="form-control"
-               autocomplete="tel" />
-
-        <span asp-validation-for="Phone"
-              class="text-danger">
+        <span class="pa-adopter-form__section-number">
+            01
         </span>
+
+        <div>
+            <h3>Contact details</h3>
+            <p>Basic information about the adopter.</p>
+        </div>
     </div>
 
-    <div class="col-md-6">
-        <label asp-for="Address"
-               class="form-label">
-        </label>
+    <div class="pa-adopter-form__grid">
 
-        <input asp-for="Address"
-               class="form-control"
-               autocomplete="street-address" />
+        <div class="pa-adopter-form__field">
 
-        <span asp-validation-for="Address"
-              class="text-danger">
-        </span>
+            <div class="pa-adopter-form__label-row">
+                <label asp-for="FullName"
+                       class="pa-adopter-form__label">
+                </label>
+
+                <span class="pa-adopter-form__required">
+                    Required
+                </span>
+            </div>
+
+            <div class="pa-adopter-form__input-wrap">
+
+                <span class="pa-adopter-form__input-icon"
+                      aria-hidden="true">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+                    </svg>
+                </span>
+
+                <input asp-for="FullName"
+                       class="form-control pa-adopter-form__input"
+                       autocomplete="name"
+                       placeholder="Enter full name" />
+            </div>
+
+            <span asp-validation-for="FullName"
+                  class="pa-adopter-form__error">
+            </span>
+        </div>
+
+        <div class="pa-adopter-form__field">
+
+            <div class="pa-adopter-form__label-row">
+                <label asp-for="Email"
+                       class="pa-adopter-form__label">
+                </label>
+
+                <span class="pa-adopter-form__optional">
+                    Optional
+                </span>
+            </div>
+
+            <div class="pa-adopter-form__input-wrap">
+
+                <span class="pa-adopter-form__input-icon"
+                      aria-hidden="true">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <rect x="3"
+                              y="5"
+                              width="18"
+                              height="14"
+                              rx="3" />
+                        <path d="m4 7 8 6 8-6" />
+                    </svg>
+                </span>
+
+                <input asp-for="Email"
+                       type="email"
+                       class="form-control pa-adopter-form__input"
+                       autocomplete="email"
+                       placeholder="name@example.com" />
+            </div>
+
+            <span asp-validation-for="Email"
+                  class="pa-adopter-form__error">
+            </span>
+        </div>
+
+        <div class="pa-adopter-form__field">
+
+            <div class="pa-adopter-form__label-row">
+                <label asp-for="Phone"
+                       class="pa-adopter-form__label">
+                </label>
+
+                <span class="pa-adopter-form__optional">
+                    Optional
+                </span>
+            </div>
+
+            <div class="pa-adopter-form__input-wrap">
+
+                <span class="pa-adopter-form__input-icon"
+                      aria-hidden="true">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+                        <path d="M10 17h4" />
+                    </svg>
+                </span>
+
+                <input asp-for="Phone"
+                       type="tel"
+                       class="form-control pa-adopter-form__input"
+                       autocomplete="tel"
+                       placeholder="Enter phone number" />
+            </div>
+
+            <span asp-validation-for="Phone"
+                  class="pa-adopter-form__error">
+            </span>
+        </div>
+
+        <div class="pa-adopter-form__field">
+
+            <div class="pa-adopter-form__label-row">
+                <label asp-for="Address"
+                       class="pa-adopter-form__label">
+                </label>
+
+                <span class="pa-adopter-form__optional">
+                    Optional
+                </span>
+            </div>
+
+            <div class="pa-adopter-form__input-wrap">
+
+                <span class="pa-adopter-form__input-icon"
+                      aria-hidden="true">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                    </svg>
+                </span>
+
+                <input asp-for="Address"
+                       class="form-control pa-adopter-form__input"
+                       autocomplete="street-address"
+                       placeholder="Enter residential address" />
+            </div>
+
+            <span asp-validation-for="Address"
+                  class="pa-adopter-form__error">
+            </span>
+        </div>
     </div>
 
-    <div class="col-12">
-        <label asp-for="Notes"
-               class="form-label">
-        </label>
+    <div class="pa-adopter-form__divider"></div>
+
+    <div class="pa-adopter-form__section-heading">
+
+        <span class="pa-adopter-form__section-number">
+            02
+        </span>
+
+        <div>
+            <h3>Additional information</h3>
+            <p>Keep relevant details in one place.</p>
+        </div>
+    </div>
+
+    <div class="pa-adopter-form__field">
+
+        <div class="pa-adopter-form__label-row">
+            <label asp-for="Notes"
+                   class="pa-adopter-form__label">
+            </label>
+
+            <span class="pa-adopter-form__optional">
+                Optional
+            </span>
+        </div>
 
         <textarea asp-for="Notes"
-                  class="form-control"
-                  rows="4"
-                  placeholder="Optional administrative notes...">
-        </textarea>
+                  class="form-control pa-adopter-form__textarea"
+                  rows="5"
+                  placeholder="Add relevant administrative notes about this adopter..."></textarea>
+
+        <div class="pa-adopter-form__field-footer">
+            <span class="pa-adopter-form__hint">
+                For administrative reference.
+            </span>
+
+            <span class="pa-adopter-form__limit">
+                Maximum 512 characters
+            </span>
+        </div>
 
         <span asp-validation-for="Notes"
-              class="text-danger">
+              class="pa-adopter-form__error">
         </span>
+    </div>
+
+    <div class="pa-adopter-form__notice">
+
+        <span class="pa-adopter-form__notice-icon">
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 11v5" />
+                <path d="M12 8h.01" />
+            </svg>
+        </span>
+
+        <div>
+            <strong>Profile information</strong>
+
+            <p>
+                Contact details are stored in the adopter profile.
+                Updating these fields does not change the
+                email address used to sign in to a linked account.
+            </p>
+        </div>
     </div>
 </div>

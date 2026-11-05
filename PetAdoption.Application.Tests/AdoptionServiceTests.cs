@@ -12,79 +12,22 @@ public class AdoptionServiceTests
     [Fact]
     public async Task SubmitAsync_WhenValid_CreatesPendingRequestAndReservesPet()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Available,
-            ShelterId = 10
-        };
+        var (service, requests, pets, adopters) = CreateService();
 
-        var adopter = new Adopter
-        {
-            Id = 2,
-            FullName = "Test Adopter"
-        };
+        var pet = CreatePet();
+        var adopter = CreateAdopter();
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(pet.Id))
-            .ReturnsAsync(pet);
-
-        adopterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(adopter.Id))
-            .ReturnsAsync(adopter);
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                Array.Empty<AdoptionRequest>()
-            );
+        SetupPetAndAdopter(pets, adopters, pet, adopter);
 
         AdoptionRequest? createdRequest = null;
 
-        requestRepository
+        requests
             .Setup(repository =>
-                repository.AddAsync(
-                    It.IsAny<AdoptionRequest>()
-                ))
+                repository.AddAsync(It.IsAny<AdoptionRequest>()))
             .Callback<AdoptionRequest>(
                 request => createdRequest = request
             )
-            .ReturnsAsync(
-                (AdoptionRequest request) => request
-            );
-
-        requestRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
-        );
+            .ReturnsAsync((AdoptionRequest request) => request);
 
         await service.SubmitAsync(
             pet.Id,
@@ -92,44 +35,29 @@ public class AdoptionServiceTests
             "  I would love to adopt Luna.  "
         );
 
-        Assert.NotNull(createdRequest);
+        var savedRequest =
+            Assert.IsType<AdoptionRequest>(createdRequest);
 
-        Assert.Equal(
-            pet.Id,
-            createdRequest.PetId
-        );
-
-        Assert.Equal(
-            adopter.Id,
-            createdRequest.AdopterId
-        );
-
+        Assert.Equal(pet.Id, savedRequest.PetId);
+        Assert.Equal(adopter.Id, savedRequest.AdopterId);
         Assert.Equal(
             AdoptionRequestStatus.Pending,
-            createdRequest.Status
+            savedRequest.Status
         );
-
         Assert.Equal(
             "I would love to adopt Luna.",
-            createdRequest.Message
+            savedRequest.Message
         );
+        Assert.Equal(PetStatus.Reserved, pet.Status);
 
-        Assert.Equal(
-            PetStatus.Reserved,
-            pet.Status
-        );
-
-        requestRepository.Verify(
+        requests.Verify(
             repository =>
-                repository.AddAsync(
-                    It.IsAny<AdoptionRequest>()
-                ),
+                repository.AddAsync(It.IsAny<AdoptionRequest>()),
             Times.Once
         );
 
-        requestRepository.Verify(
-            repository =>
-                repository.SaveChangesAsync(),
+        requests.Verify(
+            repository => repository.SaveChangesAsync(),
             Times.Once
         );
     }
@@ -137,295 +65,182 @@ public class AdoptionServiceTests
     [Fact]
     public async Task SubmitAsync_WhenMessageIsWhitespace_StoresNullMessage()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Available
-        };
+        var (service, requests, pets, adopters) = CreateService();
 
-        var adopter = new Adopter
-        {
-            Id = 2,
-            FullName = "Test Adopter"
-        };
+        var pet = CreatePet();
+        var adopter = CreateAdopter();
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(1))
-            .ReturnsAsync(pet);
-
-        adopterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(2))
-            .ReturnsAsync(adopter);
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                Array.Empty<AdoptionRequest>()
-            );
+        SetupPetAndAdopter(pets, adopters, pet, adopter);
 
         AdoptionRequest? createdRequest = null;
 
-        requestRepository
+        requests
             .Setup(repository =>
-                repository.AddAsync(
-                    It.IsAny<AdoptionRequest>()
-                ))
+                repository.AddAsync(It.IsAny<AdoptionRequest>()))
             .Callback<AdoptionRequest>(
                 request => createdRequest = request
             )
-            .ReturnsAsync(
-                (AdoptionRequest request) => request
-            );
-
-        requestRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
-        );
+            .ReturnsAsync((AdoptionRequest request) => request);
 
         await service.SubmitAsync(
-            1,
-            2,
+            pet.Id,
+            adopter.Id,
             "   "
         );
 
         Assert.NotNull(createdRequest);
         Assert.Null(createdRequest.Message);
+        Assert.Equal(PetStatus.Reserved, pet.Status);
+    }
+
+    [Fact]
+    public async Task SubmitAsync_WhenMessageIsExactly512Characters_Succeeds()
+    {
+        var (service, requests, pets, adopters) = CreateService();
+
+        var pet = CreatePet();
+        var adopter = CreateAdopter();
+
+        SetupPetAndAdopter(pets, adopters, pet, adopter);
+
+        AdoptionRequest? createdRequest = null;
+
+        requests
+            .Setup(repository =>
+                repository.AddAsync(It.IsAny<AdoptionRequest>()))
+            .Callback<AdoptionRequest>(
+                request => createdRequest = request
+            )
+            .ReturnsAsync((AdoptionRequest request) => request);
+
+        await service.SubmitAsync(
+            pet.Id,
+            adopter.Id,
+            new string('A', 512)
+        );
+
+        Assert.NotNull(createdRequest);
+        Assert.Equal(512, createdRequest.Message?.Length);
+    }
+
+    [Fact]
+    public async Task SubmitAsync_WhenMessageExceeds512Characters_ThrowsArgumentException()
+    {
+        var (service, requests, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.SubmitAsync(
+                1,
+                2,
+                new string('A', 513)
+            )
+        );
+
+        Assert.Equal("message", exception.ParamName);
+
+        requests.Verify(
+            repository =>
+                repository.AddAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
+        );
     }
 
     [Fact]
     public async Task SubmitAsync_WhenPetDoesNotExist_ThrowsArgumentException()
     {
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
+        var (service, requests, _, _) = CreateService();
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(999))
-            .ReturnsAsync((Pet?)null);
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.SubmitAsync(999, 2, null)
         );
 
-        var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.SubmitAsync(
-                    999,
-                    1,
-                    null
-                )
-            );
+        Assert.Equal("petId", exception.ParamName);
+        Assert.StartsWith("Pet not found.", exception.Message);
 
-        Assert.Equal(
-            "Pet not found.",
-            exception.Message
+        requests.Verify(
+            repository =>
+                repository.AddAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
         );
     }
 
-    [Fact]
-    public async Task SubmitAsync_WhenPetIsNotAvailable_ThrowsInvalidOperationException()
+    [Theory]
+    [InlineData(PetStatus.Reserved)]
+    [InlineData(PetStatus.Adopted)]
+    [InlineData(PetStatus.Unavailable)]
+    public async Task SubmitAsync_WhenPetIsNotAvailable_ThrowsInvalidOperationException(
+        PetStatus status
+    )
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Reserved
-        };
+        var (service, requests, pets, _) = CreateService();
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
+        var pet = CreatePet(status: status);
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(pet.Id))
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
             .ReturnsAsync(pet);
 
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
-        );
-
         var exception =
-            await Assert.ThrowsAsync<
-                InvalidOperationException
-            >(
-                () => service.SubmitAsync(
-                    pet.Id,
-                    2,
-                    null
-                )
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.SubmitAsync(pet.Id, 2, null)
             );
 
         Assert.Equal(
             "This pet is not available for adoption.",
             exception.Message
         );
+
+        requests.Verify(
+            repository =>
+                repository.AddAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
+        );
     }
 
     [Fact]
     public async Task SubmitAsync_WhenAdopterDoesNotExist_ThrowsArgumentException()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Available
-        };
+        var (service, requests, pets, _) = CreateService();
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
+        var pet = CreatePet();
 
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(1))
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
             .ReturnsAsync(pet);
 
-        adopterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(999))
-            .ReturnsAsync((Adopter?)null);
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.SubmitAsync(pet.Id, 999, null)
         );
 
-        var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.SubmitAsync(
-                    1,
-                    999,
-                    null
-                )
-            );
+        Assert.Equal("adopterId", exception.ParamName);
+        Assert.StartsWith("Adopter not found.", exception.Message);
 
-        Assert.Equal(
-            "Adopter not found.",
-            exception.Message
+        Assert.Equal(PetStatus.Available, pet.Status);
+
+        requests.Verify(
+            repository =>
+                repository.AddAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
         );
     }
 
     [Fact]
-    public async Task SubmitAsync_WhenPendingRequestAlreadyExists_ThrowsInvalidOperationException()
+    public async Task SubmitAsync_WhenSameAdopterHasPendingRequest_ThrowsInvalidOperationException()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Available
-        };
+        var (service, requests, pets, adopters) = CreateService();
 
-        var adopter = new Adopter
-        {
-            Id = 2,
-            FullName = "Test Adopter"
-        };
+        var pet = CreatePet();
+        var adopter = CreateAdopter();
 
-        var existingRequest =
-            new AdoptionRequest
-            {
-                Id = 5,
-                PetId = pet.Id,
-                AdopterId = adopter.Id,
-                Status =
-                    AdoptionRequestStatus.Pending
-            };
+        SetupPetAndAdopter(pets, adopters, pet, adopter);
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        petRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(pet.Id))
-            .ReturnsAsync(pet);
-
-        adopterRepository
-            .Setup(repository =>
-                repository.GetByIdAsync(adopter.Id))
-            .ReturnsAsync(adopter);
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { existingRequest }
-            );
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
+        SetRequests(
+            requests,
+            CreateRequest(5, pet, adopter.Id)
         );
 
         var exception =
-            await Assert.ThrowsAsync<
-                InvalidOperationException
-            >(
+            await Assert.ThrowsAsync<InvalidOperationException>(
                 () => service.SubmitAsync(
                     pet.Id,
                     adopter.Id,
@@ -438,297 +253,157 @@ public class AdoptionServiceTests
             exception.Message
         );
 
-        requestRepository.Verify(
+        Assert.Equal(PetStatus.Available, pet.Status);
+
+        requests.Verify(
             repository =>
-                repository.AddAsync(
-                    It.IsAny<AdoptionRequest>()
-                ),
+                repository.AddAsync(It.IsAny<AdoptionRequest>()),
             Times.Never
         );
     }
 
     [Fact]
-    public async Task SetStatusAsync_WhenApproved_ApprovesRequestAndMarksPetAsAdopted()
+    public async Task SubmitAsync_WhenAnotherAdopterHasPendingRequest_ThrowsInvalidOperationException()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Reserved
-        };
+        var (service, requests, pets, adopters) = CreateService();
 
-        var adopter = new Adopter
-        {
-            Id = 2,
-            FullName = "Test Adopter"
-        };
+        var pet = CreatePet();
+        var adopter = CreateAdopter();
 
-        var request =
-            new AdoptionRequest
-            {
-                Id = 3,
-                PetId = pet.Id,
-                Pet = pet,
-                AdopterId = adopter.Id,
-                Adopter = adopter,
-                Status =
-                    AdoptionRequestStatus.Pending
-            };
+        SetupPetAndAdopter(pets, adopters, pet, adopter);
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { request }
-            );
-
-        requestRepository
-            .Setup(repository =>
-                repository.UpdateAsync(request))
-            .Returns(Task.CompletedTask);
-
-        petRepository
-            .Setup(repository =>
-                repository.UpdateAsync(pet))
-            .Returns(Task.CompletedTask);
-
-        requestRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
-        );
-
-        await service.SetStatusAsync(
-            request.Id,
-            AdoptionRequestStatus.Approved
-        );
-
-        Assert.Equal(
-            AdoptionRequestStatus.Approved,
-            request.Status
-        );
-
-        Assert.Equal(
-            PetStatus.Adopted,
-            pet.Status
-        );
-
-        Assert.NotNull(request.DecisionAt);
-
-        requestRepository.Verify(
-            repository =>
-                repository.UpdateAsync(request),
-            Times.Once
-        );
-
-        petRepository.Verify(
-            repository =>
-                repository.UpdateAsync(pet),
-            Times.Once
-        );
-
-        requestRepository.Verify(
-            repository =>
-                repository.SaveChangesAsync(),
-            Times.Once
-        );
-    }
-
-    [Fact]
-    public async Task SetStatusAsync_WhenRejected_RejectsRequestAndMakesPetAvailable()
-    {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Reserved
-        };
-
-        var adopter = new Adopter
-        {
-            Id = 2,
-            FullName = "Test Adopter"
-        };
-
-        var request =
-            new AdoptionRequest
-            {
-                Id = 3,
-                PetId = pet.Id,
-                Pet = pet,
-                AdopterId = adopter.Id,
-                Adopter = adopter,
-                Status =
-                    AdoptionRequestStatus.Pending
-            };
-
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        var adopterRepository =
-            new Mock<IRepository<Adopter>>();
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { request }
-            );
-
-        requestRepository
-            .Setup(repository =>
-                repository.UpdateAsync(request))
-            .Returns(Task.CompletedTask);
-
-        petRepository
-            .Setup(repository =>
-                repository.UpdateAsync(pet))
-            .Returns(Task.CompletedTask);
-
-        requestRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            adopterRepository.Object
-        );
-
-        await service.SetStatusAsync(
-            request.Id,
-            AdoptionRequestStatus.Rejected
-        );
-
-        Assert.Equal(
-            AdoptionRequestStatus.Rejected,
-            request.Status
-        );
-
-        Assert.Equal(
-            PetStatus.Available,
-            pet.Status
-        );
-
-        Assert.NotNull(request.DecisionAt);
-    }
-
-    [Fact]
-    public async Task SetStatusAsync_WhenStatusIsNotApprovedOrRejected_ThrowsArgumentException()
-    {
-        var service = new AdoptionService(
-            Mock.Of<IRepository<AdoptionRequest>>(),
-            Mock.Of<IRepository<Pet>>(),
-            Mock.Of<IRepository<Adopter>>()
+        SetRequests(
+            requests,
+            CreateRequest(5, pet, adopterId: 3)
         );
 
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => service.SetStatusAsync(
-                    1,
-                    AdoptionRequestStatus.Cancelled
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.SubmitAsync(
+                    pet.Id,
+                    adopter.Id,
+                    null
                 )
             );
 
         Assert.Equal(
+            "Another adoption request is already pending for this pet.",
+            exception.Message
+        );
+
+        Assert.Equal(PetStatus.Available, pet.Status);
+
+        requests.Verify(
+            repository =>
+                repository.AddAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
+        );
+    }
+
+    [Theory]
+    [InlineData(
+        AdoptionRequestStatus.Approved,
+        PetStatus.Adopted
+    )]
+    [InlineData(
+        AdoptionRequestStatus.Rejected,
+        PetStatus.Available
+    )]
+    public async Task SetStatusAsync_WhenValid_UpdatesRequestAndPet(
+        AdoptionRequestStatus newStatus,
+        PetStatus expectedPetStatus
+    )
+    {
+        var (service, requests, pets, _) = CreateService();
+
+        var pet = CreatePet(status: PetStatus.Reserved);
+        var request = CreateRequest(3, pet);
+
+        SetRequests(requests, request);
+
+        await service.SetStatusAsync(request.Id, newStatus);
+
+        Assert.Equal(newStatus, request.Status);
+        Assert.Equal(expectedPetStatus, pet.Status);
+        Assert.NotNull(request.DecisionAt);
+
+        requests.Verify(
+            repository => repository.UpdateAsync(request),
+            Times.Once
+        );
+
+        pets.Verify(
+            repository => repository.UpdateAsync(pet),
+            Times.Once
+        );
+
+        requests.Verify(
+            repository => repository.SaveChangesAsync(),
+            Times.Once
+        );
+    }
+
+    [Theory]
+    [InlineData(AdoptionRequestStatus.Pending)]
+    [InlineData(AdoptionRequestStatus.Cancelled)]
+    public async Task SetStatusAsync_WhenStatusIsInvalid_ThrowsArgumentException(
+        AdoptionRequestStatus status
+    )
+    {
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.SetStatusAsync(1, status)
+        );
+
+        Assert.Equal("status", exception.ParamName);
+        Assert.StartsWith(
             "Only approval or rejection is allowed here.",
             exception.Message
         );
     }
 
     [Fact]
-    public async Task SetStatusAsync_WhenRequestAlreadyDecided_ThrowsInvalidOperationException()
+    public async Task SetStatusAsync_WhenRequestDoesNotExist_ThrowsArgumentException()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Adopted
-        };
+        var (service, _, _, _) = CreateService();
 
-        var adopter = new Adopter
-        {
-            Id = 2,
-            FullName = "Test Adopter"
-        };
-
-        var request =
-            new AdoptionRequest
-            {
-                Id = 3,
-                Pet = pet,
-                PetId = pet.Id,
-                Adopter = adopter,
-                AdopterId = adopter.Id,
-                Status =
-                    AdoptionRequestStatus.Approved
-            };
-
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { request }
-            );
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            Mock.Of<IRepository<Pet>>(),
-            Mock.Of<IRepository<Adopter>>()
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.SetStatusAsync(
+                999,
+                AdoptionRequestStatus.Approved
+            )
         );
 
+        Assert.Equal("requestId", exception.ParamName);
+        Assert.StartsWith(
+            "Adoption request not found.",
+            exception.Message
+        );
+    }
+
+    [Theory]
+    [InlineData(AdoptionRequestStatus.Approved)]
+    [InlineData(AdoptionRequestStatus.Rejected)]
+    [InlineData(AdoptionRequestStatus.Cancelled)]
+    public async Task SetStatusAsync_WhenRequestAlreadyDecided_ThrowsInvalidOperationException(
+        AdoptionRequestStatus currentStatus
+    )
+    {
+        var (service, requests, pets, _) = CreateService();
+
+        var pet = CreatePet(status: PetStatus.Adopted);
+
+        var request = CreateRequest(
+            3,
+            pet,
+            status: currentStatus
+        );
+
+        SetRequests(requests, request);
+
         var exception =
-            await Assert.ThrowsAsync<
-                InvalidOperationException
-            >(
+            await Assert.ThrowsAsync<InvalidOperationException>(
                 () => service.SetStatusAsync(
                     request.Id,
                     AdoptionRequestStatus.Rejected
@@ -739,71 +414,72 @@ public class AdoptionServiceTests
             "This request has already been decided.",
             exception.Message
         );
+
+        requests.Verify(
+            repository =>
+                repository.UpdateAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
+        );
+
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Theory]
+    [InlineData(PetStatus.Available)]
+    [InlineData(PetStatus.Adopted)]
+    [InlineData(PetStatus.Unavailable)]
+    public async Task SetStatusAsync_WhenPetIsNotReserved_ThrowsInvalidOperationException(
+        PetStatus petStatus
+    )
+    {
+        var (service, requests, pets, _) = CreateService();
+
+        var pet = CreatePet(status: petStatus);
+        var request = CreateRequest(3, pet);
+
+        SetRequests(requests, request);
+
+        var exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.SetStatusAsync(
+                    request.Id,
+                    AdoptionRequestStatus.Approved
+                )
+            );
+
+        Assert.Equal(
+            "The pet is no longer reserved for this request.",
+            exception.Message
+        );
+
+        Assert.Equal(AdoptionRequestStatus.Pending, request.Status);
+        Assert.Equal(petStatus, pet.Status);
+        Assert.Null(request.DecisionAt);
+
+        requests.Verify(
+            repository =>
+                repository.UpdateAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
+        );
+
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
     }
 
     [Fact]
     public async Task CancelAsync_WhenValid_CancelsRequestAndMakesPetAvailable()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Reserved
-        };
+        var (service, requests, pets, _) = CreateService();
 
-        var request =
-            new AdoptionRequest
-            {
-                Id = 3,
-                PetId = pet.Id,
-                Pet = pet,
-                AdopterId = 2,
-                Status =
-                    AdoptionRequestStatus.Pending
-            };
+        var pet = CreatePet(status: PetStatus.Reserved);
+        var request = CreateRequest(3, pet);
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        var petRepository =
-            new Mock<IRepository<Pet>>();
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { request }
-            );
-
-        requestRepository
-            .Setup(repository =>
-                repository.UpdateAsync(request))
-            .Returns(Task.CompletedTask);
-
-        petRepository
-            .Setup(repository =>
-                repository.UpdateAsync(pet))
-            .Returns(Task.CompletedTask);
-
-        requestRepository
-            .Setup(repository =>
-                repository.SaveChangesAsync())
-            .ReturnsAsync(1);
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            petRepository.Object,
-            Mock.Of<IRepository<Adopter>>()
-        );
+        SetRequests(requests, request);
 
         await service.CancelAsync(
             request.Id,
@@ -815,22 +491,21 @@ public class AdoptionServiceTests
             request.Status
         );
 
-        Assert.Equal(
-            PetStatus.Available,
-            pet.Status
-        );
-
+        Assert.Equal(PetStatus.Available, pet.Status);
         Assert.NotNull(request.DecisionAt);
 
-        requestRepository.Verify(
-            repository =>
-                repository.UpdateAsync(request),
+        requests.Verify(
+            repository => repository.UpdateAsync(request),
             Times.Once
         );
 
-        petRepository.Verify(
-            repository =>
-                repository.UpdateAsync(pet),
+        pets.Verify(
+            repository => repository.UpdateAsync(pet),
+            Times.Once
+        );
+
+        requests.Verify(
+            repository => repository.SaveChangesAsync(),
             Times.Once
         );
     }
@@ -838,166 +513,356 @@ public class AdoptionServiceTests
     [Fact]
     public async Task CancelAsync_WhenAdopterDoesNotOwnRequest_ThrowsUnauthorizedAccessException()
     {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Reserved
-        };
+        var (service, requests, pets, _) = CreateService();
 
-        var request =
-            new AdoptionRequest
-            {
-                Id = 3,
-                PetId = pet.Id,
-                Pet = pet,
-                AdopterId = 2,
-                Status =
-                    AdoptionRequestStatus.Pending
-            };
+        var pet = CreatePet(status: PetStatus.Reserved);
+        var request = CreateRequest(3, pet, adopterId: 2);
 
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
+        SetRequests(requests, request);
 
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { request }
-            );
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            Mock.Of<IRepository<Pet>>(),
-            Mock.Of<IRepository<Adopter>>()
-        );
-
-        await Assert.ThrowsAsync<
-            UnauthorizedAccessException
-        >(
-            () => service.CancelAsync(
-                request.Id,
-                999
-            )
-        );
-    }
-
-    [Fact]
-    public async Task CancelAsync_WhenRequestIsNotPending_ThrowsInvalidOperationException()
-    {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            Status = PetStatus.Adopted
-        };
-
-        var request =
-            new AdoptionRequest
-            {
-                Id = 3,
-                PetId = pet.Id,
-                Pet = pet,
-                AdopterId = 2,
-                Status =
-                    AdoptionRequestStatus.Approved
-            };
-
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { request }
-            );
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            Mock.Of<IRepository<Pet>>(),
-            Mock.Of<IRepository<Adopter>>()
-        );
-
-        await Assert.ThrowsAsync<
-            InvalidOperationException
-        >(
-            () => service.CancelAsync(
-                request.Id,
-                request.AdopterId
-            )
-        );
-    }
-
-    [Fact]
-    public async Task GetShelterIdForRequestAsync_ReturnsPetShelterId()
-    {
-        var pet = new Pet
-        {
-            Id = 1,
-            Name = "Luna",
-            ShelterId = 77
-        };
-
-        var request =
-            new AdoptionRequest
-            {
-                Id = 3,
-                PetId = pet.Id,
-                Pet = pet
-            };
-
-        var requestRepository =
-            new Mock<IRepository<AdoptionRequest>>();
-
-        requestRepository
-            .Setup(repository =>
-                repository.ListAsync(
-                    It.IsAny<
-                        Expression<Func<AdoptionRequest, bool>>
-                    >(),
-                    It.IsAny<
-                        Expression<
-                            Func<AdoptionRequest, object>
-                        >[]
-                    >()
-                ))
-            .ReturnsAsync(
-                new[] { request }
-            );
-
-        var service = new AdoptionService(
-            requestRepository.Object,
-            Mock.Of<IRepository<Pet>>(),
-            Mock.Of<IRepository<Adopter>>()
-        );
-
-        var shelterId =
-            await service.GetShelterIdForRequestAsync(
-                request.Id
+        var exception =
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(
+                () => service.CancelAsync(request.Id, 999)
             );
 
         Assert.Equal(
-            77,
-            shelterId
+            "You cannot cancel another adopter's request.",
+            exception.Message
         );
+
+        Assert.Equal(AdoptionRequestStatus.Pending, request.Status);
+        Assert.Equal(PetStatus.Reserved, pet.Status);
+
+        requests.Verify(
+            repository =>
+                repository.UpdateAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
+        );
+
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Theory]
+    [InlineData(AdoptionRequestStatus.Approved)]
+    [InlineData(AdoptionRequestStatus.Rejected)]
+    [InlineData(AdoptionRequestStatus.Cancelled)]
+    public async Task CancelAsync_WhenRequestIsNotPending_ThrowsInvalidOperationException(
+        AdoptionRequestStatus status
+    )
+    {
+        var (service, requests, _, _) = CreateService();
+
+        var pet = CreatePet(status: PetStatus.Adopted);
+        var request = CreateRequest(3, pet, status: status);
+
+        SetRequests(requests, request);
+
+        var exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.CancelAsync(
+                    request.Id,
+                    request.AdopterId
+                )
+            );
+
+        Assert.Equal(
+            "Only pending requests can be cancelled.",
+            exception.Message
+        );
+    }
+
+    [Theory]
+    [InlineData(PetStatus.Available)]
+    [InlineData(PetStatus.Adopted)]
+    [InlineData(PetStatus.Unavailable)]
+    public async Task CancelAsync_WhenPetIsNotReserved_ThrowsInvalidOperationException(
+        PetStatus petStatus
+    )
+    {
+        var (service, requests, pets, _) = CreateService();
+
+        var pet = CreatePet(status: petStatus);
+        var request = CreateRequest(3, pet);
+
+        SetRequests(requests, request);
+
+        var exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.CancelAsync(
+                    request.Id,
+                    request.AdopterId
+                )
+            );
+
+        Assert.Equal(
+            "The pet is no longer reserved for this request.",
+            exception.Message
+        );
+
+        Assert.Equal(AdoptionRequestStatus.Pending, request.Status);
+        Assert.Equal(petStatus, pet.Status);
+        Assert.Null(request.DecisionAt);
+
+        requests.Verify(
+            repository =>
+                repository.UpdateAsync(It.IsAny<AdoptionRequest>()),
+            Times.Never
+        );
+
+        pets.Verify(
+            repository => repository.UpdateAsync(It.IsAny<Pet>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task CancelAsync_WhenRequestDoesNotExist_ThrowsArgumentException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CancelAsync(999, 2)
+        );
+
+        Assert.Equal("requestId", exception.ParamName);
+        Assert.StartsWith(
+            "Adoption request not found.",
+            exception.Message
+        );
+    }
+
+    [Fact]
+    public async Task GetShelterIdForRequestAsync_WhenValid_ReturnsShelterId()
+    {
+        var (service, requests, _, _) = CreateService();
+
+        var pet = CreatePet(shelterId: 77);
+        var request = CreateRequest(3, pet);
+
+        SetRequests(requests, request);
+
+        var shelterId = await service.GetShelterIdForRequestAsync(
+            request.Id
+        );
+
+        Assert.Equal(77, shelterId);
+    }
+
+    [Fact]
+    public async Task GetShelterIdForRequestAsync_WhenRequestDoesNotExist_ThrowsArgumentException()
+    {
+        var (service, _, _, _) = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.GetShelterIdForRequestAsync(999)
+        );
+
+        Assert.Equal("requestId", exception.ParamName);
+        Assert.StartsWith(
+            "Adoption request not found.",
+            exception.Message
+        );
+    }
+
+    [Fact]
+    public async Task GetForAdopterAsync_ReturnsOnlyOwnRequestsInDescendingOrder()
+    {
+        var (service, requests, _, _) = CreateService();
+
+        var pet = CreatePet();
+
+        var olderRequest = CreateRequest(
+            1,
+            pet,
+            adopterId: 2,
+            createdAt: new DateTime(2026, 1, 1)
+        );
+
+        var newerRequest = CreateRequest(
+            2,
+            pet,
+            adopterId: 2,
+            createdAt: new DateTime(2026, 2, 1)
+        );
+
+        var otherAdopterRequest = CreateRequest(
+            3,
+            pet,
+            adopterId: 99,
+            createdAt: new DateTime(2026, 3, 1)
+        );
+
+        SetRequests(
+            requests,
+            olderRequest,
+            newerRequest,
+            otherAdopterRequest
+        );
+
+        var result = await service.GetForAdopterAsync(2);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(2, result[0].Id);
+        Assert.Equal(1, result[1].Id);
+
+        Assert.All(
+            result,
+            request => Assert.Equal(2, request.AdopterId)
+        );
+
+        Assert.Equal("Luna", result[0].PetName);
+        Assert.Equal("Test Adopter", result[0].AdopterName);
+    }
+
+    [Fact]
+    public async Task GetForShelterAsync_ReturnsOnlyShelterRequests()
+    {
+        var (service, requests, _, _) = CreateService();
+
+        var shelterPet = CreatePet(
+            id: 1,
+            shelterId: 10
+        );
+
+        var otherShelterPet = CreatePet(
+            id: 2,
+            shelterId: 20
+        );
+
+        var matchingRequest = CreateRequest(
+            3,
+            shelterPet
+        );
+
+        var otherRequest = CreateRequest(
+            4,
+            otherShelterPet
+        );
+
+        SetRequests(
+            requests,
+            matchingRequest,
+            otherRequest
+        );
+
+        var result = await service.GetForShelterAsync(10);
+
+        var request = Assert.Single(result);
+
+        Assert.Equal(matchingRequest.Id, request.Id);
+        Assert.Equal(shelterPet.Id, request.PetId);
+    }
+
+    private static (
+        AdoptionService Service,
+        Mock<IRepository<AdoptionRequest>> Requests,
+        Mock<IRepository<Pet>> Pets,
+        Mock<IRepository<Adopter>> Adopters
+    ) CreateService()
+    {
+        var requests = new Mock<IRepository<AdoptionRequest>>();
+        var pets = new Mock<IRepository<Pet>>();
+        var adopters = new Mock<IRepository<Adopter>>();
+
+        SetRequests(requests);
+
+        var service = new AdoptionService(
+            requests.Object,
+            pets.Object,
+            adopters.Object
+        );
+
+        return (service, requests, pets, adopters);
+    }
+
+    private static void SetupPetAndAdopter(
+        Mock<IRepository<Pet>> pets,
+        Mock<IRepository<Adopter>> adopters,
+        Pet pet,
+        Adopter adopter
+    )
+    {
+        pets
+            .Setup(repository => repository.GetByIdAsync(pet.Id))
+            .ReturnsAsync(pet);
+
+        adopters
+            .Setup(repository => repository.GetByIdAsync(adopter.Id))
+            .ReturnsAsync(adopter);
+    }
+
+    private static void SetRequests(
+        Mock<IRepository<AdoptionRequest>> repository,
+        params AdoptionRequest[] items
+    )
+    {
+        repository
+            .Setup(requests => requests.ListAsync(
+                It.IsAny<
+                    Expression<Func<AdoptionRequest, bool>>
+                >(),
+                It.IsAny<
+                    Expression<Func<AdoptionRequest, object>>[]
+                >()
+            ))
+            .Returns((
+                Expression<Func<AdoptionRequest, bool>> predicate,
+                Expression<Func<AdoptionRequest, object>>[] _
+            ) =>
+                Task.FromResult<IReadOnlyList<AdoptionRequest>>(
+                    items
+                        .Where(predicate.Compile())
+                        .ToArray()
+                )
+            );
+    }
+
+    private static Pet CreatePet(
+        int id = 1,
+        PetStatus status = PetStatus.Available,
+        int shelterId = 10
+    )
+    {
+        return new Pet
+        {
+            Id = id,
+            Name = "Luna",
+            Status = status,
+            ShelterId = shelterId
+        };
+    }
+
+    private static Adopter CreateAdopter(int id = 2)
+    {
+        return new Adopter
+        {
+            Id = id,
+            FullName = "Test Adopter"
+        };
+    }
+
+    private static AdoptionRequest CreateRequest(
+        int id,
+        Pet pet,
+        int adopterId = 2,
+        AdoptionRequestStatus status = AdoptionRequestStatus.Pending,
+        DateTime? createdAt = null
+    )
+    {
+        var adopter = CreateAdopter(adopterId);
+
+        return new AdoptionRequest
+        {
+            Id = id,
+            PetId = pet.Id,
+            Pet = pet,
+            AdopterId = adopter.Id,
+            Adopter = adopter,
+            Status = status,
+            CreatedAt = createdAt ?? DateTime.UtcNow
+        };
     }
 }

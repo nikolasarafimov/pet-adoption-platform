@@ -11,10 +11,14 @@ using PetAdoption.Infrastructure.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException(
+    builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
         "Connection string 'DefaultConnection' is not configured."
     );
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString)
@@ -43,9 +47,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
-
     options.Cookie.HttpOnly = true;
-
+    options.Cookie.SameSite = SameSiteMode.Lax;
     options.SlidingExpiration = true;
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 });
@@ -67,75 +70,66 @@ builder.Services.AddScoped<IShelterService, ShelterService>();
 builder.Services.AddScoped<IAdopterService, AdopterService>();
 builder.Services.AddScoped<IAdoptionService, AdoptionService>();
 
-builder.Services.AddHttpClient<IDogApiService, DogApiService>(
-    client =>
+builder.Services.AddHttpClient<IDogApiService, DogApiService>(client =>
+{
+    var configuredBaseUrl =
+        builder.Configuration["DogApi:BaseUrl"]
+        ?? "https://api.thedogapi.com/";
+
+    var baseUrl = configuredBaseUrl.Trim().TrimEnd('/') + "/";
+
+    if (!Uri.TryCreate(
+            baseUrl,
+            UriKind.Absolute,
+            out var baseAddress
+        ) ||
+        (baseAddress.Scheme != Uri.UriSchemeHttps &&
+         baseAddress.Scheme != Uri.UriSchemeHttp))
     {
-        var baseUrl =
-            builder.Configuration["DogApi:BaseUrl"]
-            ?? "https://api.thedogapi.com/";
-
-        if (!baseUrl.EndsWith('/'))
-        {
-            baseUrl += "/";
-        }
-
-        client.BaseAddress = new Uri(baseUrl);
-        client.Timeout = TimeSpan.FromSeconds(15);
-
-        var apiKey =
-            builder.Configuration["DogApi:ApiKey"];
-
-        if (!string.IsNullOrWhiteSpace(apiKey))
-        {
-            client.DefaultRequestHeaders.Add(
-                "x-api-key",
-                apiKey
-            );
-        }
+        throw new InvalidOperationException(
+            "DogApi:BaseUrl must be a valid absolute HTTP or HTTPS URL."
+        );
     }
-);
+
+    client.BaseAddress = baseAddress;
+    client.Timeout = TimeSpan.FromSeconds(15);
+
+    var apiKey = builder.Configuration["DogApi:ApiKey"];
+
+    if (!string.IsNullOrWhiteSpace(apiKey))
+    {
+        client.DefaultRequestHeaders.Add(
+            "x-api-key",
+            apiKey
+        );
+    }
+});
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db =
-        scope.ServiceProvider
-            .GetRequiredService<AppDbContext>();
+    var db = scope.ServiceProvider
+        .GetRequiredService<AppDbContext>();
 
-    var pendingMigrations =
-        await db.Database.GetPendingMigrationsAsync();
-
-    if (pendingMigrations.Any())
-    {
-        await db.Database.MigrateAsync();
-    }
+    await db.Database.MigrateAsync();
 
     var seedDataEnabled =
-        builder.Configuration.GetValue<bool?>(
-            "SeedData:Enabled"
-        )
+        builder.Configuration.GetValue<bool?>("SeedData:Enabled")
         ?? app.Environment.IsDevelopment();
 
     if (seedDataEnabled)
     {
-        var userManager =
-            scope.ServiceProvider
-                .GetRequiredService<
-                    UserManager<ApplicationUser>
-                >();
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
 
-        var roleManager =
-            scope.ServiceProvider
-                .GetRequiredService<
-                    RoleManager<IdentityRole>
-                >();
+        var roleManager = scope.ServiceProvider
+            .GetRequiredService<RoleManager<IdentityRole>>();
 
-        var credentials =
-            CreateDemoSeedCredentials(
-                builder.Configuration,
-                app.Environment
-            );
+        var credentials = CreateDemoSeedCredentials(
+            builder.Configuration,
+            app.Environment
+        );
 
         await DbInitializer.SeedAsync(
             db,
@@ -149,88 +143,60 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-
-    app.UseStatusCodePagesWithReExecute(
-        "/Home/Error"
-    );
-
+    app.UseStatusCodePagesWithReExecute("/Home/Error");
     app.UseHsts();
 }
 
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "account",
     pattern: "Account/{action=Login}/{id?}",
-    defaults: new
-    {
-        controller = "Account"
-    }
+    defaults: new { controller = "Account" }
 );
 
 app.MapControllerRoute(
     name: "home",
     pattern: "Home/{action=Welcome}/{id?}",
-    defaults: new
-    {
-        controller = "Home"
-    }
+    defaults: new { controller = "Home" }
 );
 
 app.MapControllerRoute(
     name: "pets",
     pattern: "Pets/{action=Index}/{id?}",
-    defaults: new
-    {
-        controller = "Pets"
-    }
+    defaults: new { controller = "Pets" }
 );
 
 app.MapControllerRoute(
     name: "breeds",
     pattern: "Breeds/{action=Index}/{id?}",
-    defaults: new
-    {
-        controller = "Breeds"
-    }
+    defaults: new { controller = "Breeds" }
 );
 
 app.MapControllerRoute(
     name: "adoptionrequests",
     pattern: "AdoptionRequests/{action=Index}/{id?}",
-    defaults: new
-    {
-        controller = "AdoptionRequests"
-    }
+    defaults: new { controller = "AdoptionRequests" }
 );
 
 app.MapControllerRoute(
     name: "shelters",
     pattern: "Shelters/{action=Index}/{id?}",
-    defaults: new
-    {
-        controller = "Shelters"
-    }
+    defaults: new { controller = "Shelters" }
 );
 
 app.MapControllerRoute(
     name: "adoptersadmin",
     pattern: "Admin/Adopters/{action=Index}/{id?}",
-    defaults: new
-    {
-        controller = "AdoptersAdmin"
-    }
+    defaults: new { controller = "AdoptersAdmin" }
 );
 
 app.MapControllerRoute(
     name: "default",
-    pattern:
-        "{controller=Home}/{action=Welcome}/{id?}"
+    pattern: "{controller=Home}/{action=Welcome}/{id?}"
 );
 
 app.Run();
@@ -246,23 +212,18 @@ static DemoSeedCredentials CreateDemoSeedCredentials(
             AdminEmail:
                 configuration["SeedData:AdminEmail"]
                 ?? "admin@pets.com",
-
             AdminPassword:
                 configuration["SeedData:AdminPassword"]
                 ?? "Admin#12345",
-
             ShelterEmail:
                 configuration["SeedData:ShelterEmail"]
                 ?? "shelter@pets.com",
-
             ShelterPassword:
                 configuration["SeedData:ShelterPassword"]
                 ?? "Shelter#123",
-
             AdopterEmail:
                 configuration["SeedData:AdopterEmail"]
                 ?? "adopter@pets.com",
-
             AdopterPassword:
                 configuration["SeedData:AdopterPassword"]
                 ?? "Adopter#123"
@@ -270,41 +231,30 @@ static DemoSeedCredentials CreateDemoSeedCredentials(
     }
 
     return new DemoSeedCredentials(
-        AdminEmail:
-            GetRequiredConfigurationValue(
-                configuration,
-                "SeedData:AdminEmail"
-            ),
-
-        AdminPassword:
-            GetRequiredConfigurationValue(
-                configuration,
-                "SeedData:AdminPassword"
-            ),
-
-        ShelterEmail:
-            GetRequiredConfigurationValue(
-                configuration,
-                "SeedData:ShelterEmail"
-            ),
-
-        ShelterPassword:
-            GetRequiredConfigurationValue(
-                configuration,
-                "SeedData:ShelterPassword"
-            ),
-
-        AdopterEmail:
-            GetRequiredConfigurationValue(
-                configuration,
-                "SeedData:AdopterEmail"
-            ),
-
-        AdopterPassword:
-            GetRequiredConfigurationValue(
-                configuration,
-                "SeedData:AdopterPassword"
-            )
+        AdminEmail: GetRequiredConfigurationValue(
+            configuration,
+            "SeedData:AdminEmail"
+        ),
+        AdminPassword: GetRequiredConfigurationValue(
+            configuration,
+            "SeedData:AdminPassword"
+        ),
+        ShelterEmail: GetRequiredConfigurationValue(
+            configuration,
+            "SeedData:ShelterEmail"
+        ),
+        ShelterPassword: GetRequiredConfigurationValue(
+            configuration,
+            "SeedData:ShelterPassword"
+        ),
+        AdopterEmail: GetRequiredConfigurationValue(
+            configuration,
+            "SeedData:AdopterEmail"
+        ),
+        AdopterPassword: GetRequiredConfigurationValue(
+            configuration,
+            "SeedData:AdopterPassword"
+        )
     );
 }
 
@@ -313,13 +263,13 @@ static string GetRequiredConfigurationValue(
     string key
 )
 {
-    var value =
-        configuration[key];
+    var value = configuration[key];
 
     if (string.IsNullOrWhiteSpace(value))
     {
         throw new InvalidOperationException(
-            $"Configuration value '{key}' is required when demo seed data is enabled outside Development."
+            $"Configuration value '{key}' is required when " +
+            "demo seed data is enabled outside Development."
         );
     }
 
