@@ -10,6 +10,8 @@
   <p>
     <a href="https://pet-adoption-platform-nuvx.onrender.com/"><strong>Explore Live Demo</strong></a>
     ·
+    <a href="#application-preview"><strong>Application Preview</strong></a>
+    ·
     <a href="#getting-started"><strong>Run Locally</strong></a>
     ·
     <a href="#architecture"><strong>Architecture</strong></a>
@@ -43,6 +45,59 @@ The solution separates business rules from persistence and presentation using a 
 | **Breed explorer** | Dog-breed information retrieved through The Dog API |
 | **Engineering** | Onion Architecture, dependency injection, EF Core migrations, unit tests, and CI |
 | **Deployment** | Multi-stage Docker build with non-root runtime and configurable SQLite storage |
+
+## Application Preview
+
+Explore the application's main workflows, from discovering adoptable animals to reviewing requests and managing shelter records.
+
+### Welcome & Discovery
+
+<p align="center">
+  <a href="docs/screenshots/01-home.png">
+    <img src="docs/screenshots/01-home.png" alt="Pet Adoption Platform home page showing the landing experience and navigation" width="900" />
+  </a>
+</p>
+
+<p align="center"><sub>The landing page introduces the platform and guides visitors toward finding and adopting a pet.</sub></p>
+
+### Core Application Screens
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/02-pet-directory.png"><img src="docs/screenshots/02-pet-directory.png" alt="Searchable pet directory with species and adoption status filters" width="100%" /></a>
+      <p><strong>Pet Directory</strong></p>
+      <p>Explore pet listings with search, filters, availability indicators, and role-aware actions.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/03-pet-details.png"><img src="docs/screenshots/03-pet-details.png" alt="Individual pet profile with photo, details, and adoption request action" width="100%" /></a>
+      <p><strong>Pet Profiles</strong></p>
+      <p>View an animal's details, shelter information, adoption status, and the next step to adopt.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/04-adoption-requests.png"><img src="docs/screenshots/04-adoption-requests.png" alt="Shelter adoption requests management interface" width="100%" /></a>
+      <p><strong>Adoption Requests</strong></p>
+      <p>Review pending requests and manage approval or rejection through the protected shelter workflow.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/05-shelter-management.png"><img src="docs/screenshots/05-shelter-management.png" alt="Administrator shelter management page" width="100%" /></a>
+      <p><strong>Shelter Administration</strong></p>
+      <p>Manage participating organizations and their public location and contact information.</p>
+    </td>
+  </tr>
+</table>
+
+### Dog Breed Explorer
+
+<p align="center">
+  <a href="docs/screenshots/06-breed-explorer.png">
+    <img src="docs/screenshots/06-breed-explorer.png" alt="Dog breed explorer showing searchable breeds and information from The Dog API" width="900" />
+  </a>
+</p>
+
+<p align="center"><sub>Discover dog breeds and their characteristics using information provided by The Dog API.</sub></p>
 
 ## Experience and Capabilities
 
@@ -150,6 +205,14 @@ PetAdoptionPlatform/
 ├── PetAdoption.Application/
 ├── PetAdoption.Infrastructure/
 ├── PetAdoption.Application.Tests/
+├── docs/
+│   └── screenshots/
+│       ├── 01-home.png
+│       ├── 02-pet-directory.png
+│       ├── 03-pet-details.png
+│       ├── 04-adoption-requests.png
+│       ├── 05-shelter-management.png
+│       └── 06-breed-explorer.png
 ├── PetAdoption.Web/
 │   ├── Controllers/
 │   ├── Models/
